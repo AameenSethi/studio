@@ -12,6 +12,8 @@ import {
   generatePracticeTestForChild,
   type GeneratePracticeTestForChildOutput,
 } from '@/ai/flows/practice-test-generator';
+import { evaluateAnswer } from '@/ai/flows/evaluate-answer';
+
 
 import { Button } from '@/components/ui/button';
 import {
@@ -100,6 +102,7 @@ type TestOutput = (
 ) & { answerKey?: { question: string; answer: string }[] };
 
 type StudentAnswers = { [key: number]: string };
+type AnswerCorrectness = { [key: number]: boolean };
 
 export function TestGenerator() {
   const { userRole } = useUser();
@@ -113,9 +116,11 @@ function StudentTestGenerator() {
   const { toast } = useToast();
   const { addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [test, setTest] = useState<GeneratePracticeTestOutput | null>(null);
   const [studentAnswers, setStudentAnswers] = useState<StudentAnswers>({});
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
+  const [answerCorrectness, setAnswerCorrectness] = useState<AnswerCorrectness>({});
   const [score, setScore] = useState(0);
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
@@ -154,6 +159,7 @@ function StudentTestGenerator() {
     setStudentAnswers({});
     setAnswersSubmitted(false);
     setScore(0);
+    setAnswerCorrectness({});
     setStartTime(null);
     setEndTime(null);
     setElapsedTime(0);
@@ -195,20 +201,43 @@ function StudentTestGenerator() {
     setStudentAnswers((prev) => ({ ...prev, [index]: value }));
   };
 
-  const handleSubmitAnswers = () => {
+  const handleSubmitAnswers = async () => {
+    if (!test?.answerKey) return;
+    setIsSubmitting(true);
     setEndTime(new Date());
+
     let correctAnswers = 0;
-    test?.answerKey.forEach((item, index) => {
-      const studentAnswer = studentAnswers[index] || '';
-      // Simple case-insensitive comparison
-      if (
-        studentAnswer.trim().toLowerCase() === item.answer.trim().toLowerCase()
-      ) {
-        correctAnswers++;
-      }
-    });
+    const correctness: AnswerCorrectness = {};
+
+    for (let i = 0; i < test.answerKey.length; i++) {
+        const item = test.answerKey[i];
+        const studentAnswer = studentAnswers[i] || '';
+
+        try {
+            const evaluation = await evaluateAnswer({
+                question: item.question,
+                studentAnswer: studentAnswer,
+                correctAnswer: item.answer,
+            });
+            correctness[i] = evaluation.isCorrect;
+            if (evaluation.isCorrect) {
+                correctAnswers++;
+            }
+        } catch (error) {
+            console.error(`Error evaluating answer for question ${i + 1}:`, error);
+            // Fallback to simple check on error
+            correctness[i] = studentAnswer.trim().toLowerCase() === item.answer.trim().toLowerCase();
+            if (correctness[i]) {
+                correctAnswers++;
+            }
+        }
+    }
+
+    setAnswerCorrectness(correctness);
     setScore(correctAnswers);
     setAnswersSubmitted(true);
+    setIsSubmitting(false);
+
     toast({
       title: 'Answers Submitted!',
       description: 'You can now view the answer key and your results.',
@@ -222,9 +251,7 @@ function StudentTestGenerator() {
   }
 
   const isCorrect = (index: number) => {
-      if (!test?.answerKey) return false;
-      const studentAnswer = studentAnswers[index] || '';
-      return studentAnswer.trim().toLowerCase() === test.answerKey[index].answer.trim().toLowerCase();
+    return answerCorrectness[index] === true;
   }
 
   return (
@@ -448,14 +475,23 @@ function StudentTestGenerator() {
                       placeholder="Type your answer here..."
                       value={studentAnswers[index] || ''}
                       onChange={(e) => handleAnswerChange(index, e.target.value)}
-                      disabled={answersSubmitted}
+                      disabled={answersSubmitted || isSubmitting}
                     />
                   </div>
                 </div>
               ))}
-              <Button onClick={handleSubmitAnswers} disabled={answersSubmitted}>
-                <Upload className="mr-2 h-4 w-4" />
-                Submit Your Answers
+              <Button onClick={handleSubmitAnswers} disabled={answersSubmitted || isSubmitting}>
+                {isSubmitting ? (
+                    <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Evaluating...
+                    </>
+                ) : (
+                    <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Submit Your Answers
+                    </>
+                )}
               </Button>
             </CardContent>
             {answersSubmitted && (
@@ -520,7 +556,7 @@ function StudentTestGenerator() {
                                 </p>
                                 <p className="text-sm text-emerald-600 dark:text-emerald-400">
                                     {item.answer}
-                                </p>
+                                 </p>
                                 </div>
                             )}
                           </li>
