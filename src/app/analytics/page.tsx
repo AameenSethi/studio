@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { StudyTimeChart, TopicMasteryChart, TestScoresChart } from '@/components/analytics/charts';
+import { StudyTimeChart, TopicMasteryChart, PerformanceByTopic } from '@/components/analytics/charts';
 
 export default function AnalyticsPage() {
   return (
@@ -35,6 +35,7 @@ export default function AnalyticsPage() {
         </Card>
         <TopicMasteryChart />
       </div>
+      <PerformanceByTopic />
     </AppLayout>
   );
 }

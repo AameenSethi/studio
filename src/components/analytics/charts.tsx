@@ -23,26 +23,17 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { useState, useMemo, useEffect } from 'react';
-import { Input } from '../ui/input';
-import { Button } from '../ui/button';
-import { Plus, X, BarChart3 } from 'lucide-react';
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { BarChart3 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { useHistory } from '@/hooks/use-history';
+import { Separator } from '../ui/separator';
 
 const studyTimeData = Array.from({ length: 30 }, (_, i) => ({
   date: `Day ${i + 1}`,
   hours: Number((Math.random() * 3 + 0.5).toFixed(1)),
 }));
-
-const testScoresData = [
-    { range: '> 90%', value: 12, fill: "hsl(var(--chart-1))" },
-    { range: '80-90%', value: 25, fill: "hsl(var(--chart-2))" },
-    { range: '70-80%', value: 30, fill: "hsl(var(--chart-3))" },
-    { range: '< 70%', value: 8, fill: "hsl(var(--chart-4))" },
-];
-
 
 const studyTimeConfig = {
   hours: {
@@ -185,28 +176,89 @@ export function TopicMasteryChart() {
   );
 }
 
+const topicPerformanceChartConfig = {
+  score: {
+    label: 'Score',
+    color: 'hsl(var(--accent))',
+  },
+} satisfies ChartConfig;
 
-export function TestScoresChart() {
+export function PerformanceByTopic() {
+    const { history } = useHistory();
+
+    const topicPerformanceData = useMemo(() => {
+        const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
+        const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number } } = {};
+
+        testHistory.reverse().forEach((item, index) => {
+            const topicMatch = item.title.match(/Test on: (.*)/);
+            const topic = topicMatch ? topicMatch[1] : 'General';
+            const percentage = (item.score! / item.content.length) * 100;
+
+            if (!topicData[topic]) {
+                topicData[topic] = { scores: [], count: 0 };
+            }
+            topicData[topic].scores.push({ score: Math.round(percentage), attempt: topicData[topic].count + 1 });
+            topicData[topic].count++;
+        });
+
+        return Object.entries(topicData).map(([topic, data]) => {
+            const averageScore = data.scores.reduce((acc, s) => acc + s.score, 0) / data.count;
+            return {
+                topic,
+                averageScore: Math.round(averageScore),
+                testCount: data.count,
+                scores: data.scores,
+            };
+        });
+    }, [history]);
+
+    if (topicPerformanceData.length === 0) {
+        return null; // Don't render if no data
+    }
+
     return (
-        <ChartContainer config={{}} className="h-[250px] w-full">
-            <ResponsiveContainer>
-                <PieChart>
-                    <Tooltip content={<ChartTooltipContent nameKey="range" />} />
-                    <Pie
-                        data={testScoresData}
-                        dataKey="value"
-                        nameKey="range"
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={100}
-                        label={({ name, percent }) => `${(percent * 100).toFixed(0)}%`}
-                    >
-                         {testScoresData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.fill} />
-                        ))}
-                    </Pie>
-                </PieChart>
-            </ResponsiveContainer>
-        </ChartContainer>
+        <Card className="lg:col-span-2">
+            <CardHeader>
+                <CardTitle>Performance by Topic</CardTitle>
+                <CardDescription>
+                    A detailed breakdown of your performance in each topic.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+                {topicPerformanceData.map((topicData, index) => (
+                    <div key={topicData.topic}>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                            <div className="md:col-span-1">
+                                <h3 className="text-lg font-semibold">{topicData.topic}</h3>
+                                <div className="flex items-center gap-4 mt-2">
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Avg. Score</p>
+                                        <p className="text-2xl font-bold">{topicData.averageScore}%</p>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm text-muted-foreground">Tests Taken</p>
+                                        <p className="text-2xl font-bold">{topicData.testCount}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="md:col-span-2">
+                                <ChartContainer config={topicPerformanceChartConfig} className="h-[100px] w-full">
+                                    <ResponsiveContainer>
+                                        <LineChart data={topicData.scores} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                            <XAxis dataKey="attempt" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `Test ${val}`} />
+                                            <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
+                                            <Tooltip content={<ChartTooltipContent indicator="dot" />} />
+                                            <Line type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={2} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </ChartContainer>
+                            </div>
+                        </div>
+                        {index < topicPerformanceData.length - 1 && <Separator />}
+                    </div>
+                ))}
+            </CardContent>
+        </Card>
     );
 }
