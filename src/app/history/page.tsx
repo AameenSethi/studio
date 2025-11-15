@@ -15,7 +15,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useHistory } from '@/hooks/use-history';
-import { History, Wand2, Lightbulb, FileText } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,6 +24,13 @@ const iconMap = {
   'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
   'Practice Test': <FileText className="h-5 w-5 text-accent" />,
 };
+
+const formatDuration = (seconds?: number) => {
+    if (seconds === undefined) return '';
+    const minutes = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${minutes}m ${secs}s`;
+}
 
 export default function HistoryPage() {
   const { history } = useHistory();
@@ -37,11 +44,17 @@ export default function HistoryPage() {
       case 'Practice Test':
         return (
           <div>
-            {item.score !== undefined && (
-                 <div className="mb-4">
+            <div className="flex gap-4 mb-4">
+                {item.score !== undefined && (
                     <Badge>Score: {item.score} / {item.content.length}</Badge>
-                </div>
-            )}
+                )}
+                {item.duration !== undefined && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                        <Clock className="h-3 w-3"/>
+                        {formatDuration(item.duration)}
+                    </Badge>
+                )}
+            </div>
           <ul className="space-y-4">
             {item.content.map((qa: any, index: number) => (
               <li key={index}>
@@ -85,7 +98,7 @@ export default function HistoryPage() {
               {history.map((item) => (
                 <AccordionItem value={item.id} key={item.id}>
                   <AccordionTrigger>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-4 w-full">
                       {iconMap[item.type]}
                       <div className="flex flex-col items-start">
                         <span className="font-semibold">{item.title}</span>
@@ -94,7 +107,13 @@ export default function HistoryPage() {
                         </span>
                       </div>
                        {item.type === 'Practice Test' && item.score !== undefined && (
-                        <div className="ml-auto pr-4">
+                        <div className="ml-auto pr-4 flex items-center gap-4">
+                            {item.duration !== undefined && (
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3"/>
+                                    {formatDuration(item.duration)}
+                                </Badge>
+                            )}
                             <Badge variant="outline">
                                 {((item.score / item.content.length) * 100).toFixed(0)}%
                             </Badge>

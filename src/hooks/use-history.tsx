@@ -9,6 +9,7 @@ export type HistoryItem = {
   content: any; // Can be string or object with questions/answers
   timestamp: string;
   score?: number; // Add score for practice tests
+  duration?: number; // Add duration for practice tests in seconds
 };
 
 interface HistoryContextType {

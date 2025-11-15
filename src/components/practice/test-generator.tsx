@@ -205,6 +205,9 @@ function StudentTestGenerator() {
     setIsSubmitting(true);
     const submissionTime = new Date();
     setEndTime(submissionTime);
+    const finalElapsedTime = Math.floor((submissionTime.getTime() - (startTime?.getTime() ?? submissionTime.getTime())) / 1000);
+    setElapsedTime(finalElapsedTime);
+
 
     let correctAnswers = 0;
     const correctness: AnswerCorrectness = {};
@@ -243,6 +246,7 @@ function StudentTestGenerator() {
         title: `Test on: ${formValues.topic}`,
         content: test.answerKey,
         score: correctAnswers,
+        duration: finalElapsedTime,
     });
 
     toast({

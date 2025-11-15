@@ -15,11 +15,11 @@ import {
 } from '@/components/ui/chart';
 import { useHistory } from '@/hooks/use-history';
 import { useMemo } from 'react';
-import { format, subDays, getDay, parseISO } from 'date-fns';
+import { format, subDays, parseISO } from 'date-fns';
 
 const chartConfig = {
-  activities: {
-    label: 'Activities',
+  hours: {
+    label: 'Hours',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
@@ -33,17 +33,24 @@ export function WeeklyProgressChart() {
             return {
                 day: format(date, 'eee'),
                 date: format(date, 'yyyy-MM-dd'),
-                activities: 0,
+                hours: 0,
             };
         });
 
         history.forEach(item => {
-            const itemDate = parseISO(item.timestamp);
-            const formattedDate = format(itemDate, 'yyyy-MM-dd');
-            const dayEntry = days.find(d => d.date === formattedDate);
-            if (dayEntry) {
-                dayEntry.activities += 1;
+            if (item.type === 'Practice Test' && item.duration) {
+                const itemDate = parseISO(item.timestamp);
+                const formattedDate = format(itemDate, 'yyyy-MM-dd');
+                const dayEntry = days.find(d => d.date === formattedDate);
+                if (dayEntry) {
+                    dayEntry.hours += item.duration / 3600; // convert seconds to hours
+                }
             }
+        });
+
+        // Round to 2 decimal places
+        days.forEach(day => {
+            day.hours = parseFloat(day.hours.toFixed(2));
         });
 
         return days;
@@ -67,14 +74,14 @@ export function WeeklyProgressChart() {
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            allowDecimals={false}
-            tickFormatter={(value) => `${value}`}
+            allowDecimals={true}
+            tickFormatter={(value) => `${value}h`}
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
             content={<ChartTooltipContent hideIndicator />}
           />
-          <Bar dataKey="activities" fill="hsl(var(--primary))" radius={4} />
+          <Bar dataKey="hours" fill="hsl(var(--primary))" radius={4} />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
