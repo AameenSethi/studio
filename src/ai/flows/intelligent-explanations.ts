@@ -13,7 +13,7 @@ import {googleAI} from '@genkit-ai/google-genai';
 import {z} from 'genkit';
 
 const IntelligentExplanationInputSchema = z.object({
-  topic: z.string().describe('The complex topic to be explained.'),
+  topic: z.string().min(1, { message: 'Please enter a topic.' }),
   explanationLevel: z.enum(['Simple', 'Detailed', 'Expert']).describe('The desired level of detail for the explanation.'),
 });
 export type IntelligentExplanationInput = z.infer<typeof IntelligentExplanationInputSchema>;
@@ -60,21 +60,22 @@ const intelligentExplanationFlow = ai.defineFlow(
     outputSchema: IntelligentExplanationOutputSchema,
   },
   async input => {
-    const [explanationResult, diagramResult] = await Promise.all([
-      prompt(input),
-      ai.generate({
-        model: googleAI.model('imagen-2.0-fast-generate-001'),
-        prompt: `A clear, well-labelled diagram illustrating the concept of "${input.topic}". The diagram should be simple, educational, and easy to understand.`,
-      }),
-    ]);
-
-    const output = explanationResult.output;
-    if (!output) {
-      throw new Error('Failed to generate explanation');
+    const explanationResult = await prompt(input);
+    const explanationOutput = explanationResult.output;
+    
+    if (!explanationOutput) {
+        throw new Error('Failed to generate explanation text.');
     }
+
+    const diagramResult = await ai.generate({
+        model: googleAI.model('imagen-2.0-fast-generate-001'),
+        prompt: explanationOutput.diagramPrompt,
+    });
     
     return {
-        ...output,
+        summary: explanationOutput.summary,
+        detailedExplanation: explanationOutput.detailedExplanation,
+        analogy: explanationOutput.analogy,
         diagramUrl: diagramResult.media?.url || '',
     };
   }
