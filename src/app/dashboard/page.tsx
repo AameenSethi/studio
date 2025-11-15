@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Lightbulb, FileText, ArrowRight } from 'lucide-react';
+import { Lightbulb, FileText, ArrowRight, History, User } from 'lucide-react';
 import Link from 'next/link';
 import { PersonalizedStudyPlan } from '@/components/dashboard/personalized-study-plan';
 import { WeeklyProgressChart } from '@/components/dashboard/overview-cards';
@@ -35,7 +35,7 @@ export default function DashboardPage() {
           <CardHeader>
             <CardTitle>Weekly Progress</CardTitle>
             <CardDescription>
-              Your study time over the last 7 days.
+              Your study activities over the last 7 days.
             </CardDescription>
           </CardHeader>
           <CardContent className="pl-2">
@@ -61,6 +61,20 @@ export default function DashboardPage() {
               <Button variant="outline" className="w-full justify-start">
                 <FileText className="mr-2 h-4 w-4" />
                 Generate a Practice Test
+                <ArrowRight className="ml-auto h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/history" passHref>
+              <Button variant="outline" className="w-full justify-start">
+                <History className="mr-2 h-4 w-4" />
+                View Action History
+                <ArrowRight className="ml-auto h-4 w-4" />
+              </Button>
+            </Link>
+            <Link href="/profile" passHref>
+              <Button variant="outline" className="w-full justify-start">
+                <User className="mr-2 h-4 w-4" />
+                Edit Your Profile
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
             </Link>
