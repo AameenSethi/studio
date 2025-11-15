@@ -87,16 +87,25 @@ const studentFormSchema = z
 type StudentAnswers = { [key: number]: string };
 type AnswerCorrectness = { [key: number]: boolean };
 
-const subjectMap: Record<string, string[]> = {
-    '6th Grade': ['Mathematics', 'Science', 'English', 'History', 'Geography'],
-    '7th Grade': ['Mathematics', 'Science', 'English', 'History', 'Geography'],
-    '8th Grade': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Civics'],
-    '9th Grade': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Economics'],
-    '10th Grade': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Economics', 'Computer Science'],
-    '11th Grade': ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'English', 'Accountancy', 'Business Studies', 'Economics'],
-    '12th Grade': ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'English', 'Accountancy', 'Business Studies', 'Economics'],
-    'Undergraduate': ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'],
-  };
+const subjectMap: Record<string, Record<string, string>> = {
+    '6th Grade': { 'Mathematics': 'Fractions', 'Science': 'Ecosystems', 'English': 'Grammar', 'History': 'Ancient Civilizations', 'Geography': 'Map Skills' },
+    '7th Grade': { 'Mathematics': 'Algebraic Expressions', 'Science': 'Cell Biology', 'English': 'Sentence Structure', 'History': 'The Middle Ages', 'Geography': 'World Climates' },
+    '8th Grade': { 'Mathematics': 'Linear Equations', 'Physics': 'Newtons Laws', 'Chemistry': 'The Periodic Table', 'Biology': 'Human Anatomy', 'English': 'Essay Writing', 'History': 'The Renaissance', 'Geography': 'Tectonic Plates' },
+    '9th Grade': { 'Mathematics': 'Quadratic Equations', 'Physics': 'Kinematics', 'Chemistry': 'Chemical Reactions', 'Biology': 'Genetics', 'English': 'Literary Devices', 'History': 'Industrial Revolution', 'Economics': 'Supply and Demand' },
+    '10th Grade': { 'Mathematics': 'Trigonometry', 'Physics': 'Optics', 'Chemistry': 'Stoichiometry', 'Biology': 'Evolution', 'English': 'Shakespeare', 'History': 'World War I', 'Computer Science': 'Basic Programming' },
+    '11th Grade': { 'Physics': 'Electromagnetism', 'Chemistry': 'Organic Chemistry', 'Mathematics': 'Calculus', 'Biology': 'Biotechnology', 'Computer Science': 'Data Structures', 'English': 'Modern Literature', 'Accountancy': 'Journal Entries', 'Business Studies': 'Principles of Management', 'Economics': 'Macroeconomics' },
+    '12th Grade': { 'Physics': 'Modern Physics', 'Chemistry': 'Polymers', 'Mathematics': 'Differential Equations', 'Biology': 'Ecology', 'Computer Science': 'Algorithms', 'English': 'Critical Analysis', 'Accountancy': 'Financial Statements', 'Business Studies': 'Marketing', 'Economics': 'International Trade' },
+    'Undergraduate': {
+        'Computer Science': { 'Data Structures': 'Linked Lists', 'Algorithms': 'Sorting Algorithms', 'Operating Systems': 'Process Management' },
+        'Engineering: Computer Engg': { 'Digital Logic': 'Boolean Algebra', 'Computer Architecture': 'CPU Design' },
+        'Engineering: Civil': { 'Structural Analysis': 'Truss Bridges', 'Fluid Mechanics': 'Bernoullis Principle' },
+        'Engineering: Mechanical': { 'Thermodynamics': 'Heat Engines', 'Material Science': 'Alloys' },
+        'Medicine': { 'Anatomy': 'The Skeletal System', 'Physiology': 'The Cardiovascular System' },
+        'Business': { 'Marketing': 'SWOT Analysis', 'Finance': 'Time Value of Money' },
+        'Arts': { 'Philosophy': 'Existentialism', 'Sociology': 'Social Stratification' },
+        'Law': { 'Constitutional Law': 'Fundamental Rights', 'Criminal Law': 'Mens Rea' },
+    },
+};
 
 interface StudentTestGeneratorProps {
     assignedTest?: HistoryItem;
@@ -136,24 +145,44 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const form = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
-      subject: 'Mathematics',
+      subject: '',
       customSubject: '',
-      topic: 'Algebra',
+      topic: '',
       numberOfQuestions: 5,
     },
   });
 
   const watchSubject = form.watch('subject');
-  const [availableSubjects, setAvailableSubjects] = useState(subjectMap[userClass] || []);
+  const [availableSubjects, setAvailableSubjects] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    const newSubjects = subjectMap[userClass] || [];
-    setAvailableSubjects(newSubjects);
-    // Reset subject if it's not in the new list
-    if (!newSubjects.includes(form.getValues('subject')) && form.getValues('subject') !== 'other') {
-      form.setValue('subject', newSubjects[0] || '');
+    let subjects: Record<string, string> = {};
+    if (userClass === 'Undergraduate') {
+        const fieldSubjects = subjectMap['Undergraduate'][userField] || {};
+        subjects = { ...fieldSubjects };
+    } else {
+        subjects = subjectMap[userClass] || {};
     }
-  }, [userClass, form]);
+    setAvailableSubjects(subjects);
+
+    const firstSubject = Object.keys(subjects)[0];
+    if (firstSubject) {
+        form.setValue('subject', firstSubject);
+        form.setValue('topic', subjects[firstSubject]);
+    } else {
+        form.setValue('subject', '');
+        form.setValue('topic', '');
+    }
+
+  }, [userClass, userField, form]);
+
+  useEffect(() => {
+    if (watchSubject && watchSubject !== 'other' && availableSubjects[watchSubject]) {
+      form.setValue('topic', availableSubjects[watchSubject]);
+    } else if (watchSubject === 'other') {
+        form.setValue('topic', '');
+    }
+  }, [watchSubject, availableSubjects, form]);
 
 
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
@@ -328,7 +357,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                                 </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                                {availableSubjects.map((subject) => (
+                                {Object.keys(availableSubjects).map((subject) => (
                                     <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                                 ))}
                                 <SelectItem value="other">Other</SelectItem>
@@ -544,3 +573,5 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     </Card>
   );
 }
+
+    
