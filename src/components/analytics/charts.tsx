@@ -23,26 +23,18 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 import { Badge } from '../ui/badge';
+import { useHistory } from '@/hooks/use-history';
 
 const studyTimeData = Array.from({ length: 30 }, (_, i) => ({
   date: `Day ${i + 1}`,
   hours: Number((Math.random() * 3 + 0.5).toFixed(1)),
 }));
-
-const initialTopicMasteryData = [
-  { topic: 'Calculus', mastery: Math.floor(Math.random() * 60) + 40 },
-  { topic: 'Algebra', mastery: Math.floor(Math.random() * 60) + 40 },
-  { topic: 'Statistics', mastery: Math.floor(Math.random() * 60) + 40 },
-  { topic: 'Geometry', mastery: Math.floor(Math.random() * 60) + 40 },
-  { topic: 'Trigonometry', mastery: Math.floor(Math.random() * 60) + 40 },
-  { topic: 'Probability', mastery: Math.floor(Math.random() * 60) + 40 },
-];
 
 const testScoresData = [
     { range: '> 90%', value: 12, fill: "hsl(var(--chart-1))" },
@@ -82,78 +74,114 @@ export function StudyTimeChart() {
 }
 
 export function TopicMasteryChart() {
-  const [topicMasteryData, setTopicMasteryData] = useState(initialTopicMasteryData);
-  const [newSubject, setNewSubject] = useState('');
+  const { history } = useHistory();
 
-  const handleAddSubject = () => {
-    if (newSubject.trim() !== '') {
-      const newTopic = {
-        topic: newSubject.trim(),
-        mastery: Math.floor(Math.random() * 60) + 40,
+  const { topicMasteryData, overallPerformance } = useMemo(() => {
+    const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
+
+    const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
+
+    testHistory.forEach(item => {
+      const topicMatch = item.title.match(/Test on: (.*)/);
+      const topic = topicMatch ? topicMatch[1] : 'General';
+      const percentage = (item.score! / item.content.length) * 100;
+
+      if (!topicScores[topic]) {
+        topicScores[topic] = { scores: [], count: 0 };
+      }
+      topicScores[topic].scores.push(percentage);
+      topicScores[topic].count++;
+    });
+
+    const calculatedMasteryData = Object.entries(topicScores).map(([topic, data]) => {
+      const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
+      return {
+        topic: topic,
+        mastery: Math.round(averageScore),
       };
-      setTopicMasteryData([...topicMasteryData, newTopic]);
-      setNewSubject('');
-    }
-  };
+    });
 
-  const handleRemoveSubject = (topicToRemove: string) => {
-    setTopicMasteryData(topicMasteryData.filter(item => item.topic !== topicToRemove));
-  };
+    const totalTests = testHistory.length;
+    const totalPercentage = testHistory.reduce((acc, item) => {
+        const percentage = (item.score! / item.content.length) * 100;
+        return acc + percentage;
+    }, 0);
+
+    const overallAverage = totalTests > 0 ? Math.round(totalPercentage / totalTests) : 0;
+
+    return { topicMasteryData: calculatedMasteryData, overallPerformance: overallAverage };
+  }, [history]);
 
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Topic Mastery</CardTitle>
-        <CardDescription>
-          Your estimated mastery level for each topic. Add or remove subjects to customize.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <ChartContainer config={topicMasteryConfig} className="h-[250px] w-full">
-          <ResponsiveContainer>
-            <RadarChart data={topicMasteryData}>
-                <PolarGrid />
-                <PolarAngleAxis dataKey="topic" stroke="hsl(var(--muted-foreground))" fontSize={12}/>
-                <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-                <Tooltip content={<ChartTooltipContent />} />
-                <Radar name="Mastery" dataKey="mastery" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
-            </RadarChart>
-          </ResponsiveContainer>
-        </ChartContainer>
-         <div className="mt-4 flex gap-2">
-            <Input
-                type="text"
-                value={newSubject}
-                onChange={(e) => setNewSubject(e.target.value)}
-                placeholder="Add a new subject"
-                className="flex-grow"
-            />
-            <Button onClick={handleAddSubject} size="icon">
-                <Plus className="h-4 w-4" />
-            </Button>
-        </div>
-        <div className="mt-4 space-y-2">
-            <h4 className="text-sm font-medium">Tracked Subjects</h4>
-            <div className="flex flex-wrap gap-2">
-                {topicMasteryData.map((item) => (
-                    <Badge key={item.topic} variant="secondary" className="pl-3 pr-1">
-                        {item.topic}
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-5 w-5 ml-1 -mr-1"
-                            onClick={() => handleRemoveSubject(item.topic)}
-                        >
-                            <X className="h-3 w-3"/>
-                            <span className="sr-only">Remove {item.topic}</span>
-                        </Button>
-                    </Badge>
-                ))}
+    <>
+      <Card>
+        <CardHeader>
+          <CardTitle>Topic Mastery</CardTitle>
+          <CardDescription>
+            Your estimated mastery level based on practice test performance.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+        {topicMasteryData.length > 0 ? (
+          <ChartContainer config={topicMasteryConfig} className="h-[250px] w-full">
+            <ResponsiveContainer>
+              <RadarChart data={topicMasteryData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="topic" stroke="hsl(var(--muted-foreground))" fontSize={12}/>
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <Tooltip content={<ChartTooltipContent />} />
+                  <Radar name="Mastery" dataKey="mastery" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
+              </RadarChart>
+            </ResponsiveContainer>
+          </ChartContainer>
+        ) : (
+            <div className="flex flex-col items-center justify-center h-[250px] text-center p-4 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">No test data available.</p>
+                <p className="text-sm text-muted-foreground">Complete some practice tests to see your mastery here.</p>
             </div>
-        </div>
-      </CardContent>
-    </Card>
+        )}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            Overall Performance
+          </CardTitle>
+          <CardDescription>
+            Your average score across all practice tests.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-col items-center justify-center h-[250px]">
+          <div className="relative h-40 w-40">
+            <svg className="h-full w-full" viewBox="0 0 36 36">
+              <path
+                className="stroke-current text-gray-200 dark:text-gray-700"
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                strokeWidth="3"
+              />
+              <path
+                className="stroke-current text-primary"
+                strokeDasharray={`${overallPerformance}, 100`}
+                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                fill="none"
+                strokeWidth="3"
+                strokeLinecap="round"
+                transform="rotate(-90 18 18)"
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-4xl font-bold text-primary">{overallPerformance}%</span>
+            </div>
+          </div>
+          <p className="mt-4 text-muted-foreground">
+            Keep up the great work!
+          </p>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 

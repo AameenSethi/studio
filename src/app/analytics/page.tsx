@@ -34,17 +34,6 @@ export default function AnalyticsPage() {
           </CardContent>
         </Card>
         <TopicMasteryChart />
-        <Card>
-          <CardHeader>
-            <CardTitle>Practice Test Scores</CardTitle>
-            <CardDescription>
-              Distribution of your recent test scores.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center">
-            <TestScoresChart />
-          </CardContent>
-        </Card>
       </div>
     </AppLayout>
   );
