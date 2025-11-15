@@ -73,7 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'auto',
+      behavior: 'smooth',
     });
   };
 
