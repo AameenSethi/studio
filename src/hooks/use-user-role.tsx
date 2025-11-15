@@ -27,14 +27,14 @@ const getInitialState = (email?: string) => {
     name: 'Alex Johnson',
     avatar: 'https://i.pravatar.cc/150?u=student-007',
     email: 'student@example.com',
-    id: 'student-007', // Changed student UID to be unique
+    id: 'student-007',
   };
   const defaultTeacher = {
     role: 'Teacher' as Role,
     name: 'Valeriy Trubnikov',
     avatar: PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
     email: 'teacher@example.com',
-    id: 'valeriy-trubnikov-01',
+    id: 'prof-trubnikov-01',
   };
 
   const selectedUser = isTeacher ? defaultTeacher : defaultStudent;

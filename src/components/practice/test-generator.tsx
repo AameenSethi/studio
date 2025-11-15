@@ -116,12 +116,12 @@ const subjectMap: Record<string, string[]> = {
     'Undergraduate': ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'],
   };
 
-export function TestGenerator() {
+export function TestGenerator({ assignedTest }: { assignedTest?: HistoryItem }) {
   const { userRole } = useUser();
   if (userRole === 'Parent' || userRole === 'Teacher') {
     return <ParentTestGenerator />;
   }
-  return <StudentTestGenerator />;
+  return <StudentTestGenerator assignedTest={assignedTest} />;
 }
 
 interface StudentTestGeneratorProps {
@@ -647,7 +647,7 @@ function ParentTestGenerator() {
   const form = useForm<z.infer<typeof parentFormSchema>>({
     resolver: zodResolver(parentFormSchema),
     defaultValues: {
-      studentId: 'user-123',
+      studentId: 'alex-johnson-42',
       topic: 'Algebra Basics',
       numberOfQuestions: 5,
       timeLimit: 30,

@@ -166,9 +166,10 @@ export function ReportGenerator({ studentId }: ReportGeneratorProps) {
 function StudentReportViewer({ studentId }: { studentId?: string}) {
   const { toast } = useToast();
   const { history, addHistoryItem } = useHistory();
+  const { userId } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<WeeklyProgressReportOutput | null>(null);
-  const effectiveStudentId = studentId || 'user-123'; // Default to own ID if not provided
+  const effectiveStudentId = studentId || userId;
 
   useEffect(() => {
     // If a specific studentId is provided, generate the report automatically on mount.
@@ -306,7 +307,7 @@ function TeacherParentReportGenerator() {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      studentId: 'user-123',
+      studentId: 'alex-johnson-42',
     },
   });
 
