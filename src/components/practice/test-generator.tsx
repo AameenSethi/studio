@@ -233,19 +233,23 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   }, [watchStream, userClass, form]);
 
   useEffect(() => {
-    if (userClass && watchStream && watchStream !== 'other' && watchSubject && watchSubject !== 'other') {
+    if (userClass && watchStream && watchStream !== 'other' && watchSubject) {
+      if (watchSubject !== 'other') {
         const classStreams = streamAndSubjectMap[userClass] || {};
         const streamSubjects = classStreams[watchStream] || {};
         const suggestedTopic = streamSubjects[watchSubject];
         if (suggestedTopic) {
-            form.setValue('topic', suggestedTopic);
+          form.setValue('topic', suggestedTopic);
         } else {
-            form.setValue('topic', '');
+          form.setValue('topic', '');
         }
+      }
+      // When 'other' is selected for subject, we don't clear the topic
+      // allowing the user to type a custom one.
     } else {
-        form.setValue('topic', '');
+      form.setValue('topic', '');
     }
-}, [watchStream, watchSubject, userClass, form]);
+  }, [watchStream, watchSubject, userClass, form]);
 
 
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
@@ -687,5 +691,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     
 
     
+
 
 
