@@ -12,6 +12,7 @@ import {
   User,
   History,
   ArrowDown,
+  ArrowUp,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -43,7 +44,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { userRole } = useUser();
   const [navItems, setNavItems] = useState(allNavItems);
-  const [showScrollDownButton, setShowScrollDownButton] = useState(false);
+  const [isAtBottom, setIsAtBottom] = useState(false);
 
   useEffect(() => {
     const filteredNavItems = allNavItems.filter(item => item.roles.includes(userRole));
@@ -52,12 +53,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const handleScroll = () => {
-      const isScrolled = window.scrollY > 100;
       const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 50; // 50px buffer
-      setShowScrollDownButton(isScrolled && !atBottom);
+      setIsAtBottom(atBottom);
     };
 
     window.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -65,6 +67,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     window.scrollTo({
       top: document.body.scrollHeight,
       behavior: 'smooth',
+    });
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'auto',
     });
   };
 
@@ -163,7 +172,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
-      {showScrollDownButton && (
         <TooltipProvider>
             <Tooltip>
                 <TooltipTrigger asChild>
@@ -171,17 +179,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         variant="default"
                         size="icon"
                         className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg z-50"
-                        onClick={scrollToBottom}
+                        onClick={isAtBottom ? scrollToTop : scrollToBottom}
                     >
-                        <ArrowDown className="h-6 w-6" />
+                        {isAtBottom ? (
+                            <ArrowUp className="h-6 w-6" />
+                        ) : (
+                            <ArrowDown className="h-6 w-6" />
+                        )}
                     </Button>
                 </TooltipTrigger>
                 <TooltipContent side="left">
-                    Scroll to Bottom
+                    {isAtBottom ? 'Scroll to Top' : 'Scroll to Bottom'}
                 </TooltipContent>
             </Tooltip>
         </TooltipProvider>
-      )}
     </div>
   );
 }
