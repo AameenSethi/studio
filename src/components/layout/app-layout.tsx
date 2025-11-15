@@ -30,9 +30,10 @@ import {
 } from '@/components/ui/tooltip';
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { useUser } from '@/hooks/use-user-role';
 import { ModeToggle } from './mode-toggle';
+import { Separator } from '@/components/ui/separator';
 
 const allNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher'] },
@@ -115,23 +116,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
             <Link
                 href="/dashboard"
-                className="flex items-center gap-2 text-lg font-semibold md:text-base"
+                className="flex items-center gap-2 text-lg font-semibold md:text-base mr-4"
             >
                 <BookOpen className="h-6 w-6 text-primary" />
                 <span className="font-headline text-xl">StudyPal</span>
             </Link>
-            {navItems.map((item) => (
-                <Link
-                    key={item.href}
-                    href={item.href}
-                    className={cn(
-                        "flex items-center gap-2 transition-colors hover:text-foreground",
-                        pathname === item.href ? "text-foreground" : "text-muted-foreground"
-                    )}
-                >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                </Link>
+            {navItems.map((item, index) => (
+                <Fragment key={item.href}>
+                  <Link
+                      href={item.href}
+                      className={cn(
+                          "flex items-center gap-2 transition-colors hover:text-foreground",
+                          pathname === item.href ? "text-foreground" : "text-muted-foreground"
+                      )}
+                  >
+                      <item.icon className="h-4 w-4" />
+                      {item.label}
+                  </Link>
+                  {index < navItems.length -1 && <Separator orientation="vertical" className="h-6" />}
+                </Fragment>
             ))}
           </nav>
           <Sheet>
@@ -175,7 +178,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <UserNav />
           </div>
        </header>
-       <main className="flex-1 p-4 sm:px-6 sm:py-4 md:gap-8 md:p-8">
+       <main className="flex-1 p-4 sm:px-6 sm:py-4 md:gap-8 md:p-8 space-y-8">
           {children}
        </main>
         <TooltipProvider>
