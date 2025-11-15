@@ -42,23 +42,23 @@ export default function DashboardPage() {
             <WeeklyProgressChart />
           </CardContent>
         </Card>
-        <Card className="col-span-1 lg:col-span-2 flex flex-col">
+        <Card className="col-span-1 lg:col-span-2 flex flex-col bg-accent/80 text-accent-foreground">
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>
+            <CardDescription className="text-accent-foreground/80">
               Jump right back into your learning journey.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex-grow flex flex-col justify-center gap-4">
             <Link href="/explanations" passHref>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start bg-accent-foreground/10 hover:bg-accent-foreground/20 border-accent-foreground/30 text-accent-foreground">
                 <Lightbulb className="mr-2 h-4 w-4" />
                 Explain a Complex Topic
                 <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
             </Link>
             <Link href="/practice" passHref>
-              <Button variant="outline" className="w-full justify-start">
+              <Button variant="outline" className="w-full justify-start bg-accent-foreground/10 hover:bg-accent-foreground/20 border-accent-foreground/30 text-accent-foreground">
                 <FileText className="mr-2 h-4 w-4" />
                 Generate a Practice Test
                 <ArrowRight className="ml-auto h-4 w-4" />
