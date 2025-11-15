@@ -109,14 +109,14 @@ export function ProfileEditor() {
     }
 
     form.reset({
-      name: userName,
-      email: userEmail,
-      institutionName: userInstitution,
-      class: userClass,
-      field: mainField,
-      customField: customMainField,
-      engineeringField: engField,
-      customEngineeringField: customEngField,
+      name: userName || '',
+      email: userEmail || '',
+      institutionName: userInstitution || '',
+      class: userClass || '',
+      field: mainField || '',
+      customField: customMainField || '',
+      engineeringField: engField || '',
+      customEngineeringField: customEngField || '',
     });
   }, [userName, userEmail, userClass, userField, userInstitution, form]);
 
