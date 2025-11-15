@@ -93,14 +93,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full flex-col">
        <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
-          <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
-            <Link
-                href="/dashboard"
-                className="flex items-center gap-2 text-lg font-semibold md:text-base mr-2"
-            >
-                <BookOpen className="h-6 w-6 text-primary" />
-                <span className="font-headline text-xl">StudyPal</span>
-            </Link>
+            <div className="hidden md:flex">
+                <Link
+                    href="/dashboard"
+                    className="flex items-center gap-2 text-lg font-semibold md:text-base mr-2"
+                >
+                    <BookOpen className="h-6 w-6 text-primary" />
+                    <span className="font-headline text-xl">StudyPal</span>
+                </Link>
+            </div>
+          <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative w-full justify-center">
             {navItems.map((item, index) => (
                 <Fragment key={item.href}>
                   {index > 0 && <Separator orientation="vertical" className="h-10" />}
@@ -154,7 +156,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </nav>
             </SheetContent>
           </Sheet>
-          <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
+          <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4 md:w-auto">
             <ModeToggle />
             <UserNav />
           </div>
