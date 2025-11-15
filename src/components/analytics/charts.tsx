@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -29,11 +30,7 @@ import { BarChart3 } from 'lucide-react';
 import { Badge } from '../ui/badge';
 import { useHistory } from '@/hooks/use-history';
 import { Separator } from '../ui/separator';
-
-const studyTimeData = Array.from({ length: 30 }, (_, i) => ({
-  date: `Day ${i + 1}`,
-  hours: Number((Math.random() * 3 + 0.5).toFixed(1)),
-}));
+import { subDays, format, parseISO } from 'date-fns';
 
 const studyTimeConfig = {
   hours: {
@@ -50,6 +47,39 @@ const topicMasteryConfig = {
 } satisfies ChartConfig;
 
 export function StudyTimeChart() {
+  const { history } = useHistory();
+
+  const studyTimeData = useMemo(() => {
+    const days = Array.from({ length: 30 }).map((_, i) => {
+      const date = subDays(new Date(), 29 - i);
+      return {
+          date: format(date, 'MMM d'),
+          fullDate: format(date, 'yyyy-MM-dd'),
+          hours: 0,
+      };
+    });
+
+    history.forEach(item => {
+        const itemDate = parseISO(item.timestamp);
+        const formattedDate = format(itemDate, 'yyyy-MM-dd');
+        const dayEntry = days.find(d => d.fullDate === formattedDate);
+
+        if (dayEntry) {
+            let timeInSeconds = 0;
+            if (item.type === 'Practice Test' && item.duration) {
+                timeInSeconds = item.duration;
+            } else if (item.type === 'Explanation') {
+                timeInSeconds = 600; // 10 minutes
+            } else if (item.type === 'Study Plan') {
+                timeInSeconds = 300; // 5 minutes
+            }
+            dayEntry.hours += Number((timeInSeconds / 3600).toFixed(1));
+        }
+    });
+
+    return days;
+  }, [history]);
+
   return (
     <ChartContainer config={studyTimeConfig} className="h-[250px] w-full">
       <ResponsiveContainer>
@@ -262,3 +292,5 @@ export function PerformanceByTopic() {
         </Card>
     );
 }
+
+    
