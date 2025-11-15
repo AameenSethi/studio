@@ -254,7 +254,9 @@ export function ExplanationGenerator() {
               </div>
             </CardHeader>
             <CardContent>
-                <ExplanationDisplay text={explanation.explanation} />
+                <div className='p-4 rounded-lg bg-background/50 border'>
+                    <ExplanationDisplay text={explanation.explanation} />
+                </div>
                 {audioData?.audio && (
                   <div className="mt-4">
                     <audio controls src={audioData.audio} className="w-full" />
