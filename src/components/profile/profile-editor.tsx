@@ -70,7 +70,8 @@ const profileSchema = z
 
 export function ProfileEditor() {
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isFormLoaded, setIsFormLoaded] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { user, updateUser, userAvatar, setUserAvatar, userId } = useUser();
   const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
@@ -78,15 +79,15 @@ export function ProfileEditor() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-        name: '',
-        email: '',
-        institutionName: '',
-        class: '',
-        field: '',
-        customField: '',
-        engineeringField: '',
-        customEngineeringField: '',
-      },
+      name: '',
+      email: '',
+      institutionName: '',
+      class: '',
+      field: '',
+      customField: '',
+      engineeringField: '',
+      customEngineeringField: '',
+    },
   });
 
   const watchClass = form.watch('class');
@@ -94,7 +95,7 @@ export function ProfileEditor() {
   const watchEngineeringField = form.watch('engineeringField');
 
   useEffect(() => {
-    if (user) {
+    if (user && user.email) { // Check if user data is loaded
         const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
         const engineeringFields = ['Computer Engg', 'Civil', 'Mechanical'];
         
@@ -127,11 +128,12 @@ export function ProfileEditor() {
           engineeringField: engField || '',
           customEngineeringField: customEngField || '',
         });
+        setIsFormLoaded(true);
     }
   }, [user, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
-    setIsLoading(true);
+    setIsSubmitting(true);
 
     let finalField = values.field;
     if (values.class === 'Undergraduate') {
@@ -157,8 +159,8 @@ export function ProfileEditor() {
     });
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setIsSubmitting(false);
     toast({
       title: 'Profile Updated',
       description: 'Your information has been saved successfully.',
@@ -235,6 +237,12 @@ export function ProfileEditor() {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!isFormLoaded ? (
+                <div className="flex items-center justify-center h-40">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    <p className="ml-4 text-muted-foreground">Loading profile...</p>
+                </div>
+            ) : (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormItem>
@@ -428,8 +436,8 @@ export function ProfileEditor() {
                       )}
                     />
                 </div>
-                <Button type="submit" disabled={isLoading}>
-                  {isLoading ? (
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   ) : (
                     <Save className="mr-2 h-4 w-4" />
@@ -438,6 +446,7 @@ export function ProfileEditor() {
                 </Button>
               </form>
             </Form>
+            )}
           </CardContent>
         </Card>
       </div>
