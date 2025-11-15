@@ -39,14 +39,14 @@ const motivationalQuotes = [
 ];
 
 export default function DashboardPage() {
-  const { userRole, userName } = useUser();
+  const { userRole, userName, userId } = useUser();
   const { history } = useHistory();
   const [quote, setQuote] = useState('');
   const [activeTest, setActiveTest] = useState<string | null>(null);
 
   const assignedTests = history.filter(item => 
     item.type === 'Practice Test' && 
-    item.studentId === 'user-123' && // Simulating the logged-in student's ID
+    item.studentId === userId && // Use the logged-in student's ID
     !item.isComplete
   );
 

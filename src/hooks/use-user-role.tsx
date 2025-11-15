@@ -13,6 +13,7 @@ interface UserContextType {
   userEmail: string;
   userAvatar: string | undefined;
   setUserAvatar: (avatar: string) => void;
+  userId: string;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -55,6 +56,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserName] = useState<string>(initialState.name);
   const userEmail = 'learner@example.com';
   const [userAvatar, setUserAvatar] = useState<string | undefined>(initialState.avatar);
+  const userId = 'user-123'; // Simulating a fixed ID for the logged-in user
 
   useEffect(() => {
     setIsMounted(true);
@@ -99,7 +101,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <UserContext.Provider value={{ userRole, setUserRole, userName, setUserName, userEmail, userAvatar, setUserAvatar }}>
+    <UserContext.Provider value={{ userRole, setUserRole, userName, setUserName, userEmail, userAvatar, setUserAvatar, userId }}>
       {children}
     </UserContext.Provider>
   );
