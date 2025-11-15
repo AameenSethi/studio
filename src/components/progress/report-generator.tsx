@@ -7,7 +7,7 @@ import { z } from 'zod';
 import {
   generateWeeklyProgressReport,
   type WeeklyProgressReportOutput,
-  WeeklyProgressReportInput,
+  type WeeklyProgressReportInput,
 } from '@/ai/flows/weekly-progress-report';
 
 import { Button } from '@/components/ui/button';
@@ -51,24 +51,25 @@ const generateDynamicReportData = (history: any[], forStudentId?: string): Omit<
   });
 
   const subjectData: { [key: string]: any } = {};
-  let totalTime = 0; // for now, we don't have this data.
 
   weeklyHistory.forEach(item => {
+    let subject: string | undefined;
+    let topic: string | undefined;
+
     if (item.type === 'Practice Test') {
-      // Assuming test title is in format: "Test on: Algebra"
-      const topicMatch = item.title.match(/Test on: (.*)/);
-      const topic = topicMatch ? topicMatch[1] : 'General';
-      const subject = "General"; // Or derive from topic if possible
+      subject = item.subject || 'General Knowledge';
+      topic = item.topic || item.title;
 
       if (!subjectData[subject]) {
         subjectData[subject] = {
           subject: subject,
           topicsStudied: new Set(),
-          timeSpent: "N/A",
+          timeSpent: "N/A", // This could be enhanced to aggregate `item.duration`
           practiceTestScores: [],
         };
       }
-      subjectData[subject].topicsStudied.add(topic);
+      if (topic) subjectData[subject].topicsStudied.add(topic);
+
       const scorePercentage = (item.score / item.content.length) * 100;
       subjectData[subject].practiceTestScores.push({
         testName: item.title,
@@ -76,33 +77,33 @@ const generateDynamicReportData = (history: any[], forStudentId?: string): Omit<
       });
     } else if (item.type === 'Explanation') {
         const topicMatch = item.title.match(/Explanation of: (.*)/);
-        const topic = topicMatch ? topicMatch[1] : 'General';
-        const subject = "General"; // Or derive from topic if possible
+        topic = topicMatch ? topicMatch[1] : 'General Study';
+        subject = "General Study";
 
          if (!subjectData[subject]) {
             subjectData[subject] = {
                 subject: subject,
                 topicsStudied: new Set(),
-                timeSpent: "N/A",
+                timeSpent: "N/A", // Approx. 5-10 mins per explanation
                 practiceTestScores: [],
             };
         }
-        subjectData[subject].topicsStudied.add(topic);
+        if (topic) subjectData[subject].topicsStudied.add(topic);
 
     } else if (item.type === 'Study Plan') {
         const goalMatch = item.title.match(/For: (.*)/);
-        const goal = goalMatch ? goalMatch[1] : 'General Goal';
-        const subject = "Planning";
+        topic = goalMatch ? goalMatch[1] : 'General Goal';
+        subject = "Planning & Organization";
 
         if (!subjectData[subject]) {
             subjectData[subject] = {
                 subject: subject,
                 topicsStudied: new Set(),
-                timeSpent: "N/A",
+                timeSpent: "N/A", // Approx. 2-5 mins per plan
                 practiceTestScores: [],
             };
         }
-        subjectData[subject].topicsStudied.add(goal);
+        if (topic) subjectData[subject].topicsStudied.add(topic);
     }
   });
 
@@ -113,8 +114,8 @@ const generateDynamicReportData = (history: any[], forStudentId?: string): Omit<
   }));
 
   const overallSummary = {
-    totalTimeSpent: "Not tracked",
-    generalObservations: weeklyHistory.length > 0 ? "Activity detected this week." : "No activity recorded this week.",
+    totalTimeSpent: "Not tracked", // This could be a sum of durations
+    generalObservations: weeklyHistory.length > 0 ? `The user engaged in ${weeklyHistory.length} activities this week.` : "No activity was recorded in the last 7 days.",
   };
 
   return { learningData, overallSummary };
@@ -188,7 +189,7 @@ function StudentReportViewer() {
           My Weekly Progress Report
         </CardTitle>
         <CardDescription>
-          Here is an AI-powered analysis of your learning progress from the
+          Click the button to generate an AI-powered analysis of your learning progress from the
           past week.
         </CardDescription>
       </CardHeader>
@@ -351,38 +352,55 @@ function ReportDisplayCard({
   report: WeeklyProgressReportOutput;
   studentId: string;
 }) {
-  const ReportDisplay = ({ reportText }: { reportText: string }) => {
-    // Simple markdown-like parsing
-    const lines = reportText.split('\n').map((line, index) => {
-      if (line.startsWith('**') && line.endsWith('**')) {
-        return (
-          <h3
-            key={index}
-            className="text-xl font-semibold mt-4 mb-2 text-primary"
-          >
-            {line.replace(/\*\*/g, '')}
-          </h3>
-        );
-      }
-      if (line.startsWith('* ')) {
-        return (
-          <li key={index} className="ml-4 list-disc">
-            {line.substring(2)}
-          </li>
-        );
-      }
-      return (
-        <p key={index} className="mb-2">
-          {line}
-        </p>
-      );
-    });
+  const handleDownload = () => {
+    if (!report) return;
 
-    return (
-      <div className="prose prose-sm max-w-none dark:prose-invert">
-        {lines}
-      </div>
-    );
+    const blob = new Blob([report.report], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `progress_report_${studentId}_${new Date().toISOString().split('T')[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  const ReportDisplay = ({ reportText }: { reportText: string }) => {
+    // Simple markdown-like parsing for headers, lists and bold text
+    const lines = reportText.split('\n').map((line, index) => {
+        let processedLine: React.ReactNode = line;
+  
+        // Bold text
+        processedLine = processedLine.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+  
+        if (line.startsWith('**') && line.endsWith('**')) {
+          return (
+            <h3
+              key={index}
+              className="text-xl font-semibold mt-4 mb-2 text-primary"
+            >
+              {line.replace(/\*\*/g, '')}
+            </h3>
+          );
+        }
+        if (line.startsWith('- ')) {
+          return (
+            <li key={index} className="ml-4 list-disc">
+              <span dangerouslySetInnerHTML={{ __html: line.substring(2) }} />
+            </li>
+          );
+        }
+        return (
+          <p key={index} className="mb-2" dangerouslySetInnerHTML={{ __html: processedLine as string }} />
+        );
+      });
+  
+      return (
+        <div className="prose prose-sm max-w-none dark:prose-invert">
+          {lines}
+        </div>
+      );
   };
 
   return (
@@ -391,10 +409,10 @@ function ReportDisplayCard({
         <div>
           <CardTitle>Weekly Report for Student: {studentId}</CardTitle>
           <CardDescription>
-            Summary of activities and performance.
+            Summary of activities and performance for the last 7 days.
           </CardDescription>
         </div>
-        <Button variant="outline" size="sm">
+        <Button onClick={handleDownload} variant="outline" size="sm">
           <Download className="mr-2 h-4 w-4" />
           Download
         </Button>
