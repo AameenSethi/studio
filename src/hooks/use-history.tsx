@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 
 export type HistoryItem = {
   id: string;
-  type: 'Study Plan' | 'Explanation' | 'Practice Test';
+  type: 'Study Plan' | 'Explanation' | 'Practice Test' | 'Progress Report';
   title: string;
   content: any; // Can be string or object with questions/answers
   timestamp: string;

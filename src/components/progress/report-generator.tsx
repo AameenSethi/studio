@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -133,9 +133,17 @@ export function ReportGenerator() {
 
 function StudentReportViewer() {
   const { toast } = useToast();
-  const { history } = useHistory();
+  const { history, addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<WeeklyProgressReportOutput | null>(null);
+
+  useEffect(() => {
+    // Find the most recent progress report from history on mount
+    const lastReport = history.find(item => item.type === 'Progress Report');
+    if (lastReport) {
+        setReport(lastReport.content);
+    }
+  }, [history]);
 
   const handleGenerateReport = async () => {
     setIsLoading(true);
@@ -166,6 +174,11 @@ function StudentReportViewer() {
       });
 
       setReport(result);
+      addHistoryItem({
+        type: 'Progress Report',
+        title: `Weekly Report for ${studentId}`,
+        content: result,
+      });
       toast({
         title: 'Report Generated!',
         description: `Your weekly progress report is ready.`,
@@ -191,7 +204,7 @@ function StudentReportViewer() {
         </CardTitle>
         <CardDescription>
           Click the button to generate an AI-powered analysis of your learning progress from the
-          past week.
+          past week. Your last generated report is shown below.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -203,7 +216,7 @@ function StudentReportViewer() {
             </>
           ) : (
             <>
-              Generate My Report
+              Generate New Report
               <ArrowRight className="ml-2 h-4 w-4" />
             </>
           )}
@@ -211,7 +224,7 @@ function StudentReportViewer() {
       </CardContent>
       {report && (
         <CardFooter>
-          <ReportDisplayCard report={report} studentId={'user-123'} />
+          <ReportDisplayCard report={report} studentId={'user-123'} title="Last Generated Report" />
         </CardFooter>
       )}
     </Card>
@@ -220,7 +233,7 @@ function StudentReportViewer() {
 
 function TeacherParentReportGenerator() {
   const { toast } = useToast();
-  const { history } = useHistory();
+  const { history, addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<WeeklyProgressReportOutput | null>(
     null
@@ -264,6 +277,11 @@ function TeacherParentReportGenerator() {
 
       setReport(result);
       setGeneratedForId(values.studentId);
+      addHistoryItem({
+        type: 'Progress Report',
+        title: `Generated report for ${values.studentId}`,
+        content: result,
+      });
       toast({
         title: 'Report Generated!',
         description: `Progress report for student ${values.studentId} is ready.`,
@@ -349,9 +367,11 @@ function TeacherParentReportGenerator() {
 function ReportDisplayCard({
   report,
   studentId,
+  title,
 }: {
   report: WeeklyProgressReportOutput;
   studentId: string;
+  title?: string;
 }) {
   const handleDownload = () => {
     if (!report) return;
@@ -398,7 +418,7 @@ function ReportDisplayCard({
     <Card className="w-full bg-muted/50">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>Weekly Report for Student: {studentId}</CardTitle>
+          <CardTitle>{title || `Weekly Report for Student: ${studentId}`}</CardTitle>
           <CardDescription>
             Summary of activities and performance for the last 7 days.
           </CardDescription>
