@@ -26,7 +26,11 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function WeeklyProgressChart() {
+interface WeeklyProgressChartProps {
+    onBarClick: (date: string) => void;
+}
+
+export function WeeklyProgressChart({ onBarClick }: WeeklyProgressChartProps) {
     const { history } = useHistory();
     const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -94,13 +98,14 @@ export function WeeklyProgressChart() {
             dataKey="activities" 
             radius={4}
             onMouseEnter={(_, index) => setActiveIndex(index)}
+            onClick={(data) => onBarClick(data.date)}
           >
             {chartData.map((entry, index) => (
                 <Cell 
                     key={`cell-${index}`} 
                     fill="hsl(var(--primary))"
                     filter={activeIndex === index ? 'url(#glow)' : 'none'}
-                    style={{ transition: 'filter 0.2s ease-in-out' }}
+                    style={{ transition: 'filter 0.2s ease-in-out', cursor: 'pointer' }}
                 />
             ))}
           </Bar>
