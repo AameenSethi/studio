@@ -101,14 +101,15 @@ export function TopicMasteryChart() {
 
   const { topicMasteryData, overallPerformance } = useMemo(() => {
     const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
+    const trackedTopicNames = trackedTopics.map(t => t.topic);
 
     const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
 
     testHistory.forEach(item => {
-      const name = item.topic || item.subject || 'General';
+      const name = item.topic || 'General';
       
       // Check if the topic or subject is being tracked
-      if (trackedTopics.includes(name)) {
+      if (trackedTopicNames.includes(name)) {
         const percentage = (item.score! / item.content.length) * 100;
         if (!topicScores[name]) {
           topicScores[name] = { scores: [], count: 0 };
@@ -119,7 +120,7 @@ export function TopicMasteryChart() {
     });
     
     // Create mastery data for all tracked topics
-    const calculatedMasteryData = trackedTopics.map(topic => {
+    const calculatedMasteryData = trackedTopics.map(({ topic }) => {
       const data = topicScores[topic];
       if (data) {
         const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
@@ -136,8 +137,8 @@ export function TopicMasteryChart() {
 
     const relevantTestHistory = history.filter(item => {
         if (item.type !== 'Practice Test' || item.score === undefined) return false;
-        const name = item.topic || item.subject || 'General';
-        return trackedTopics.includes(name);
+        const name = item.topic || 'General';
+        return trackedTopicNames.includes(name);
     });
 
     const totalTests = relevantTestHistory.length;
@@ -237,27 +238,30 @@ export function PerformanceByTopic() {
 
     const topicPerformanceData = useMemo(() => {
         const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
-        const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number } } = {};
+        const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number, subject: string } } = {};
+        const trackedTopicNames = trackedTopics.map(t => t.topic);
 
         testHistory.reverse().forEach((item) => {
-            const name = item.topic || item.subject || 'General';
+            const name = item.topic || 'General';
+            const trackedTopic = trackedTopics.find(t => t.topic === name);
 
-            if (trackedTopics.includes(name)) {
+            if (trackedTopic) {
                 const percentage = (item.score! / item.content.length) * 100;
                 if (!topicData[name]) {
-                    topicData[name] = { scores: [], count: 0 };
+                    topicData[name] = { scores: [], count: 0, subject: trackedTopic.subject };
                 }
                 topicData[name].scores.push({ score: Math.round(percentage), attempt: topicData[name].count + 1 });
                 topicData[name].count++;
             }
         });
 
-        return trackedTopics.map(topic => {
+        return trackedTopics.map(({ topic, subject }) => {
             const data = topicData[topic];
             if (data) {
                 const averageScore = data.scores.reduce((acc, s) => acc + s.score, 0) / data.count;
                 return {
                     topic,
+                    subject,
                     averageScore: Math.round(averageScore),
                     testCount: data.count,
                     scores: data.scores,
@@ -265,6 +269,7 @@ export function PerformanceByTopic() {
             }
             return {
                 topic,
+                subject,
                 averageScore: 0,
                 testCount: 0,
                 scores: [],
@@ -305,6 +310,7 @@ export function PerformanceByTopic() {
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div className="md:col-span-1">
                                 <h3 className="text-lg font-semibold">{topicData.topic}</h3>
+                                <p className="text-sm text-muted-foreground">{topicData.subject}</p>
                                 <div className="flex items-center gap-4 mt-2">
                                     <div>
                                         <p className="text-sm text-muted-foreground">Avg. Score</p>

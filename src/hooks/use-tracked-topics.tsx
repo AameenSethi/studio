@@ -2,17 +2,26 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
-const defaultTopics = ['Algebra', 'Calculus', 'Physics'];
+export type TrackedTopic = {
+  topic: string;
+  subject: string;
+};
+
+const defaultTopics: TrackedTopic[] = [
+    { topic: 'Algebra', subject: 'Mathematics' },
+    { topic: 'Calculus', subject: 'Mathematics' },
+    { topic: 'Thermodynamics', subject: 'Physics' },
+];
 
 interface TrackedTopicsContextType {
-  trackedTopics: string[];
-  addTrackedTopic: (topic: string) => void;
+  trackedTopics: TrackedTopic[];
+  addTrackedTopic: (topic: TrackedTopic) => void;
   removeTrackedTopic: (topic: string) => void;
 }
 
 const TrackedTopicsContext = createContext<TrackedTopicsContextType | undefined>(undefined);
 
-const getInitialTopics = (): string[] => {
+const getInitialTopics = (): TrackedTopic[] => {
   if (typeof window === 'undefined') {
     return defaultTopics;
   }
@@ -27,7 +36,7 @@ const getInitialTopics = (): string[] => {
 
 export const TrackedTopicsProvider = ({ children }: { children: ReactNode }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const [trackedTopics, setTrackedTopics] = useState<string[]>(getInitialTopics);
+  const [trackedTopics, setTrackedTopics] = useState<TrackedTopic[]>(getInitialTopics);
 
   useEffect(() => {
     setIsMounted(true);
@@ -44,15 +53,15 @@ export const TrackedTopicsProvider = ({ children }: { children: ReactNode }) => 
     }
   }, [trackedTopics, isMounted]);
 
-  const addTrackedTopic = (topic: string) => {
-    if (trackedTopics.find(t => t.toLowerCase() === topic.toLowerCase())) {
-        throw new Error(`Topic "${topic}" is already being tracked.`);
+  const addTrackedTopic = (topic: TrackedTopic) => {
+    if (trackedTopics.find(t => t.topic.toLowerCase() === topic.topic.toLowerCase())) {
+        throw new Error(`Topic "${topic.topic}" is already being tracked.`);
     }
     setTrackedTopics(prevTopics => [...prevTopics, topic]);
   };
 
-  const removeTrackedTopic = (topic: string) => {
-    setTrackedTopics(prevTopics => prevTopics.filter(t => t !== topic));
+  const removeTrackedTopic = (topicToRemove: string) => {
+    setTrackedTopics(prevTopics => prevTopics.filter(t => t.topic !== topicToRemove));
   };
   
   if (!isMounted) {
@@ -77,7 +86,7 @@ export const useTrackedTopics = () => {
     // We return a default state to prevent crashing, but functionality will be limited.
     return {
         trackedTopics: defaultTopics,
-        addTrackedTopic: (topic: string) => {},
+        addTrackedTopic: (topic: TrackedTopic) => {},
         removeTrackedTopic: (topic: string) => {},
     };
   }
