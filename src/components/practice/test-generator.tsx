@@ -96,14 +96,14 @@ const subjectMap: Record<string, Record<string, string>> = {
     '11th Grade': { 'Physics': 'Electromagnetism', 'Chemistry': 'Organic Chemistry', 'Mathematics': 'Calculus', 'Biology': 'Biotechnology', 'Computer Science': 'Data Structures', 'English': 'Modern Literature', 'Accountancy': 'Journal Entries', 'Business Studies': 'Principles of Management', 'Economics': 'Macroeconomics' },
     '12th Grade': { 'Physics': 'Modern Physics', 'Chemistry': 'Polymers', 'Mathematics': 'Differential Equations', 'Biology': 'Ecology', 'Computer Science': 'Algorithms', 'English': 'Critical Analysis', 'Accountancy': 'Financial Statements', 'Business Studies': 'Marketing', 'Economics': 'International Trade' },
     'Undergraduate': {
-        'Computer Science': { 'Data Structures': 'Linked Lists', 'Algorithms': 'Sorting Algorithms', 'Operating Systems': 'Process Management' },
-        'Engineering: Computer Engg': { 'Digital Logic': 'Boolean Algebra', 'Computer Architecture': 'CPU Design' },
-        'Engineering: Civil': { 'Structural Analysis': 'Truss Bridges', 'Fluid Mechanics': 'Bernoullis Principle' },
-        'Engineering: Mechanical': { 'Thermodynamics': 'Heat Engines', 'Material Science': 'Alloys' },
-        'Medicine': { 'Anatomy': 'The Skeletal System', 'Physiology': 'The Cardiovascular System' },
-        'Business': { 'Marketing': 'SWOT Analysis', 'Finance': 'Time Value of Money' },
-        'Arts': { 'Philosophy': 'Existentialism', 'Sociology': 'Social Stratification' },
-        'Law': { 'Constitutional Law': 'Fundamental Rights', 'Criminal Law': 'Mens Rea' },
+        'Computer Science': 'Data Structures',
+        'Engineering: Computer Engg': 'Digital Logic',
+        'Engineering: Civil': 'Structural Analysis',
+        'Engineering: Mechanical': 'Thermodynamics',
+        'Medicine': 'Anatomy',
+        'Business': 'Marketing',
+        'Arts': 'Philosophy',
+        'Law': 'Constitutional Law',
     },
 };
 
@@ -158,27 +158,33 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   useEffect(() => {
     let subjects: Record<string, string> = {};
     if (userClass === 'Undergraduate') {
-        const fieldSubjects = subjectMap['Undergraduate'][userField] || {};
-        subjects = { ...fieldSubjects };
+        subjects = subjectMap['Undergraduate'] || {};
+        // If userField is a custom field, it won't be in the map.
+        if (userField && !subjects[userField] && !userField.startsWith('Engineering: ')) {
+            subjects[userField] = ''; // Add custom field to available subjects
+        }
     } else {
         subjects = subjectMap[userClass] || {};
     }
     setAvailableSubjects(subjects);
 
+    // Set initial subject and topic
     const firstSubject = Object.keys(subjects)[0];
     if (firstSubject) {
         form.setValue('subject', firstSubject);
-        form.setValue('topic', subjects[firstSubject]);
+        form.setValue('topic', subjects[firstSubject] || '');
     } else {
         form.setValue('subject', '');
         form.setValue('topic', '');
     }
-
   }, [userClass, userField, form]);
 
   useEffect(() => {
-    if (watchSubject && watchSubject !== 'other' && availableSubjects[watchSubject]) {
-      form.setValue('topic', availableSubjects[watchSubject]);
+    if (watchSubject && watchSubject !== 'other') {
+      const suggestedTopic = availableSubjects[watchSubject];
+      if (suggestedTopic) {
+        form.setValue('topic', suggestedTopic);
+      }
     } else if (watchSubject === 'other') {
         form.setValue('topic', '');
     }
@@ -573,5 +579,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     </Card>
   );
 }
+
+    
 
     
