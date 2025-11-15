@@ -23,13 +23,20 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Loader2, User, Save, Camera } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  role: z.string().min(2, { message: 'Role must be at least 2 characters.' }),
+  role: z.enum(['Student', 'Teacher', 'Parent']),
 });
 
 export function ProfileEditor() {
@@ -43,7 +50,7 @@ export function ProfileEditor() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: 'Valeriy Trubnikov',
-      role: 'Software Engineer',
+      role: 'Student',
     },
   });
 
@@ -128,9 +135,21 @@ export function ProfileEditor() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g., Student, Developer" {...field} />
-                    </FormControl>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a role" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Student">Student</SelectItem>
+                        <SelectItem value="Teacher">Teacher</SelectItem>
+                        <SelectItem value="Parent">Parent</SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
