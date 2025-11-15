@@ -32,7 +32,6 @@ import {
 } from '@/components/ui/select';
 import { Loader2, User, Save, Camera, School, KeyRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user-role';
 
@@ -58,10 +57,8 @@ const profileSchema = z
 export function ProfileEditor() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const userAvatarImage = PlaceHolderImages.find((img) => img.id === 'user-avatar');
-  const [avatar, setAvatar] = useState(userAvatarImage?.imageUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userRole, setUserRole, userName, setUserName } = useUser();
+  const { userRole, setUserRole, userName, setUserName, userAvatar, setUserAvatar } = useUser();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -105,7 +102,7 @@ export function ProfileEditor() {
       const file = event.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAvatar(reader.result as string);
+        setUserAvatar(reader.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -119,7 +116,7 @@ export function ProfileEditor() {
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
           <Avatar className="h-32 w-32">
-            <AvatarImage src={avatar} alt="User avatar" />
+            <AvatarImage src={userAvatar} alt="User avatar" />
             <AvatarFallback>
               <User className="h-16 w-16" />
             </AvatarFallback>
