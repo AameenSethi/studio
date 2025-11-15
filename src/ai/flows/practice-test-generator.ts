@@ -16,7 +16,7 @@ import {z} from 'genkit';
 
 // For Students
 const GeneratePracticeTestInputSchema = z.object({
-  class: z.string().describe('The class level of the student (e.g., "9th Grade").'),
+  class: z.string().describe('The class level of the student and the educational board (e.g., "10th Grade (CBSE)").'),
   subject: z.string().describe('The subject for the test (e.g., "Mathematics").'),
   topic: z.string().describe('The specific topic within the subject (e.g., "Algebra").'),
   numberOfQuestions: z.number().describe('The number of questions to generate.'),
@@ -62,7 +62,7 @@ const studentPrompt = ai.definePrompt({
   output: {schema: GeneratePracticeTestOutputSchema},
   prompt: `You are an expert in generating practice tests for students.
 
-  Class: {{{class}}}
+  Class and Board: {{{class}}}
   Subject: {{{subject}}}
   Topic: {{{topic}}}
 
@@ -107,3 +107,5 @@ const generatePracticeTestForChildFlow = ai.defineFlow(
         return output!;
     }
 );
+
+    

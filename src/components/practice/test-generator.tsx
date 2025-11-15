@@ -51,6 +51,7 @@ import {
 import { useUser } from '@/hooks/use-user-role';
 
 const studentFormSchema = z.object({
+    board: z.string().min(1, { message: 'Please select a board.' }),
     class: z.string().min(1, { message: 'Please select a class.' }),
     subject: z.string().min(1, { message: 'Please select or enter a subject.' }),
     customSubject: z.string().optional(),
@@ -91,6 +92,7 @@ function StudentTestGenerator() {
   const form = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
+      board: 'CBSE',
       class: '10th Grade',
       subject: 'Mathematics',
       customSubject: '',
@@ -109,7 +111,7 @@ function StudentTestGenerator() {
 
     try {
       const result = await generatePracticeTest({
-          class: values.class,
+          class: `${values.class} (${values.board})`,
           subject: subject,
           topic: values.topic,
           numberOfQuestions: values.numberOfQuestions,
@@ -139,13 +141,37 @@ function StudentTestGenerator() {
           Generate a Practice Test
         </CardTitle>
         <CardDescription>
-          Select your class, subject, and topic to generate a custom test.
+          Select your board, class, subject, and topic to generate a custom test.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <FormField
+                    control={form.control}
+                    name="board"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Board</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a board" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="CBSE">CBSE</SelectItem>
+                            <SelectItem value="ICSE">ICSE</SelectItem>
+                            <SelectItem value="State Board">State Board</SelectItem>
+                            <SelectItem value="IB">IB (International Baccalaureate)</SelectItem>
+                            <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
                  <FormField
                     control={form.control}
                     name="class"
@@ -159,17 +185,23 @@ function StudentTestGenerator() {
                             </SelectTrigger>
                         </FormControl>
                         <SelectContent>
+                            <SelectItem value="6th Grade">6th Grade</SelectItem>
+                            <SelectItem value="7th Grade">7th Grade</SelectItem>
+                            <SelectItem value="8th Grade">8th Grade</SelectItem>
                             <SelectItem value="9th Grade">9th Grade</SelectItem>
                             <SelectItem value="10th Grade">10th Grade</SelectItem>
                             <SelectItem value="11th Grade">11th Grade</SelectItem>
                             <SelectItem value="12th Grade">12th Grade</SelectItem>
+                            <SelectItem value="Undergraduate">Undergraduate</SelectItem>
                         </SelectContent>
                         </Select>
                         <FormMessage />
                     </FormItem>
                     )}
                 />
-                 <FormField
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
                     control={form.control}
                     name="subject"
                     render={({ field }) => (
@@ -183,9 +215,16 @@ function StudentTestGenerator() {
                         </FormControl>
                         <SelectContent>
                             <SelectItem value="Mathematics">Mathematics</SelectItem>
+                            <SelectItem value="Physics">Physics</SelectItem>
+                            <SelectItem value="Chemistry">Chemistry</SelectItem>
+                            <SelectItem value="Biology">Biology</SelectItem>
                             <SelectItem value="Science">Science</SelectItem>
                             <SelectItem value="History">History</SelectItem>
+                            <SelectItem value="Geography">Geography</SelectItem>
+                            <SelectItem value="Civics">Civics</SelectItem>
+                            <SelectItem value="Economics">Economics</SelectItem>
                             <SelectItem value="English">English</SelectItem>
+                            <SelectItem value="Computer Science">Computer Science</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                         </SelectContent>
                         </Select>
@@ -193,23 +232,23 @@ function StudentTestGenerator() {
                     </FormItem>
                     )}
                 />
-            </div>
 
-            {watchSubject === 'other' && (
-                 <FormField
-                    control={form.control}
-                    name="customSubject"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Custom Subject</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter a subject" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
-            )}
+                {watchSubject === 'other' && (
+                    <FormField
+                        control={form.control}
+                        name="customSubject"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Custom Subject</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter a subject" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+            </div>
 
             <FormField
               control={form.control}
@@ -219,7 +258,7 @@ function StudentTestGenerator() {
                   <FormLabel>Topic</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="e.g., 'Algebra' or 'The Cold War'"
+                      placeholder="e.g., 'Algebra', 'Thermodynamics', or 'The Cold War'"
                       {...field}
                     />
                   </FormControl>
@@ -468,3 +507,5 @@ function ParentTestGenerator() {
         </Card>
     );
 }
+
+    
