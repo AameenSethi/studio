@@ -26,8 +26,9 @@ import {
 import { useState } from 'react';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
+import { Badge } from '../ui/badge';
 
 const studyTimeData = Array.from({ length: 30 }, (_, i) => ({
   date: `Day ${i + 1}`,
@@ -95,13 +96,17 @@ export function TopicMasteryChart() {
     }
   };
 
+  const handleRemoveSubject = (topicToRemove: string) => {
+    setTopicMasteryData(topicMasteryData.filter(item => item.topic !== topicToRemove));
+  };
+
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Topic Mastery</CardTitle>
         <CardDescription>
-          Your estimated mastery level for each topic.
+          Your estimated mastery level for each topic. Add or remove subjects to customize.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -127,6 +132,25 @@ export function TopicMasteryChart() {
             <Button onClick={handleAddSubject} size="icon">
                 <Plus className="h-4 w-4" />
             </Button>
+        </div>
+        <div className="mt-4 space-y-2">
+            <h4 className="text-sm font-medium">Tracked Subjects</h4>
+            <div className="flex flex-wrap gap-2">
+                {topicMasteryData.map((item) => (
+                    <Badge key={item.topic} variant="secondary" className="pl-3 pr-1">
+                        {item.topic}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-5 w-5 ml-1 -mr-1"
+                            onClick={() => handleRemoveSubject(item.topic)}
+                        >
+                            <X className="h-3 w-3"/>
+                            <span className="sr-only">Remove {item.topic}</span>
+                        </Button>
+                    </Badge>
+                ))}
+            </div>
         </div>
       </CardContent>
     </Card>
