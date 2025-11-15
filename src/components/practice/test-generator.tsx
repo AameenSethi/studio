@@ -40,7 +40,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FileText, ArrowRight, KeyRound } from 'lucide-react';
+import { Loader2, FileText, ArrowRight, KeyRound, Upload, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Accordion,
@@ -49,6 +49,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useUser } from '@/hooks/use-user-role';
+import { Textarea } from '../ui/textarea';
 
 const studentFormSchema = z.object({
     board: z.string().min(1, { message: 'Please select a board.' }),
@@ -76,6 +77,9 @@ const parentFormSchema = z.object({
 
 type TestOutput = (GeneratePracticeTestOutput | GeneratePracticeTestForChildOutput) & { answerKey?: { question: string, answer: string }[] };
 
+type StudentAnswers = { [key: number]: string };
+
+
 export function TestGenerator() {
     const { userRole } = useUser();
     if (userRole === 'Parent') {
@@ -88,6 +92,8 @@ function StudentTestGenerator() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [test, setTest] = useState<GeneratePracticeTestOutput | null>(null);
+  const [studentAnswers, setStudentAnswers] = useState<StudentAnswers>({});
+  const [answersSubmitted, setAnswersSubmitted] = useState(false);
 
   const form = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
@@ -97,7 +103,7 @@ function StudentTestGenerator() {
       subject: 'Mathematics',
       customSubject: '',
       topic: 'Algebra',
-      numberOfQuestions: 10,
+      numberOfQuestions: 5,
     },
   });
 
@@ -106,6 +112,8 @@ function StudentTestGenerator() {
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
     setIsLoading(true);
     setTest(null);
+    setStudentAnswers({});
+    setAnswersSubmitted(false);
 
     const subject = values.subject === 'other' ? values.customSubject! : values.subject;
 
@@ -131,6 +139,18 @@ function StudentTestGenerator() {
     } finally {
       setIsLoading(false);
     }
+  }
+
+  const handleAnswerChange = (index: number, value: string) => {
+    setStudentAnswers(prev => ({...prev, [index]: value}));
+  }
+
+  const handleSubmitAnswers = () => {
+      setAnswersSubmitted(true);
+      toast({
+          title: 'Answers Submitted!',
+          description: "You can now view the answer key."
+      });
   }
 
   return (
@@ -302,7 +322,7 @@ function StudentTestGenerator() {
           </form>
         </Form>
       </CardContent>
-      {test && test.testQuestions.length > 0 && (
+      {test && test.answerKey && (
         <CardFooter
           className={cn(
             'transition-all duration-500 ease-in-out',
@@ -312,19 +332,58 @@ function StudentTestGenerator() {
           <Card className="w-full bg-muted/50">
             <CardHeader>
               <CardTitle>Your Practice Test</CardTitle>
+              <CardDescription>Enter your answers below and submit to see the answer key.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <ul className="space-y-4">
-                {test.testQuestions.map((q, index) => (
-                  <li key={index} className="flex items-start gap-4">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold mt-1">
-                      {index + 1}
-                    </span>
-                    <p className="flex-1">{q}</p>
-                  </li>
+            <CardContent className="space-y-6">
+               {test.answerKey.map((item, index) => (
+                  <div key={index} className="space-y-2">
+                    <div className="flex items-start gap-4">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold mt-1">
+                        {index + 1}
+                        </span>
+                        <p className="flex-1 font-medium">{item.question}</p>
+                    </div>
+                    <div className='pl-10'>
+                        <Textarea 
+                            placeholder='Type your answer here...'
+                            value={studentAnswers[index] || ''}
+                            onChange={(e) => handleAnswerChange(index, e.target.value)}
+                            disabled={answersSubmitted}
+                        />
+                    </div>
+                  </div>
                 ))}
-              </ul>
+                <Button onClick={handleSubmitAnswers} disabled={answersSubmitted}>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Submit Your Answers
+                </Button>
             </CardContent>
+            {answersSubmitted && (
+                 <CardFooter>
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="item-1">
+                            <AccordionTrigger>Show Answer Key & Compare</AccordionTrigger>
+                            <AccordionContent>
+                                <ul className="space-y-6 mt-4">
+                                    {test.answerKey.map((item, index) => (
+                                    <li key={index}>
+                                        <p className="font-semibold">{index + 1}. {item.question}</p>
+                                        <div className='mt-2 p-3 rounded-md bg-background/50 border border-input'>
+                                            <p className='text-sm font-medium'>Your Answer:</p>
+                                            <p className="text-sm text-muted-foreground">{studentAnswers[index] || "No answer provided."}</p>
+                                        </div>
+                                        <div className='mt-2 p-3 rounded-md bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800'>
+                                            <p className='text-sm font-medium text-emerald-700 dark:text-emerald-400'>Correct Answer:</p>
+                                            <p className="text-sm text-emerald-600 dark:text-emerald-400">{item.answer}</p>
+                                        </div>
+                                    </li>
+                                    ))}
+                                </ul>
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </CardFooter>
+            )}
           </Card>
         </CardFooter>
       )}
@@ -507,5 +566,3 @@ function ParentTestGenerator() {
         </Card>
     );
 }
-
-    

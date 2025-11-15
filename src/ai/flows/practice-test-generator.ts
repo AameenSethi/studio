@@ -14,6 +14,11 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
+const AnswerKeySchema = z.object({
+    question: z.string().describe('A single test question.'),
+    answer: z.string().describe('The correct answer to the question.'),
+});
+
 // For Students
 const GeneratePracticeTestInputSchema = z.object({
   class: z.string().describe('The class level of the student and the educational board (e.g., "10th Grade (CBSE)").'),
@@ -24,7 +29,7 @@ const GeneratePracticeTestInputSchema = z.object({
 export type GeneratePracticeTestInput = z.infer<typeof GeneratePracticeTestInputSchema>;
 
 const GeneratePracticeTestOutputSchema = z.object({
-  testQuestions: z.array(z.string()).describe('The generated practice test questions.'),
+    answerKey: z.array(AnswerKeySchema).describe('An array of questions and their corresponding answers.'),
 });
 export type GeneratePracticeTestOutput = z.infer<typeof GeneratePracticeTestOutputSchema>;
 
@@ -36,11 +41,6 @@ const GeneratePracticeTestForChildInputSchema = z.object({
     timeLimit: z.number().describe('The time limit for the test in minutes.'),
 });
 export type GeneratePracticeTestForChildInput = z.infer<typeof GeneratePracticeTestForChildInputSchema>;
-
-const AnswerKeySchema = z.object({
-    question: z.string().describe('A single test question.'),
-    answer: z.string().describe('The correct answer to the question.'),
-});
 
 const GeneratePracticeTestForChildOutputSchema = z.object({
     answerKey: z.array(AnswerKeySchema).describe('An array of questions and their corresponding answers.'),
@@ -66,7 +66,9 @@ const studentPrompt = ai.definePrompt({
   Subject: {{{subject}}}
   Topic: {{{topic}}}
 
-  Generate {{{numberOfQuestions}}} practice test questions based on the provided details. Return the questions as a JSON array of strings.
+  Generate {{{numberOfQuestions}}} practice test questions based on the provided details.
+  For each question, provide a clear and correct answer.
+  Return the result as a JSON object containing an 'answerKey' which is an array of question-answer pairs.
   `,
 });
 
@@ -107,5 +109,3 @@ const generatePracticeTestForChildFlow = ai.defineFlow(
         return output!;
     }
 );
-
-    
