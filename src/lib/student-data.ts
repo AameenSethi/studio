@@ -5,7 +5,7 @@ export type Student = {
     avatarUrl: string;
 };
 
-export const studentData: Student[] = [
+export const defaultStudentData: Student[] = [
     {
         id: 'user-123',
         name: 'Alex Johnson',
@@ -32,6 +32,6 @@ export const studentData: Student[] = [
     },
 ];
 
-export const getStudentById = (id: string): Student | undefined => {
-    return studentData.find(student => student.id === id);
+export const getStudentById = (id: string, students: Student[]): Student | undefined => {
+    return students.find(student => student.id === id);
 }

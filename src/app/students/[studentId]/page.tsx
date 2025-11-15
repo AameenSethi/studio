@@ -28,32 +28,36 @@ import {
   PerformanceByTopic,
 } from '@/components/analytics/charts';
 import { TrackedTopicsProvider } from '@/hooks/use-tracked-topics';
+import { useStudents } from '@/hooks/use-students';
 
 
 export default function StudentDetailPage() {
   const router = useRouter();
   const params = useParams();
   const { history } = useHistory();
+  const { students } = useStudents();
   const studentId = params.studentId as string;
-  const [student, setStudent] = useState(getStudentById(studentId));
+  const [student, setStudent] = useState(getStudentById(studentId, students));
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-    if (!student) {
+    const currentStudent = getStudentById(studentId, students);
+    setStudent(currentStudent);
+    if (!currentStudent) {
       // In a real app, you might fetch student data here if not found
       // or redirect if the ID is invalid.
       console.warn(`Student with ID ${studentId} not found.`);
     }
-  }, [studentId, student]);
+  }, [studentId, students]);
   
   const studentHistory = useMemo(() => {
       // In a real app with a backend, you'd fetch history for this specific student.
       // For this simulation, we'll use a portion of the global history for the student.
       if (!student) return [];
       const studentHash = student.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return history.filter((_, index) => (index + studentHash) % (studentData.length) === 0);
-  }, [history, student]);
+      return history.filter((_, index) => (index + studentHash) % (students.length || 1) === 0);
+  }, [history, student, students]);
 
 
   if (!isClient) {
