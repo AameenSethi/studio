@@ -51,8 +51,8 @@ import {
 import { Separator } from '../ui/separator';
 
 const formSchema = z.object({
-  topic: z.string().min(5, {
-    message: 'Please describe the topic in at least 5 characters.',
+  topic: z.string().min(1, {
+    message: 'Please enter a topic.',
   }),
   explanationLevel: z.enum(['Simple', 'Detailed', 'Expert']),
 });
