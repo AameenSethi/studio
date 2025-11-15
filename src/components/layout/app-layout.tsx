@@ -127,8 +127,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <Link
                       href={item.href}
                       className={cn(
-                          "flex flex-col items-center justify-center gap-1 transition-colors hover:text-foreground w-20 text-center",
-                          pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
+                          "flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300",
+                          pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                       )}
                   >
                       <item.icon className="h-5 w-5" />
@@ -162,7 +162,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-4 px-2.5",
+                                "flex items-center gap-4 px-2.5 transition-colors duration-300",
                                 pathname === item.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
