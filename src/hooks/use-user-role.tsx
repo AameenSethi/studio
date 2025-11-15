@@ -34,7 +34,7 @@ const getInitialState = (email?: string) => {
     name: 'Valeriy Trubnikov',
     avatar: PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
     email: 'teacher@example.com',
-    id: 'prof-trubnikov-01',
+    id: 'valeriy-trubnikov-01',
   };
 
   const selectedUser = isTeacher ? defaultTeacher : defaultStudent;
@@ -118,11 +118,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   if (!isMounted) {
     // or a loading spinner
-    return (
-      <UserContext.Provider value={{ userRole: 'Student', setUserRole: () => {}, userName: 'Guest', setUserName: () => {}, userEmail: '', setUserEmail: () => {}, userAvatar: undefined, setUserAvatar: () => {}, userId: '' }}>
-        {children}
-      </UserContext.Provider>
-    );
+    return null;
   }
 
   return (
@@ -135,17 +131,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    return {
-        userRole: 'Student' as Role,
-        setUserRole: () => {},
-        userName: 'Guest',
-        setUserName: () => {},
-        userEmail: '',
-        setUserEmail: () => {},
-        userAvatar: undefined,
-        setUserAvatar: () => {},
-        userId: 'guest-id',
-    };
+    throw new Error('useUser must be used within a UserProvider');
   }
   return context;
 };

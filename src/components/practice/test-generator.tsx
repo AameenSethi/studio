@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -709,7 +710,7 @@ function ParentTestGenerator() {
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        placeholder="e.g., user-123"
+                        placeholder="e.g., alex-johnson-42"
                         {...field}
                         className="pl-10"
                       />

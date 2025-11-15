@@ -158,7 +158,7 @@ export function StudentRoster() {
                             <FormControl>
                                 <div className="relative">
                                     <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input placeholder="e.g., user-123" {...field} className="pl-10" />
+                                    <Input placeholder="e.g., maria-garcia-57" {...field} className="pl-10" />
                                 </div>
                             </FormControl>
                             <FormMessage />
