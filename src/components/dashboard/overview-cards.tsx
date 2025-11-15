@@ -13,25 +13,42 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
-
-const chartData = [
-  { day: 'Mon', hours: Math.floor(Math.random() * 4) + 1 },
-  { day: 'Tue', hours: Math.floor(Math.random() * 4) + 1 },
-  { day: 'Wed', hours: Math.floor(Math.random() * 4) + 1 },
-  { day: 'Thu', hours: Math.floor(Math.random() * 4) + 1 },
-  { day: 'Fri', hours: Math.floor(Math.random() * 4) + 1 },
-  { day: 'Sat', hours: Math.floor(Math.random() * 4) + 1 },
-  { day: 'Sun', hours: Math.floor(Math.random() * 4) + 1 },
-];
+import { useHistory } from '@/hooks/use-history';
+import { useMemo } from 'react';
+import { format, subDays, getDay, parseISO } from 'date-fns';
 
 const chartConfig = {
-  hours: {
-    label: 'Hours',
+  activities: {
+    label: 'Activities',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
 
 export function WeeklyProgressChart() {
+    const { history } = useHistory();
+
+    const chartData = useMemo(() => {
+        const days = Array.from({ length: 7 }).map((_, i) => {
+            const date = subDays(new Date(), 6 - i);
+            return {
+                day: format(date, 'eee'),
+                date: format(date, 'yyyy-MM-dd'),
+                activities: 0,
+            };
+        });
+
+        history.forEach(item => {
+            const itemDate = parseISO(item.timestamp);
+            const formattedDate = format(itemDate, 'yyyy-MM-dd');
+            const dayEntry = days.find(d => d.date === formattedDate);
+            if (dayEntry) {
+                dayEntry.activities += 1;
+            }
+        });
+
+        return days;
+    }, [history]);
+
   return (
     <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
       <ResponsiveContainer width="100%" height={200}>
@@ -50,13 +67,14 @@ export function WeeklyProgressChart() {
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            tickFormatter={(value) => `${value}h`}
+            allowDecimals={false}
+            tickFormatter={(value) => `${value}`}
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
             content={<ChartTooltipContent hideIndicator />}
           />
-          <Bar dataKey="hours" fill="hsl(var(--primary))" radius={4} />
+          <Bar dataKey="activities" fill="hsl(var(--primary))" radius={4} />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
