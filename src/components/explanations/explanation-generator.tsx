@@ -39,7 +39,7 @@ import {
   } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lightbulb, ArrowRight, Volume2, Download } from 'lucide-react';
+import { Loader2, Lightbulb, ArrowRight, Volume2, Download, Quote } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistory } from '@/hooks/use-history';
 import {
@@ -48,6 +48,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { Separator } from '../ui/separator';
 
 const formSchema = z.object({
   topic: z.string().min(5, {
@@ -85,7 +86,7 @@ export function ExplanationGenerator() {
       addHistoryItem({
         type: 'Explanation',
         title: `Explanation of: ${values.topic}`,
-        content: result.explanation,
+        content: result, // Store the full object
       });
       toast({
         title: 'Explanation Ready!',
@@ -108,7 +109,8 @@ export function ExplanationGenerator() {
     setIsGeneratingSpeech(true);
     setAudioData(null);
     try {
-      const result = await textToSpeech({ text: explanation.explanation });
+        const fullText = `${explanation.summary}\n\n${explanation.detailedExplanation}\n\nAnalogy: ${explanation.analogy}`;
+      const result = await textToSpeech({ text: fullText });
       setAudioData(result);
       toast({
         title: 'Audio Ready!',
@@ -129,7 +131,7 @@ export function ExplanationGenerator() {
   const handleDownload = () => {
     if (!explanation || !formValues) return;
 
-    const textContent = `Topic: ${formValues.topic}\nLevel: ${formValues.explanationLevel}\n\n---\n\n${explanation.explanation}`;
+    const textContent = `Topic: ${formValues.topic}\nLevel: ${formValues.explanationLevel}\n\n--- SUMMARY ---\n${explanation.summary}\n\n--- DETAILED EXPLANATION ---\n${explanation.detailedExplanation}\n\n--- ANALOGY ---\n${explanation.analogy}`;
 
     const blob = new Blob([textContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -275,10 +277,22 @@ export function ExplanationGenerator() {
                 </div>
               </TooltipProvider>
             </CardHeader>
-            <CardContent>
-                <div className='p-4 rounded-lg bg-background/50 border'>
-                    <ExplanationDisplay text={explanation.explanation} />
+            <CardContent className="space-y-4">
+                <div className="p-4 rounded-lg bg-background/50 border italic">
+                    <p>{explanation.summary}</p>
                 </div>
+                <div className='p-4 rounded-lg bg-background/50 border'>
+                    <ExplanationDisplay text={explanation.detailedExplanation} />
+                </div>
+                <Card className="bg-background/50">
+                    <CardHeader className="flex-row items-center gap-2 pb-2">
+                        <Quote className="h-5 w-5 text-accent"/>
+                        <CardTitle className="text-lg">Analogy</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{explanation.analogy}</p>
+                    </CardContent>
+                </Card>
                 {audioData?.audio && (
                   <div className="mt-4">
                     <audio controls src={audioData.audio} className="w-full" />

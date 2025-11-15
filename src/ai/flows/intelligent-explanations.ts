@@ -18,7 +18,9 @@ const IntelligentExplanationInputSchema = z.object({
 export type IntelligentExplanationInput = z.infer<typeof IntelligentExplanationInputSchema>;
 
 const IntelligentExplanationOutputSchema = z.object({
-  explanation: z.string().describe('The explanation of the topic in text format.'),
+    summary: z.string().describe("A concise one-sentence summary of the topic."),
+    detailedExplanation: z.string().describe("The main, detailed explanation of the topic, formatted with markdown-style headers (e.g., **Header**) and lists (e.g., * item). The length should be appropriate for the topic and explanation level."),
+    analogy: z.string().describe("A simple analogy to help understand the core concept."),
 });
 export type IntelligentExplanationOutput = z.infer<typeof IntelligentExplanationOutputSchema>;
 
@@ -32,13 +34,16 @@ const prompt = ai.definePrompt({
   name: 'intelligentExplanationPrompt',
   input: {schema: IntelligentExplanationInputSchema},
   output: {schema: IntelligentExplanationOutputSchema},
-  prompt: `You are an expert educator skilled at explaining complex topics in simple terms.
+  prompt: `You are an expert educator skilled at explaining complex topics in simple terms. Your task is to provide a comprehensive explanation of a given topic tailored to a specific level of detail.
 
-You will explain the topic "{{topic}}" at a "{{explanationLevel}}" level.
+Topic: "{{topic}}"
+Level: "{{explanationLevel}}"
 
-Ensure the explanation is clear, text-based, and tailored to the requested level of detail.
-
-Explanation:`,
+Generate the following based on the topic and level:
+1.  **Summary:** A concise, one-sentence summary.
+2.  **Detailed Explanation:** A thorough explanation of the topic. Use markdown for structure, like **Headers** for sections and * for list items. The length and depth should match the requested "{{explanationLevel}}". Do not impose an artificial word limit.
+3.  **Analogy:** A simple and relatable analogy to clarify the core concept.
+`,
 });
 
 const intelligentExplanationFlow = ai.defineFlow(

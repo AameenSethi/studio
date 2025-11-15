@@ -15,7 +15,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useHistory } from '@/hooks/use-history';
-import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -42,6 +42,26 @@ const formatDuration = (seconds?: number) => {
 
 export default function HistoryPage() {
   const { history } = useHistory();
+
+  const ExplanationDisplay = ({ text }: { text: string }) => {
+    return (
+      <div className="prose prose-sm max-w-none dark:prose-invert">
+        {text.split('\n\n').map((paragraph, i) => {
+            const lines = paragraph.split('\n').map((line, j) => {
+                 if (line.startsWith('**') && line.endsWith('**')) {
+                    return <h3 key={j} className="text-xl font-semibold mt-4 mb-2 text-primary">{line.replace(/\*\*/g, '')}</h3>
+                }
+                if (line.startsWith('* ')) {
+                    return <li key={j} className="ml-4 list-disc">{line.substring(2)}</li>
+                }
+                return <span key={j}>{line}<br /></span>
+            })
+            return <p key={i}>{lines}</p>
+        })}
+      </div>
+    );
+  };
+
 
   const renderContent = (item: any) => {
     switch (item.type) {
@@ -87,7 +107,28 @@ export default function HistoryPage() {
             </div>
         );
       case 'Explanation':
-        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        if (typeof item.content === 'string') {
+            return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        }
+        return (
+            <div className="space-y-4">
+                <div className="p-4 rounded-lg bg-background/50 border italic">
+                    <p>{item.content.summary}</p>
+                </div>
+                <div className='p-4 rounded-lg bg-background/50 border'>
+                    <ExplanationDisplay text={item.content.detailedExplanation} />
+                </div>
+                <Card className="bg-background/50">
+                    <CardHeader className="flex-row items-center gap-2 pb-2">
+                        <Quote className="h-5 w-5 text-accent"/>
+                        <CardTitle className="text-lg">Analogy</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{item.content.analogy}</p>
+                    </CardContent>
+                </Card>
+            </div>
+        );
       case 'Practice Test':
         return (
           <div>
