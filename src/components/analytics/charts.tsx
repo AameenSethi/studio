@@ -61,19 +61,15 @@ export function StudyTimeChart() {
     });
 
     history.forEach(item => {
-        // Only include tests that are marked for analytics
-        if (item.type === 'Practice Test' && item.includeInAnalytics === false) {
-            return;
-        }
-
         const itemDate = parseISO(item.timestamp);
         const formattedDate = format(itemDate, 'yyyy-MM-dd');
         const dayEntry = days.find(d => d.fullDate === formattedDate);
 
         if (dayEntry) {
             let timeInSeconds = 0;
-            if (item.type === 'Practice Test' && item.duration) {
-                timeInSeconds = item.duration;
+            if (item.type === 'Practice Test') {
+                if (item.includeInAnalytics === false) return;
+                timeInSeconds = item.duration || 0;
             } else if (item.type === 'Explanation') {
                 timeInSeconds = 600; // 10 minutes
             } else if (item.type === 'Study Plan') {
@@ -353,3 +349,5 @@ export function PerformanceByTopic() {
         </Card>
     );
 }
+
+    
