@@ -46,9 +46,6 @@ export default function DashboardPage() {
           <h2 className="text-3xl font-bold tracking-tight font-headline">
             Welcome back, {userName.split(' ')[0]}!
           </h2>
-          <p className="text-muted-foreground">
-            Here&apos;s your learning snapshot for today.
-          </p>
           {quote && (
             <p className="text-sm text-muted-foreground italic mt-2">
               &quot;{quote}&quot;
