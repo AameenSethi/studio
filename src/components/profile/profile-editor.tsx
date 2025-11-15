@@ -34,7 +34,6 @@ import { Loader2, User, Save, Camera, School, KeyRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user-role';
-import { ImageCropDialog } from './image-crop-dialog';
 
 const profileSchema = z
   .object({
@@ -60,7 +59,6 @@ export function ProfileEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { userRole, setUserRole, userName, setUserName, userAvatar, setUserAvatar } = useUser();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -104,37 +102,22 @@ export function ProfileEditor() {
       const file = event.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setSelectedImage(reader.result as string);
+        setUserAvatar(reader.result as string);
+        toast({
+            title: "Picture updated!",
+            description: "Your new profile picture has been set."
+        })
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
       };
       reader.readAsDataURL(file);
-    }
-  };
-  
-  const handleCropComplete = (croppedImage: string) => {
-    setUserAvatar(croppedImage);
-    setSelectedImage(null);
-    if(fileInputRef.current) {
-      fileInputRef.current.value = "";
     }
   };
 
 
   return (
     <>
-      {selectedImage && (
-        <ImageCropDialog
-          imageUrl={selectedImage}
-          onCropComplete={handleCropComplete}
-          onOpenChange={(isOpen) => {
-            if (!isOpen) {
-              setSelectedImage(null);
-              if (fileInputRef.current) {
-                fileInputRef.current.value = "";
-              }
-            }
-          }}
-        />
-      )}
       <div className="grid md:grid-cols-3 gap-8">
         <Card className="md:col-span-1">
           <CardHeader>
