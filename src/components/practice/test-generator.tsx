@@ -49,6 +49,7 @@ import {
   XCircle,
   Clock,
   BarChart3,
+  BarChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -61,6 +62,8 @@ import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useHistory, type HistoryItem } from '@/hooks/use-history';
 import { useUser } from '@/hooks/use-user-role';
+import { Switch } from '../ui/switch';
+import { Label } from '../ui/label';
 
 const studentFormSchema = z
   .object({
@@ -147,6 +150,8 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [formValues, setFormValues] = useState<z.infer<typeof studentFormSchema> | null>(null);
+  const [includeInAnalytics, setIncludeInAnalytics] = useState(true);
+  const [currentTestId, setCurrentTestId] = useState<string | null>(assignedTest?.id || null);
 
 
   useEffect(() => {
@@ -347,18 +352,23 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             score: correctAnswers,
             duration: finalElapsedTime,
             isComplete: true,
+            includeInAnalytics: true, // Assigned tests default to included
         });
+        setCurrentTestId(assignedTest.id);
     } else {
-        addHistoryItem({
-            type: 'Practice Test',
+        const newHistoryItem = {
+            type: 'Practice Test' as const,
             title: `Test on: ${testTopic}`,
             content: test.answerKey,
             score: correctAnswers,
             duration: finalElapsedTime,
             subject: testSubject,
             topic: testTopic,
-            isComplete: true, // Self-generated tests are immediately complete
-        });
+            isComplete: true,
+            includeInAnalytics: true, // Self-generated tests default to included
+        };
+        const newId = addHistoryItem(newHistoryItem);
+        setCurrentTestId(newId);
     }
 
 
@@ -366,6 +376,17 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       title: 'Answers Submitted!',
       description: 'You can now view the answer key and your results.',
     });
+  };
+
+  const handleAnalyticsToggle = (checked: boolean) => {
+    setIncludeInAnalytics(checked);
+    if (currentTestId) {
+      updateHistoryItem(currentTestId, { includeInAnalytics: checked });
+      toast({
+        title: 'Analytics Updated',
+        description: `This test will ${checked ? 'now be included in' : 'be excluded from'} your analytics.`,
+      });
+    }
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -615,18 +636,27 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                             Test Analytics
                         </CardTitle>
                     </CardHeader>
-                    <CardContent className='flex gap-8'>
-                        <div>
-                            <p className='text-sm text-muted-foreground'>Score</p>
-                            <p className='text-2xl font-bold'>{score} / {test.answerKey.length}</p>
+                    <CardContent className='flex justify-between items-center'>
+                        <div className="flex gap-8">
+                            <div>
+                                <p className='text-sm text-muted-foreground'>Score</p>
+                                <p className='text-2xl font-bold'>{score} / {test.answerKey.length}</p>
+                            </div>
+                            <div>
+                                <p className='text-sm text-muted-foreground'>Percentage</p>
+                                <p className='text-2xl font-bold'>{((score / test.answerKey.length) * 100).toFixed(0)}%</p>
+                            </div>
+                            <div>
+                                <p className='text-sm text-muted-foreground'>Time Taken</p>
+                                <p className='text-2xl font-bold'>{formatTime(elapsedTime)}</p>
+                            </div>
                         </div>
-                         <div>
-                            <p className='text-sm text-muted-foreground'>Percentage</p>
-                            <p className='text-2xl font-bold'>{((score / test.answerKey.length) * 100).toFixed(0)}%</p>
-                        </div>
-                        <div>
-                            <p className='text-sm text-muted-foreground'>Time Taken</p>
-                            <p className='text-2xl font-bold'>{formatTime(elapsedTime)}</p>
+                        <div className="flex items-center space-x-2">
+                            <Switch id="analytics-toggle" checked={includeInAnalytics} onCheckedChange={handleAnalyticsToggle} />
+                            <Label htmlFor="analytics-toggle" className="flex flex-col">
+                                <span>Include in Analytics</span>
+                                <span className="font-normal text-xs text-muted-foreground">Toggle this to include/exclude from charts.</span>
+                            </Label>
                         </div>
                     </CardContent>
                 </Card>
@@ -691,6 +721,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     
 
     
+
 
 
 

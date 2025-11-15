@@ -14,6 +14,7 @@ export type HistoryItem = {
   topic?: string;
   studentId?: string; // For tests assigned by teachers/parents
   isComplete?: boolean; // For assigned tests
+  includeInAnalytics?: boolean; // For practice tests
 };
 
 interface HistoryContextType {

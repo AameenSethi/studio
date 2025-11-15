@@ -61,6 +61,11 @@ export function StudyTimeChart() {
     });
 
     history.forEach(item => {
+        // Only include tests that are marked for analytics
+        if (item.type === 'Practice Test' && item.includeInAnalytics === false) {
+            return;
+        }
+
         const itemDate = parseISO(item.timestamp);
         const formattedDate = format(itemDate, 'yyyy-MM-dd');
         const dayEntry = days.find(d => d.fullDate === formattedDate);
@@ -100,7 +105,7 @@ export function TopicMasteryChart() {
   const { trackedTopics } = useTrackedTopics();
 
   const { topicMasteryData, overallPerformance } = useMemo(() => {
-    const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
+    const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined && item.includeInAnalytics !== false);
     const trackedTopicNames = trackedTopics.map(t => t.topic);
 
     const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
@@ -136,7 +141,7 @@ export function TopicMasteryChart() {
     });
 
     const relevantTestHistory = history.filter(item => {
-        if (item.type !== 'Practice Test' || item.score === undefined) return false;
+        if (item.type !== 'Practice Test' || item.score === undefined || item.includeInAnalytics === false) return false;
         const name = item.topic || 'General';
         return trackedTopicNames.includes(name);
     });
@@ -237,7 +242,7 @@ export function PerformanceByTopic() {
     const { trackedTopics } = useTrackedTopics();
 
     const topicPerformanceData = useMemo(() => {
-        const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
+        const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined && item.includeInAnalytics !== false);
         const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number, subject: string } } = {};
         const trackedTopicNames = trackedTopics.map(t => t.topic);
 
