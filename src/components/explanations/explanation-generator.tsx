@@ -79,6 +79,25 @@ export function ExplanationGenerator() {
       setIsLoading(false);
     }
   }
+  
+  const ExplanationDisplay = ({ text }: { text: string }) => {
+    return (
+      <div className="prose prose-sm max-w-none dark:prose-invert">
+        {text.split('\n\n').map((paragraph, i) => {
+            const lines = paragraph.split('\n').map((line, j) => {
+                 if (line.startsWith('**') && line.endsWith('**')) {
+                    return <h3 key={j} className="text-xl font-semibold mt-4 mb-2 text-primary">{line.replace(/\*\*/g, '')}</h3>
+                }
+                if (line.startsWith('* ')) {
+                    return <li key={j} className="ml-4 list-disc">{line.substring(2)}</li>
+                }
+                return <span key={j}>{line}<br /></span>
+            })
+            return <p key={i}>{lines}</p>
+        })}
+      </div>
+    );
+  };
 
   const ExplanationContent = () => {
     if (!explanation) return null;
@@ -86,36 +105,42 @@ export function ExplanationGenerator() {
     if (submittedFormat === 'diagrams' && diagramImage) {
       return (
         <>
-            <p className='text-muted-foreground mb-4'>{explanation.explanation}</p>
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
-                <Image
-                    src={diagramImage.imageUrl}
-                    alt={diagramImage.description}
-                    layout="fill"
-                    objectFit="cover"
-                    data-ai-hint={diagramImage.imageHint}
-                />
-            </div>
+          <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
+            <ExplanationDisplay text={explanation.explanation} />
+          </div>
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
+            <Image
+              src={diagramImage.imageUrl}
+              alt={diagramImage.description}
+              layout="fill"
+              objectFit="cover"
+              data-ai-hint={diagramImage.imageHint}
+            />
+          </div>
         </>
       );
     }
 
     if (submittedFormat === 'video') {
-        return (
-            <>
-                <p className='text-muted-foreground mb-4'>{explanation.explanation}</p>
-                <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-slate-800 flex items-center justify-center">
-                    <div className="text-white text-center">
-                        <p>Video explanation placeholder</p>
-                        <p className="text-sm text-slate-400">Content would be loaded here.</p>
-                    </div>
-                </div>
-            </>
-          );
+      return (
+        <>
+          <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
+            <ExplanationDisplay text={explanation.explanation} />
+          </div>
+          <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-slate-800 flex items-center justify-center">
+            <div className="text-white text-center">
+              <p>Video explanation placeholder</p>
+              <p className="text-sm text-slate-400">
+                Content would be loaded here.
+              </p>
+            </div>
+          </div>
+        </>
+      );
     }
-    
-    return <p>{explanation.explanation}</p>;
-  }
+
+    return <ExplanationDisplay text={explanation.explanation} />;
+  };
 
   return (
     <Card className="w-full">
