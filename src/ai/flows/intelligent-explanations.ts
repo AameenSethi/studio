@@ -13,14 +13,11 @@ import {z} from 'genkit';
 
 const IntelligentExplanationInputSchema = z.object({
   topic: z.string().describe('The complex topic to be explained.'),
-  learningFormat: z
-    .enum(['text', 'video', 'diagrams'])
-    .describe('The preferred learning format for the explanation.'),
 });
 export type IntelligentExplanationInput = z.infer<typeof IntelligentExplanationInputSchema>;
 
 const IntelligentExplanationOutputSchema = z.object({
-  explanation: z.string().describe('The explanation of the topic in the specified format.'),
+  explanation: z.string().describe('The explanation of the topic in text format.'),
 });
 export type IntelligentExplanationOutput = z.infer<typeof IntelligentExplanationOutputSchema>;
 
@@ -36,9 +33,9 @@ const prompt = ai.definePrompt({
   output: {schema: IntelligentExplanationOutputSchema},
   prompt: `You are an expert educator skilled at explaining complex topics in simple terms.
 
-You will explain the topic "{{topic}}" in the "{{learningFormat}}" format.
+You will explain the topic "{{topic}}" in a clear, text-based format.
 
-Ensure the explanation is easy to understand and tailored to the specified learning format.
+Ensure the explanation is easy to understand.
 
 Explanation:`,
 });

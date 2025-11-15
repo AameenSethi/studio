@@ -4,11 +4,14 @@ import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
-import Image from 'next/image';
 import {
   intelligentExplanation,
   type IntelligentExplanationOutput,
 } from '@/ai/flows/intelligent-explanations';
+import {
+  textToSpeech,
+  type TextToSpeechOutput,
+} from '@/ai/flows/text-to-speech';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -27,31 +30,24 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lightbulb, ArrowRight } from 'lucide-react';
+import { Loader2, Lightbulb, ArrowRight, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const formSchema = z.object({
   topic: z.string().min(5, {
     message: 'Please describe the topic in at least 5 characters.',
-  }),
-  learningFormat: z.enum(['text', 'video', 'diagrams'], {
-    required_error: 'You need to select a learning format.',
   }),
 });
 
 export function ExplanationGenerator() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
   const [explanation, setExplanation] =
     useState<IntelligentExplanationOutput | null>(null);
-  const [submittedFormat, setSubmittedFormat] = useState<string | null>(null);
-  const diagramImage = PlaceHolderImages.find(
-    (img) => img.id === 'explanation-diagram'
-  );
+  const [audioData, setAudioData] = useState<TextToSpeechOutput | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -60,7 +56,7 @@ export function ExplanationGenerator() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setExplanation(null);
-    setSubmittedFormat(values.learningFormat);
+    setAudioData(null);
     try {
       const result = await intelligentExplanation(values);
       setExplanation(result);
@@ -79,7 +75,30 @@ export function ExplanationGenerator() {
       setIsLoading(false);
     }
   }
-  
+
+  async function handleTextToSpeech() {
+    if (!explanation) return;
+    setIsGeneratingSpeech(true);
+    setAudioData(null);
+    try {
+      const result = await textToSpeech({ text: explanation.explanation });
+      setAudioData(result);
+      toast({
+        title: 'Audio Ready!',
+        description: 'The explanation is ready to be played.',
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error Generating Audio',
+        description: 'There was an issue creating the audio. Please try again.',
+      });
+      console.error(error);
+    } finally {
+      setIsGeneratingSpeech(false);
+    }
+  }
+
   const ExplanationDisplay = ({ text }: { text: string }) => {
     return (
       <div className="prose prose-sm max-w-none dark:prose-invert">
@@ -99,49 +118,6 @@ export function ExplanationGenerator() {
     );
   };
 
-  const ExplanationContent = () => {
-    if (!explanation) return null;
-
-    if (submittedFormat === 'diagrams' && diagramImage) {
-      return (
-        <>
-          <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
-            <ExplanationDisplay text={explanation.explanation} />
-          </div>
-          <div className="relative aspect-video w-full overflow-hidden rounded-lg border">
-            <Image
-              src={diagramImage.imageUrl}
-              alt={diagramImage.description}
-              layout="fill"
-              objectFit="cover"
-              data-ai-hint={diagramImage.imageHint}
-            />
-          </div>
-        </>
-      );
-    }
-
-    if (submittedFormat === 'video') {
-      return (
-        <>
-          <div className="prose prose-sm max-w-none dark:prose-invert mb-4">
-            <ExplanationDisplay text={explanation.explanation} />
-          </div>
-          <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-slate-800 flex items-center justify-center">
-            <div className="text-white text-center">
-              <p>Video explanation placeholder</p>
-              <p className="text-sm text-slate-400">
-                Content would be loaded here.
-              </p>
-            </div>
-          </div>
-        </>
-      );
-    }
-
-    return <ExplanationDisplay text={explanation.explanation} />;
-  };
-
   return (
     <Card className="w-full">
       <CardHeader>
@@ -150,7 +126,7 @@ export function ExplanationGenerator() {
           Explanation Generator
         </CardTitle>
         <CardDescription>
-          Enter a topic you want to understand better and choose your preferred learning style.
+          Enter a topic you want to understand better.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -168,42 +144,6 @@ export function ExplanationGenerator() {
                       className="resize-none"
                       {...field}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="learningFormat"
-              render={({ field }) => (
-                <FormItem className="space-y-3">
-                  <FormLabel>Preferred Learning Format</FormLabel>
-                  <FormControl>
-                    <RadioGroup
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                      className="flex flex-col sm:flex-row gap-4"
-                    >
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="text" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Text</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="video" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Video</FormLabel>
-                      </FormItem>
-                      <FormItem className="flex items-center space-x-3 space-y-0">
-                        <FormControl>
-                          <RadioGroupItem value="diagrams" />
-                        </FormControl>
-                        <FormLabel className="font-normal">Diagrams</FormLabel>
-                      </FormItem>
-                    </RadioGroup>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -233,11 +173,24 @@ export function ExplanationGenerator() {
           )}
         >
           <Card className="w-full bg-muted/50">
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Here&apos;s the Breakdown</CardTitle>
+              <Button onClick={handleTextToSpeech} disabled={isGeneratingSpeech} variant="outline" size="sm">
+                {isGeneratingSpeech ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Volume2 className="mr-2 h-4 w-4" />
+                )}
+                Listen
+              </Button>
             </CardHeader>
             <CardContent>
-                <ExplanationContent />
+                <ExplanationDisplay text={explanation.explanation} />
+                {audioData?.audio && (
+                  <div className="mt-4">
+                    <audio controls src={audioData.audio} className="w-full" />
+                  </div>
+                )}
             </CardContent>
           </Card>
         </CardFooter>
