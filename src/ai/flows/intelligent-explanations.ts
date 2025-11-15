@@ -67,16 +67,24 @@ const intelligentExplanationFlow = ai.defineFlow(
         throw new Error('Failed to generate explanation text.');
     }
 
-    const { media } = await ai.generate({
-        model: googleAI.model('imagen-4.0-fast-generate-001'),
-        prompt: explanationOutput.diagramPrompt,
-    });
+    let diagramUrl = '';
+    try {
+        const { media } = await ai.generate({
+            model: googleAI.model('imagen-4.0-fast-generate-001'),
+            prompt: explanationOutput.diagramPrompt,
+        });
+        diagramUrl = media?.url || '';
+    } catch (error) {
+        console.error("Failed to generate diagram, likely a billing issue:", error);
+        // Fail gracefully if diagram generation fails
+        diagramUrl = '';
+    }
     
     return {
         summary: explanationOutput.summary,
         detailedExplanation: explanationOutput.detailedExplanation,
         analogy: explanationOutput.analogy,
-        diagramUrl: media?.url || '',
+        diagramUrl: diagramUrl,
     };
   }
 );
