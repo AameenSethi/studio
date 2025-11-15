@@ -18,8 +18,8 @@ import { useMemo } from 'react';
 import { format, subDays, parseISO } from 'date-fns';
 
 const chartConfig = {
-  hours: {
-    label: 'Hours',
+  seconds: {
+    label: 'Seconds',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
@@ -33,7 +33,7 @@ export function WeeklyProgressChart() {
             return {
                 day: format(date, 'eee'),
                 date: format(date, 'yyyy-MM-dd'),
-                hours: 0,
+                seconds: 0,
             };
         });
 
@@ -43,14 +43,9 @@ export function WeeklyProgressChart() {
                 const formattedDate = format(itemDate, 'yyyy-MM-dd');
                 const dayEntry = days.find(d => d.date === formattedDate);
                 if (dayEntry) {
-                    dayEntry.hours += item.duration / 3600; // convert seconds to hours
+                    dayEntry.seconds += item.duration; // use seconds directly
                 }
             }
-        });
-
-        // Round to 2 decimal places
-        days.forEach(day => {
-            day.hours = parseFloat(day.hours.toFixed(2));
         });
 
         return days;
@@ -74,14 +69,14 @@ export function WeeklyProgressChart() {
             tickLine={false}
             axisLine={false}
             tickMargin={10}
-            allowDecimals={true}
-            tickFormatter={(value) => `${value}h`}
+            allowDecimals={false}
+            tickFormatter={(value) => `${value}s`}
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
             content={<ChartTooltipContent hideIndicator />}
           />
-          <Bar dataKey="hours" fill="hsl(var(--primary))" radius={4} />
+          <Bar dataKey="seconds" fill="hsl(var(--primary))" radius={4} />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
