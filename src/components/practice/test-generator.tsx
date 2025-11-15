@@ -89,30 +89,30 @@ type StudentAnswers = { [key: number]: string };
 type AnswerCorrectness = { [key: number]: boolean };
 
 const streamAndSubjectMap: Record<string, Record<string, Record<string, string>>> = {
-    '6th Grade': { 'General': { 'Mathematics': 'Fractions', 'Science': 'Ecosystems', 'English': 'Grammar', 'History': 'Ancient Civilizations', 'Geography': 'Map Skills' } },
-    '7th Grade': { 'General': { 'Mathematics': 'Algebraic Expressions', 'Science': 'Cell Biology', 'English': 'Sentence Structure', 'History': 'The Middle Ages', 'Geography': 'World Climates' } },
-    '8th Grade': { 'General': { 'Mathematics': 'Linear Equations', 'Physics': 'Newtons Laws', 'Chemistry': 'The Periodic Table', 'Biology': 'Human Anatomy', 'English': 'Essay Writing', 'History': 'The Renaissance', 'Geography': 'Tectonic Plates' } },
-    '9th Grade': { 'General': { 'Mathematics': 'Quadratic Equations', 'Physics': 'Kinematics', 'Chemistry': 'Chemical Reactions', 'Biology': 'Genetics', 'English': 'Literary Devices', 'History': 'Industrial Revolution', 'Economics': 'Supply and Demand' } },
-    '10th Grade': { 'General': { 'Mathematics': 'Trigonometry', 'Physics': 'Optics', 'Chemistry': 'Stoichiometry', 'Biology': 'Evolution', 'English': 'Shakespeare', 'History': 'World War I', 'Computer Science': 'Basic Programming' } },
+    '6th Grade': { 'General': { 'Mathematics': 'Fractions', 'Science': 'Ecosystems', 'English': 'Grammar', 'History': 'Ancient Civilizations', 'Geography': 'Map Skills', 'Civics': 'Local Government', 'Art': 'Color Theory' } },
+    '7th Grade': { 'General': { 'Mathematics': 'Algebraic Expressions', 'Science': 'Cell Biology', 'English': 'Sentence Structure', 'History': 'The Middle Ages', 'Geography': 'World Climates', 'Civics': 'Democracy', 'Music': 'Music Notation' } },
+    '8th Grade': { 'General': { 'Mathematics': 'Linear Equations', 'Physics': 'Newtons Laws', 'Chemistry': 'The Periodic Table', 'Biology': 'Human Anatomy', 'English': 'Essay Writing', 'History': 'The Renaissance', 'Geography': 'Tectonic Plates', 'Computer Science': 'Introduction to HTML' } },
+    '9th Grade': { 'General': { 'Mathematics': 'Quadratic Equations', 'Physics': 'Kinematics', 'Chemistry': 'Chemical Reactions', 'Biology': 'Genetics', 'English': 'Literary Devices', 'History': 'Industrial Revolution', 'Economics': 'Supply and Demand', 'Physical Education': 'Rules of Soccer' } },
+    '10th Grade': { 'General': { 'Mathematics': 'Trigonometry', 'Physics': 'Optics', 'Chemistry': 'Stoichiometry', 'Biology': 'Evolution', 'English': 'Shakespeare', 'History': 'World War I', 'Computer Science': 'Basic Programming', 'Social Studies': 'Federalism' } },
     '11th Grade': {
-        'Science': { 'Physics': 'Electromagnetism', 'Chemistry': 'Organic Chemistry', 'Mathematics': 'Calculus', 'Biology': 'Biotechnology', 'Computer Science': 'Data Structures', 'English': 'Modern Literature' },
-        'Commerce': { 'Accountancy': 'Journal Entries', 'Business Studies': 'Principles of Management', 'Economics': 'Macroeconomics', 'Mathematics': 'Statistics', 'English': 'Business Communication' },
-        'Arts': { 'History': 'Modern History', 'Political Science': 'Constitutional Framework', 'Sociology': 'Social Structures', 'Psychology': 'Introduction to Psychology', 'English': 'Poetry Analysis' }
+        'Science': { 'Physics': 'Electromagnetism', 'Chemistry': 'Organic Chemistry', 'Mathematics': 'Calculus', 'Biology': 'Biotechnology', 'Computer Science': 'Data Structures', 'English': 'Modern Literature', 'Engineering Drawing': 'Projections' },
+        'Commerce': { 'Accountancy': 'Journal Entries', 'Business Studies': 'Principles of Management', 'Economics': 'Macroeconomics', 'Mathematics': 'Statistics', 'English': 'Business Communication', 'Taxation': 'Direct and Indirect Taxes', 'Informatics Practices': 'Database Concepts' },
+        'Arts': { 'History': 'Modern History', 'Political Science': 'Constitutional Framework', 'Sociology': 'Social Structures', 'Psychology': 'Introduction to Psychology', 'English': 'Poetry Analysis', 'Home Science': 'Nutrition', 'Fine Arts': 'History of Art' }
     },
     '12th Grade': {
-        'Science': { 'Physics': 'Modern Physics', 'Chemistry': 'Polymers', 'Mathematics': 'Differential Equations', 'Biology': 'Ecology', 'Computer Science': 'Algorithms', 'English': 'Critical Analysis' },
-        'Commerce': { 'Accountancy': 'Financial Statements', 'Business Studies': 'Marketing', 'Economics': 'International Trade', 'Mathematics': 'Linear Programming', 'English': 'Advanced Writing' },
-        'Arts': { 'History': 'Contemporary World Politics', 'Political Science': 'International Relations', 'Sociology': 'Social Change', 'Psychology': 'Clinical Psychology', 'English': 'Literary Criticism' }
+        'Science': { 'Physics': 'Modern Physics', 'Chemistry': 'Polymers', 'Mathematics': 'Differential Equations', 'Biology': 'Ecology', 'Computer Science': 'Algorithms', 'English': 'Critical Analysis', 'Biotechnology': 'Genetic Engineering' },
+        'Commerce': { 'Accountancy': 'Financial Statements', 'Business Studies': 'Marketing', 'Economics': 'International Trade', 'Mathematics': 'Linear Programming', 'English': 'Advanced Writing', 'Entrepreneurship': 'Business Plan', 'Legal Studies': 'Types of Law' },
+        'Arts': { 'History': 'Contemporary World Politics', 'Political Science': 'International Relations', 'Sociology': 'Social Change', 'Psychology': 'Clinical Psychology', 'English': 'Literary Criticism', 'Philosophy': 'Indian Philosophy', 'Fashion Studies': 'History of Fashion' }
     },
     'Undergraduate': {
-        'Computer Science': { 'Data Structures': 'Linked Lists', 'Algorithms': 'Sorting Algorithms', 'Operating Systems': 'Process Management' },
-        'Engineering: Computer Engg': { 'Digital Logic': 'Boolean Algebra', 'Computer Architecture': 'CPU Design' },
-        'Engineering: Civil': { 'Structural Analysis': 'Truss Analysis', 'Fluid Mechanics': 'Bernoulli\'s Principle' },
-        'Engineering: Mechanical': { 'Thermodynamics': 'First Law', 'Machine Design': 'Gear Systems' },
-        'Medicine': { 'Anatomy': 'Musculoskeletal System', 'Physiology': 'Cardiovascular System' },
-        'Business': { 'Marketing': 'SWOT Analysis', 'Finance': 'Time Value of Money' },
-        'Arts': { 'Philosophy': 'Existentialism', 'Literature': 'Postmodernism' },
-        'Law': { 'Constitutional Law': 'Fundamental Rights', 'Criminal Law': 'Mens Rea' }
+        'Computer Science': { 'Data Structures': 'Linked Lists', 'Algorithms': 'Sorting Algorithms', 'Operating Systems': 'Process Management', 'Database Management': 'SQL Queries', 'Computer Networks': 'OSI Model', 'Theory of Computation': 'Finite Automata', 'Software Engineering': 'Waterfall Model' },
+        'Engineering: Computer Engg': { 'Digital Logic': 'Boolean Algebra', 'Computer Architecture': 'CPU Design', 'Microprocessors': '8085 Architecture', 'Compiler Design': 'Parsing Techniques', 'Distributed Systems': 'Concurrency Control', 'Information Security': 'Cryptography', 'Artificial Intelligence': 'Search Algorithms' },
+        'Engineering: Civil': { 'Structural Analysis': 'Truss Analysis', 'Fluid Mechanics': 'Bernoulli\'s Principle', 'Geotechnical Engineering': 'Soil Classification', 'Transportation Engineering': 'Traffic Flow', 'Environmental Engineering': 'Water Treatment', 'Construction Management': 'Project Scheduling', 'Hydrology': 'Rainfall-Runoff Modeling' },
+        'Engineering: Mechanical': { 'Thermodynamics': 'First Law', 'Machine Design': 'Gear Systems', 'Fluid Mechanics': 'Pipe Flow', 'Heat Transfer': 'Conduction', 'Manufacturing Processes': 'Casting', 'Control Systems': 'Laplace Transforms', 'Robotics': 'Kinematics' },
+        'Medicine': { 'Anatomy': 'Musculoskeletal System', 'Physiology': 'Cardiovascular System', 'Biochemistry': 'Metabolic Pathways', 'Pharmacology': 'Drug Actions', 'Pathology': 'Inflammation', 'Microbiology': 'Bacterial Infections', 'Forensic Medicine': 'Post-mortem' },
+        'Business': { 'Marketing': 'SWOT Analysis', 'Finance': 'Time Value of Money', 'Human Resources': 'Recruitment Process', 'Operations Management': 'Inventory Control', 'International Business': 'Global Strategy', 'Organizational Behavior': 'Leadership Theories', 'Business Law': 'Contract Law' },
+        'Arts': { 'Philosophy': 'Existentialism', 'Literature': 'Postmodernism', 'Psychology': 'Cognitive Biases', 'Sociology': 'Social Stratification', 'Economics': 'Game Theory', 'Political Science': 'Democratic Theory', 'Anthropology': 'Cultural Relativism' },
+        'Law': { 'Constitutional Law': 'Fundamental Rights', 'Criminal Law': 'Mens Rea', 'Contract Law': 'Offer and Acceptance', 'Torts': 'Negligence', 'International Law': 'State Sovereignty', 'Property Law': 'Easements', 'Corporate Law': 'Company Formation' }
     }
 };
 
@@ -657,3 +657,4 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     
 
     
+
