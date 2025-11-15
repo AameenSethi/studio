@@ -110,7 +110,7 @@ export function PersonalizedStudyPlan() {
   }
 
   return (
-    <Card className="w-full bg-gradient-to-br from-pink-300/20 to-secondary/50">
+    <Card className="w-full bg-gradient-to-br from-pink-300/20 to-secondary/50 border-2 border-white/50">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Wand2 className="h-6 w-6 text-accent" />
