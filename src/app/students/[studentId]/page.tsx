@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/app-layout';
-import { getStudentById } from '@/lib/student-data';
+import { getStudentById, studentData } from '@/lib/student-data';
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
