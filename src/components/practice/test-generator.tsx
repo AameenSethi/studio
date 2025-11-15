@@ -73,6 +73,7 @@ const studentFormSchema = z
     customSubject: z.string().optional(),
     topic: z.string().min(2, { message: 'Topic must be at least 2 characters.' }),
     numberOfQuestions: z.number().min(1).max(20),
+    includeInAnalytics: z.boolean().default(true),
   })
   .refine(
     (data) => {
@@ -176,6 +177,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       customSubject: '',
       topic: '',
       numberOfQuestions: 5,
+      includeInAnalytics: true,
     },
   });
 
@@ -251,8 +253,8 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       }
       // When 'other' is selected for subject, we don't clear the topic
       // allowing the user to type a custom one.
-    } else {
-      form.setValue('topic', '');
+    } else if (watchSubject !== 'other') {
+        form.setValue('topic', '');
     }
   }, [watchStream, watchSubject, userClass, form]);
 
@@ -271,6 +273,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     const finalStream = values.stream === 'other' ? values.customStream! : values.stream;
     const finalSubject = values.subject === 'other' ? values.customSubject! : values.subject;
     setFormValues({...values, stream: finalStream, subject: finalSubject});
+    setIncludeInAnalytics(values.includeInAnalytics);
 
 
     try {
@@ -352,7 +355,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             score: correctAnswers,
             duration: finalElapsedTime,
             isComplete: true,
-            includeInAnalytics: true, // Assigned tests default to included
+            includeInAnalytics: includeInAnalytics,
         });
         setCurrentTestId(assignedTest.id);
     } else {
@@ -365,7 +368,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             subject: testSubject,
             topic: testTopic,
             isComplete: true,
-            includeInAnalytics: true, // Self-generated tests default to included
+            includeInAnalytics: includeInAnalytics,
         };
         const newId = addHistoryItem(newHistoryItem);
         setCurrentTestId(newId);
@@ -376,17 +379,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       title: 'Answers Submitted!',
       description: 'You can now view the answer key and your results.',
     });
-  };
-
-  const handleAnalyticsToggle = (checked: boolean) => {
-    setIncludeInAnalytics(checked);
-    if (currentTestId) {
-      updateHistoryItem(currentTestId, { includeInAnalytics: checked });
-      toast({
-        title: 'Analytics Updated',
-        description: `This test will ${checked ? 'now be included in' : 'be excluded from'} your analytics.`,
-      });
-    }
   };
 
   const formatTime = (totalSeconds: number) => {
@@ -554,6 +546,24 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                         </FormItem>
                     )}
                     />
+                    <FormField
+                        control={form.control}
+                        name="includeInAnalytics"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                            <div className="space-y-0.5">
+                                <FormLabel>Add to Analytics</FormLabel>
+                                <FormMessage />
+                            </div>
+                            <FormControl>
+                                <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                                />
+                            </FormControl>
+                            </FormItem>
+                        )}
+                    />
                     <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
                         <>
@@ -651,13 +661,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                                 <p className='text-2xl font-bold'>{formatTime(elapsedTime)}</p>
                             </div>
                         </div>
-                        <div className="flex items-center space-x-2">
-                            <Switch id="analytics-toggle" checked={includeInAnalytics} onCheckedChange={handleAnalyticsToggle} />
-                            <Label htmlFor="analytics-toggle" className="flex flex-col">
-                                <span>Include in Analytics</span>
-                                <span className="font-normal text-xs text-muted-foreground">Toggle this to include/exclude from charts.</span>
-                            </Label>
-                        </div>
                     </CardContent>
                 </Card>
 
@@ -715,13 +718,3 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     </Card>
   );
 }
-
-    
-
-    
-
-    
-
-
-
-
