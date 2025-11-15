@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -30,14 +30,29 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, User, Save, Camera } from 'lucide-react';
+import { Loader2, User, Save, Camera, School } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { cn } from '@/lib/utils';
 
-const profileSchema = z.object({
-  name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-  role: z.enum(['Student', 'Teacher', 'Parent']),
-});
+const profileSchema = z
+  .object({
+    name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+    role: z.enum(['Student', 'Teacher', 'Parent']),
+    institutionName: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.role === 'Student') {
+        return data.institutionName && data.institutionName.length > 0;
+      }
+      return true;
+    },
+    {
+      message: 'Institution name is required for students.',
+      path: ['institutionName'],
+    }
+  );
 
 export function ProfileEditor() {
   const { toast } = useToast();
@@ -51,12 +66,19 @@ export function ProfileEditor() {
     defaultValues: {
       name: 'Valeriy Trubnikov',
       role: 'Student',
+      institutionName: 'State University',
     },
   });
 
+  const watchRole = form.watch('role');
+
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
-    console.log(values);
+    const submissionValues = { ...values };
+    if (submissionValues.role !== 'Student') {
+      delete submissionValues.institutionName;
+    }
+    console.log(submissionValues);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
@@ -154,6 +176,37 @@ export function ProfileEditor() {
                   </FormItem>
                 )}
               />
+              <div
+                className={cn(
+                  'transition-all duration-300 ease-in-out',
+                  watchRole === 'Student'
+                    ? 'opacity-100 max-h-40'
+                    : 'opacity-0 max-h-0 overflow-hidden'
+                )}
+              >
+                {watchRole === 'Student' && (
+                  <FormField
+                    control={form.control}
+                    name="institutionName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Institution Name</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <School className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input
+                              placeholder="e.g., 'State University'"
+                              {...field}
+                              className="pl-10"
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                )}
+              </div>
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
