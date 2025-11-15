@@ -10,10 +10,6 @@ import {
   generatePracticeTest,
   type GeneratePracticeTestOutput,
 } from '@/ai/flows/practice-test-generator';
-import {
-  generatePracticeTestForChild,
-  type GeneratePracticeTestForChildOutput,
-} from '@/ai/flows/practice-test-generator';
 import { evaluateAnswer } from '@/ai/flows/evaluate-answer';
 
 
@@ -48,7 +44,6 @@ import {
   Loader2,
   FileText,
   ArrowRight,
-  KeyRound,
   Upload,
   CheckCircle,
   XCircle,
@@ -62,7 +57,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { useUser } from '@/hooks/use-user-role';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useHistory, type HistoryItem } from '@/hooks/use-history';
@@ -91,18 +85,6 @@ const studentFormSchema = z
     }
   );
 
-const parentFormSchema = z.object({
-  studentId: z.string().min(1, { message: 'Please enter a student UID.' }),
-  topic: z.string().min(3, { message: 'Please enter a topic.' }),
-  numberOfQuestions: z.number().min(1).max(20),
-  timeLimit: z.number().min(5).max(120),
-});
-
-type TestOutput = (
-  | GeneratePracticeTestOutput
-  | GeneratePracticeTestForChildOutput
-) & { answerKey?: { question: string; answer: string }[] };
-
 type StudentAnswers = { [key: number]: string };
 type AnswerCorrectness = { [key: number]: boolean };
 
@@ -117,19 +99,11 @@ const subjectMap: Record<string, string[]> = {
     'Undergraduate': ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'],
   };
 
-export function TestGenerator({ assignedTest }: { assignedTest?: HistoryItem }) {
-  const { userRole } = useUser();
-  if (userRole === 'Parent' || userRole === 'Teacher') {
-    return <ParentTestGenerator />;
-  }
-  return <StudentTestGenerator assignedTest={assignedTest} />;
-}
-
 interface StudentTestGeneratorProps {
     assignedTest?: HistoryItem;
-  }
-  
-function StudentTestGenerator({ assignedTest }: StudentTestGeneratorProps) {
+}
+
+export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const { toast } = useToast();
   const { addHistoryItem, updateHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
@@ -632,205 +606,6 @@ function StudentTestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                 </Accordion>
               </CardFooter>
             )}
-          </Card>
-        </CardFooter>
-      )}
-    </Card>
-  );
-}
-
-function ParentTestGenerator() {
-  const { toast } = useToast();
-  const { addHistoryItem } = useHistory();
-  const [isLoading, setIsLoading] = useState(false);
-  const [test, setTest] = useState<TestOutput | null>(null);
-
-  const form = useForm<z.infer<typeof parentFormSchema>>({
-    resolver: zodResolver(parentFormSchema),
-    defaultValues: {
-      studentId: 'alex-johnson-42',
-      topic: 'Algebra Basics',
-      numberOfQuestions: 5,
-      timeLimit: 30,
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof parentFormSchema>) {
-    setIsLoading(true);
-    setTest(null);
-    try {
-      const result = await generatePracticeTestForChild(values);
-      setTest(result);
-      addHistoryItem({
-        type: 'Practice Test',
-        title: `Assigned Test: ${values.topic}`,
-        content: result.answerKey,
-        studentId: values.studentId,
-        isComplete: false,
-        topic: values.topic,
-        subject: 'Assigned' // Placeholder subject for assigned tests
-      });
-      toast({
-        title: 'Practice Test Assigned!',
-        description: `A test on ${values.topic} has been created for student ${values.studentId}.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error Generating Test',
-        description: 'There was an issue creating the test. Please try again.',
-      });
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-6 w-6 text-accent" />
-          Assign a Practice Test
-        </CardTitle>
-        <CardDescription>
-          Create a timed test with an answer key for a specific student.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="studentId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Student User ID</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="e.g., alex-johnson-42"
-                        {...field}
-                        className="pl-10"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="topic"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Test Topic</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., 'Fractions' or 'World War II'"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="timeLimit"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Time Limit (minutes): {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={5}
-                      max={120}
-                      step={5}
-                      defaultValue={[field.value]}
-                      onValueChange={(values) => field.onChange(values[0])}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="numberOfQuestions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Questions: {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={1}
-                      max={20}
-                      step={1}
-                      defaultValue={[field.value]}
-                      onValueChange={(values) => field.onChange(values[0])}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating & Assigning...
-                </>
-              ) : (
-                <>
-                  Assign Test
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      {test && test.answerKey && (
-        <CardFooter>
-          <Card className="w-full bg-muted/50">
-            <CardHeader>
-              <CardTitle>Generated Practice Test</CardTitle>
-              <CardDescription>
-                Time Limit: {form.getValues('timeLimit')} minutes
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <h3 className="font-semibold mb-4">Questions</h3>
-              <ul className="space-y-4 mb-6">
-                {test.answerKey.map((item, index) => (
-                  <li key={index} className="flex items-start gap-4">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-primary-foreground text-sm font-bold mt-1">
-                      {index + 1}
-                    </span>
-                    <p className="flex-1">{item.question}</p>
-                  </li>
-                ))}
-              </ul>
-              <Accordion type="single" collapsible className="w-full">
-                <AccordionItem value="item-1">
-                  <AccordionTrigger>Show Answer Key</AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="space-y-4 mt-4">
-                      {test.answerKey.map((item, index) => (
-                        <li key={index}>
-                          <p className="font-semibold">
-                            {index + 1}. {item.question}
-                          </p>
-                          <p className="text-emerald-600 dark:text-emerald-400 pl-6">
-                            Answer: {item.answer}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            </CardContent>
           </Card>
         </CardFooter>
       )}

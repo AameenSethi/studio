@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 
-type Role = 'Student' | 'Teacher' | 'Parent';
+type Role = 'Student';
 
 interface UserContextType {
   userRole: Role;
@@ -20,27 +20,17 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Helper to get initial state from localStorage
-const getInitialState = (email?: string) => {
-  const isTeacher = email?.toLowerCase().includes('teacher');
-  const defaultStudent = {
-    role: 'Student' as Role,
-    name: 'Alex Johnson',
-    avatar: 'https://i.pravatar.cc/150?u=student-007',
-    email: 'student@example.com',
-    id: 'student-007',
-  };
-  const defaultTeacher = {
-    role: 'Teacher' as Role,
-    name: 'Valeriy Trubnikov',
-    avatar: PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
-    email: 'teacher@example.com',
-    id: 'valeriy-trubnikov-01',
-  };
-
-  const selectedUser = isTeacher ? defaultTeacher : defaultStudent;
+const getInitialState = () => {
+    const defaultStudent = {
+      role: 'Student' as Role,
+      name: 'Alex Johnson',
+      avatar: 'https://i.pravatar.cc/150?u=student-007',
+      email: 'student@example.com',
+      id: 'student-007',
+    };
 
   if (typeof window === 'undefined') {
-    return selectedUser;
+    return defaultStudent;
   }
   try {
     const storedRole = localStorage.getItem('userRole');
@@ -49,22 +39,16 @@ const getInitialState = (email?: string) => {
     const storedEmail = localStorage.getItem('userEmail');
     const storedId = localStorage.getItem('userId');
     
-    // If an email is passed, it means we are logging in, so we should ignore stored values.
-    if (email) {
-        return selectedUser;
-    }
-
-    // Otherwise, load from storage or use defaults.
     return {
-      role: (storedRole ? JSON.parse(storedRole) : selectedUser.role) as Role,
-      name: storedName ? JSON.parse(storedName) : selectedUser.name,
-      avatar: storedAvatar ? JSON.parse(storedAvatar) : selectedUser.avatar,
-      email: storedEmail ? JSON.parse(storedEmail) : selectedUser.email,
-      id: storedId ? JSON.parse(storedId) : selectedUser.id,
+      role: (storedRole ? JSON.parse(storedRole) : defaultStudent.role) as Role,
+      name: storedName ? JSON.parse(storedName) : defaultStudent.name,
+      avatar: storedAvatar ? JSON.parse(storedAvatar) : defaultStudent.avatar,
+      email: storedEmail ? JSON.parse(storedEmail) : defaultStudent.email,
+      id: storedId ? JSON.parse(storedId) : defaultStudent.id,
     };
   } catch (error) {
     console.error("Failed to parse from localStorage", error);
-    return selectedUser;
+    return defaultStudent;
   }
 };
 
@@ -72,29 +56,26 @@ const getInitialState = (email?: string) => {
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isMounted, setIsMounted] = useState(false);
   
-  const [userEmail, setUserEmailState] = useState<string>(() => getInitialState().email);
-  
-  const initialState = getInitialState(userEmail);
+  const initialState = getInitialState();
 
   const [userRole, setUserRole] = useState<Role>(initialState.role);
   const [userName, setUserName] = useState<string>(initialState.name);
   const [userAvatar, setUserAvatar] = useState<string | undefined>(initialState.avatar);
   const [userId, setUserId] = useState<string>(initialState.id);
+  const [userEmail, setUserEmailState] = useState<string>(initialState.email);
 
   const setUserEmail = (email: string) => {
-    const newState = getInitialState(email);
-    
+    const state = getInitialState();
     setUserEmailState(email);
-    setUserRole(newState.role);
-    setUserName(newState.name);
-    setUserAvatar(newState.avatar);
-    setUserId(newState.id);
+    setUserRole(state.role);
+    setUserName(state.name);
+    setUserAvatar(state.avatar);
+    setUserId(state.id);
   }
 
   useEffect(() => {
     setIsMounted(true);
-    const savedEmail = localStorage.getItem('userEmail');
-    const state = getInitialState(savedEmail ? JSON.parse(savedEmail) : undefined);
+    const state = getInitialState();
     setUserEmailState(state.email);
     setUserRole(state.role);
     setUserName(state.name);
@@ -116,13 +97,32 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [userRole, userName, userAvatar, userEmail, userId, isMounted]);
 
+  const value = { userRole, setUserRole, userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId };
+
   if (!isMounted) {
-    // or a loading spinner
-    return null;
+    // On the server or first render, you might want to return a default context
+    // or null, depending on your app's needs. Returning null will cause consumers
+    // to throw an error if not handled, which can be useful for debugging.
+    const defaultContextValue = {
+        userRole: 'Student' as Role,
+        setUserRole: () => {},
+        userName: 'Student',
+        setUserName: () => {},
+        userEmail: '',
+        setUserEmail: () => {},
+        userAvatar: '',
+        setUserAvatar: () => {},
+        userId: '',
+    };
+    return (
+        <UserContext.Provider value={defaultContextValue}>
+          {children}
+        </UserContext.Provider>
+      );
   }
 
   return (
-    <UserContext.Provider value={{ userRole, setUserRole, userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId }}>
+    <UserContext.Provider value={value}>
       {children}
     </UserContext.Provider>
   );
@@ -131,7 +131,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+    // This is a fallback for server-side rendering or if context is not ready
+    return {
+      userRole: 'Student' as Role,
+      setUserRole: (role: Role) => {},
+      userName: 'Student',
+      setUserName: (name: string) => {},
+      userEmail: '',
+      setUserEmail: (email: string) => {},
+      userAvatar: undefined,
+      setUserAvatar: (avatar: string) => {},
+      userId: 'student-007',
+    };
   }
   return context;
 };

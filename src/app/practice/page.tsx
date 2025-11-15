@@ -3,14 +3,10 @@
 
 import AppLayout from '@/components/layout/app-layout';
 import { TestGenerator } from '@/components/practice/test-generator';
-import { useUser } from '@/hooks/use-user-role';
 
 export default function PracticePage() {
-  const { userRole } = useUser();
-  const pageTitle = userRole === 'Student' ? 'Practice Test Generator' : 'Assign a Practice Test';
-  const pageDescription = userRole === 'Student'
-    ? 'Create custom quizzes and exams to test your knowledge.'
-    : 'Create and assign a timed test for a specific student.';
+  const pageTitle = 'Practice Test Generator';
+  const pageDescription = 'Create custom quizzes and exams to test your knowledge.';
 
   return (
     <AppLayout>

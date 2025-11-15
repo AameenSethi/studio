@@ -51,8 +51,7 @@ const generateDynamicReportData = (history: HistoryItem[], studentId?: string): 
   // If no studentId is provided (for a student's own report), we use all their history.
   let studentHistory = history;
   if (studentId) {
-      const studentHash = studentId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      studentHistory = history.filter((_, index) => (index + studentHash) % 4 === 0); // Simulate different data per student
+      studentHistory = history.filter(item => item.studentId === studentId);
   }
 
   const weeklyHistory = studentHistory.filter(item => {
@@ -145,44 +144,19 @@ const generateDynamicReportData = (history: HistoryItem[], studentId?: string): 
   return { learningData, overallSummary };
 }
 
-interface ReportGeneratorProps {
-    studentId?: string;
-}
-
-export function ReportGenerator({ studentId }: ReportGeneratorProps) {
-  const { userRole } = useUser();
-
-  if (studentId) {
-      return <StudentReportViewer studentId={studentId} />;
-  }
-
-  if (userRole === 'Student') {
-    return <StudentReportViewer />;
-  }
-  
-  return <TeacherParentReportGenerator />;
-}
-
-function StudentReportViewer({ studentId }: { studentId?: string}) {
+export function ReportGenerator() {
   const { toast } = useToast();
   const { history, addHistoryItem } = useHistory();
   const { userId } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<WeeklyProgressReportOutput | null>(null);
-  const effectiveStudentId = studentId || userId;
 
   useEffect(() => {
-    // If a specific studentId is provided, generate the report automatically on mount.
-    // Otherwise, find the most recent progress report from history on mount for the logged-in student.
-    if (studentId) {
-        handleGenerateReport(true); // `true` to suppress toast on initial load
-    } else {
-        const lastReport = history.find(item => item.type === 'Progress Report');
-        if (lastReport) {
-            setReport(lastReport.content);
-        }
+    const lastReport = history.find(item => item.type === 'Progress Report');
+    if (lastReport) {
+        setReport(lastReport.content);
     }
-  }, [history, studentId]);
+  }, [history]);
 
   const handleGenerateReport = async (isInitialLoad = false) => {
     setIsLoading(true);
@@ -191,7 +165,7 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
       const today = new Date();
       const lastWeek = subDays(today, 7);
 
-      const { learningData, overallSummary } = generateDynamicReportData(history, studentId);
+      const { learningData, overallSummary } = generateDynamicReportData(history);
 
       if (learningData.length === 0) {
         if (!isInitialLoad) {
@@ -206,7 +180,7 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
       }
 
       const result = await generateWeeklyProgressReport({
-        userId: effectiveStudentId,
+        userId: userId,
         startDate: format(lastWeek, 'yyyy-MM-dd'),
         endDate: format(today, 'yyyy-MM-dd'),
         learningData: learningData,
@@ -214,13 +188,11 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
       });
 
       setReport(result);
-      if (!studentId) { // Only add to history if it's the student generating their own report
-          addHistoryItem({
-            type: 'Progress Report',
-            title: `Weekly Report for ${effectiveStudentId}`,
-            content: result,
-          });
-      }
+      addHistoryItem({
+        type: 'Progress Report',
+        title: `Weekly Report for ${userId}`,
+        content: result,
+      });
       if (!isInitialLoad) {
           toast({
             title: 'Report Generated!',
@@ -241,10 +213,8 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
     }
   };
 
-  const cardTitle = studentId ? "AI-Generated Weekly Report" : "My Weekly Progress Report";
-  const cardDescription = studentId 
-    ? "An AI-powered analysis of this student's learning progress from the past week."
-    : "Click the button to generate an AI-powered analysis of your learning progress from the past week. Your last generated report is shown below.";
+  const cardTitle = "My Weekly Progress Report";
+  const cardDescription = "Click the button to generate an AI-powered analysis of your learning progress from the past week. Your last generated report is shown below.";
 
 
   return (
@@ -265,7 +235,7 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
             </>
           ) : (
             <>
-              {studentId ? 'Refresh Report' : 'Generate New Report'}
+              Generate New Report
               <ArrowRight className="ml-2 h-4 w-4" />
             </>
           )}
@@ -281,7 +251,7 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
       )}
       {!isLoading && report && (
         <CardFooter>
-          <ReportDisplayCard report={report} studentId={effectiveStudentId} title={studentId ? "" : "Last Generated Report"} />
+          <ReportDisplayCard report={report} studentId={userId} title={"Last Generated Report"} />
         </CardFooter>
       )}
       {!isLoading && !report && (
@@ -295,138 +265,6 @@ function StudentReportViewer({ studentId }: { studentId?: string}) {
   );
 }
 
-function TeacherParentReportGenerator() {
-  const { toast } = useToast();
-  const { history, addHistoryItem } = useHistory();
-  const [isLoading, setIsLoading] = useState(false);
-  const [report, setReport] = useState<WeeklyProgressReportOutput | null>(
-    null
-  );
-  const [generatedForId, setGeneratedForId] = useState<string | null>(null);
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      studentId: 'alex-johnson-42',
-    },
-  });
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    setIsLoading(true);
-    setReport(null);
-    setGeneratedForId(null);
-    try {
-      const today = new Date();
-      const lastWeek = subDays(today, 7);
-
-      const { learningData, overallSummary } = generateDynamicReportData(history, values.studentId);
-
-      if (learningData.length === 0) {
-        toast({
-            variant: 'destructive',
-            title: 'No Data Available',
-            description: `There is no learning activity for student ${values.studentId} in the last 7 days.`,
-        });
-        setIsLoading(false);
-        return;
-      }
-
-      const result = await generateWeeklyProgressReport({
-        userId: values.studentId,
-        startDate: format(lastWeek, 'yyyy-MM-dd'),
-        endDate: format(today, 'yyyy-MM-dd'),
-        learningData: learningData,
-        overallSummary: overallSummary,
-      });
-
-      setReport(result);
-      setGeneratedForId(values.studentId);
-      addHistoryItem({
-        type: 'Progress Report',
-        title: `Generated report for ${values.studentId}`,
-        content: result,
-      });
-      toast({
-        title: 'Report Generated!',
-        description: `Progress report for student ${values.studentId} is ready.`,
-      });
-    } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error Generating Report',
-        description:
-          'There was an issue creating the report. Please try again.',
-      });
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <TrendingUp className="h-6 w-6 text-accent" />
-          Generate Student Report
-        </CardTitle>
-        <CardDescription>
-          Enter a student UID to generate an AI-powered analysis of their
-          learning progress from the past week.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <FormField
-              control={form.control}
-              name="studentId"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Student User ID</FormLabel>
-                  <FormControl>
-                    <div className="relative">
-                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder="e.g., alex-johnson-42"
-                        {...field}
-                        className="pl-10"
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  Generate Report
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      {report && generatedForId && (
-        <CardFooter
-          className={cn(
-            'transition-all duration-500 ease-in-out',
-            report ? 'opacity-100' : 'opacity-0'
-          )}
-        >
-          <ReportDisplayCard report={report} studentId={generatedForId} />
-        </CardFooter>
-      )}
-    </Card>
-  );
-}
 
 export function ReportDisplayCard({
   report,

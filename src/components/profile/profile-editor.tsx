@@ -39,57 +39,25 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 const profileSchema = z
   .object({
     name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
-    role: z.enum(['Student', 'Teacher', 'Parent']),
     institutionName: z.string().optional(),
     class: z.string().optional(),
-  })
-  .refine(
-    (data) => {
-      if (data.role === 'Student') {
-        return data.institutionName && data.institutionName.length > 0;
-      }
-      return true;
-    },
-    {
-      message: 'Institution name is required for students.',
-      path: ['institutionName'],
-    }
-  )
-  .refine(
-    (data) => {
-        if (data.role === 'Student') {
-            return data.class && data.class.length > 0;
-        }
-        return true;
-    },
-    {
-        message: 'Please select a class.',
-        path: ['class'],
-    }
-  );
+  });
 
 export function ProfileEditor() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userRole, setUserRole, userName, setUserName, userAvatar, setUserAvatar } = useUser();
+  const { userName, setUserName, userAvatar, setUserAvatar } = useUser();
   const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: userName,
-      role: userRole,
       institutionName: 'State University',
       class: '10th Grade',
     },
   });
-
-  const watchRole = form.watch('role');
-
-  useEffect(() => {
-    form.setValue('role', userRole);
-  }, [userRole, form]);
 
   useEffect(() => {
     form.setValue('name', userName);
@@ -97,14 +65,7 @@ export function ProfileEditor() {
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
-    const submissionValues = { ...values };
-    if (submissionValues.role !== 'Student') {
-      delete submissionValues.institutionName;
-      delete submissionValues.class;
-    }
-    console.log(submissionValues);
-    setUserRole(submissionValues.role); // Update global role state
-    setUserName(submissionValues.name);
+    setUserName(values.name);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
@@ -180,7 +141,7 @@ export function ProfileEditor() {
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
             <CardDescription>
-              Update your name and role here.
+              Update your name and other details here.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -192,7 +153,7 @@ export function ProfileEditor() {
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        value="user-123"
+                        value="student-007"
                         disabled
                         className="pl-10"
                       />
@@ -212,41 +173,7 @@ export function ProfileEditor() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="role"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Role</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="Student">Student</SelectItem>
-                          <SelectItem value="Teacher">Teacher</SelectItem>
-                          <SelectItem value="Parent">Parent</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <div
-                  className={cn(
-                    'transition-all duration-300 ease-in-out space-y-6',
-                    watchRole === 'Student'
-                      ? 'opacity-100 max-h-96'
-                      : 'opacity-0 max-h-0 overflow-hidden'
-                  )}
-                >
-                  {watchRole === 'Student' && (
-                    <>
+                <div className="space-y-6">
                     <FormField
                         control={form.control}
                         name="class"
@@ -300,8 +227,6 @@ export function ProfileEditor() {
                         </FormItem>
                       )}
                     />
-                    </>
-                  )}
                 </div>
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? (

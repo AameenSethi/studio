@@ -14,7 +14,6 @@ import {
   History,
   ArrowDown,
   ArrowUp,
-  Users,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -33,33 +32,24 @@ import {
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, Fragment, useRef } from 'react';
-import { useUser } from '@/hooks/use-user-role';
 import { ModeToggle } from './mode-toggle';
 import { Separator } from '@/components/ui/separator';
 
-const allNavItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher', 'Parent'] },
-  { href: '/explanations', icon: Lightbulb, label: 'Explanations', roles: ['Student', 'Teacher'] },
-  { href: '/practice', icon: FileText, label: 'Practice Tests', studentLabel: 'Practice', teacherParentLabel: 'Assign Tests', roles: ['Student', 'Teacher', 'Parent'] },
-  { href: '/analytics', icon: BarChart2, label: 'Analytics', roles: ['Student', 'Teacher'] },
-  { href: '/progress', icon: TrendingUp, label: 'Progress Reports', roles: ['Student', 'Teacher', 'Parent'] },
-  { href: '/students', icon: Users, label: 'Students', roles: ['Teacher'] },
-  { href: '/history', icon: History, label: 'History', roles: ['Student', 'Teacher', 'Parent'] },
-  { href: '/profile', icon: User, label: 'Profile', roles: ['Student', 'Teacher', 'Parent'] },
+const navItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/explanations', icon: Lightbulb, label: 'Explanations' },
+  { href: '/practice', icon: FileText, label: 'Practice' },
+  { href: '/analytics', icon: BarChart2, label: 'Analytics' },
+  { href: '/progress', icon: TrendingUp, label: 'Progress' },
+  { href: '/history', icon: History, label: 'History' },
+  { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { userRole } = useUser();
-  const [navItems, setNavItems] = useState(allNavItems);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({});
   const navRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const filteredNavItems = allNavItems.filter(item => item.roles.includes(userRole));
-    setNavItems(filteredNavItems);
-  }, [userRole]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -83,7 +73,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             });
         }
     }
-}, [pathname, navItems]);
+}, [pathname]);
 
 
   const scrollToBottom = () => {
@@ -98,16 +88,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       top: 0,
       behavior: 'smooth',
     });
-  };
-
-  const getNavItemLabel = (item: any) => {
-    if (item.href === '/practice') {
-      if (userRole === 'Teacher' || userRole === 'Parent') {
-        return item.teacherParentLabel;
-      }
-      return item.studentLabel;
-    }
-    return item.label;
   };
 
   return (
@@ -132,7 +112,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       )}
                   >
                       <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-xs">{getNavItemLabel(item)}</span>
+                      <span className="text-xs">{item.label}</span>
                   </Link>
                 </Fragment>
             ))}
