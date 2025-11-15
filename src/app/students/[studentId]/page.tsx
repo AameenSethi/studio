@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useParams, useRouter } from 'next/navigation';
@@ -9,7 +10,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, User, BookOpen } from 'lucide-react';
 import { ReportGenerator } from '@/components/progress/report-generator';
-import { History, Wand2, Lightbulb, FileText, Clock } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { useHistory } from '@/hooks/use-history';
@@ -91,6 +92,7 @@ export default function StudentDetailPage() {
     'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
     'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
     'Practice Test': <FileText className="h-5 w-5 text-accent" />,
+    'Progress Report': <History className="h-5 w-5 text-accent" />,
   };
   
   const formatDuration = (seconds?: number) => {
@@ -142,36 +144,82 @@ export default function StudentDetailPage() {
   
   const renderContent = (item: any) => {
     switch (item.type) {
-      case 'Study Plan':
-        return (
-            <div className="space-y-6">
-                 <div>
-                    <h3 className='text-lg font-semibold mb-2 text-primary'>Weekly Schedule</h3>
-                    <Table>
-                        <TableHeader><TableRow><TableHead>Day</TableHead><TableHead>Focus Topics</TableHead><TableHead className='text-right'>Time</TableHead></TableRow></TableHeader>
-                        <TableBody>
-                            {item.content.weeklySchedule.map((day: any) => (
-                                <TableRow key={day.day}><TableCell>{day.day}</TableCell><TableCell>{day.focusTopics.join(', ')}</TableCell><TableCell className='text-right'>{day.estimatedTime}</TableCell></TableRow>
+        case 'Study Plan':
+            if (!item.content || !item.content.weeklySchedule) {
+                return <p>Study plan data is not available in the expected format.</p>;
+            }
+            return (
+                <div className="space-y-6">
+                     <div>
+                        <h3 className='text-lg font-semibold mb-2 text-primary'>Key Highlights</h3>
+                        <ul className='space-y-2'>
+                            {item.content.keyHighlights.map((highlight: string, index: number) => (
+                                <li key={index} className='flex items-start gap-2'>
+                                    <CheckCircle className="h-4 w-4 mt-1 text-green-500"/>
+                                    <span>{highlight}</span>
+                                </li>
                             ))}
-                        </TableBody>
-                    </Table>
+                        </ul>
+                    </div>
+                    <div>
+                        <h3 className='text-lg font-semibold mb-2 text-primary'>Weekly Schedule</h3>
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead className='w-[120px]'>Day</TableHead>
+                                    <TableHead>Focus Topics</TableHead>
+                                    <TableHead className='w-[150px] text-right'>Time</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {item.content.weeklySchedule.map((day: any) => (
+                                    <TableRow key={day.day}>
+                                        <TableCell className='font-medium'>{day.day}</TableCell>
+                                        <TableCell>{day.focusTopics.join(', ')}</TableCell>
+                                        <TableCell className='text-right'>{day.estimatedTime}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
+                    <p className='text-center text-muted-foreground italic pt-4'>{item.content.finalSummary}</p>
                 </div>
-            </div>
-        );
-      case 'Explanation':
-        return <ExplanationDisplay text={item.content.detailedExplanation} />;
-      case 'Practice Test':
-        return (
-          <div>
-            <div className="flex gap-4 mb-4">
-                {item.score !== undefined && <Badge>Score: {item.score} / {item.content.length}</Badge>}
-                {item.duration !== undefined && <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{formatDuration(item.duration)}</Badge>}
-            </div>
-            <ul className="space-y-4">{item.content.map((qa: any, index: number) => (<li key={index}><p className="font-semibold">{index + 1}. {qa.question}</p><p className="text-sm text-emerald-600 dark:text-emerald-400 pl-2">Answer: {qa.answer}</p></li>))}</ul>
-          </div>
-        );
-      default:
-        return <p>{JSON.stringify(item.content)}</p>;
+            );
+        case 'Explanation':
+            if (typeof item.content === 'string') {
+                return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+            }
+            return (
+                <div className="space-y-4">
+                    <div className="p-4 rounded-lg bg-background/50 border italic">
+                        <p>{item.content.summary}</p>
+                    </div>
+                    <div className='p-4 rounded-lg bg-background/50 border'>
+                        <ExplanationDisplay text={item.content.detailedExplanation} />
+                    </div>
+                    <Card className="bg-background/50">
+                        <CardHeader className="flex-row items-center gap-2 pb-2">
+                            <Quote className="h-5 w-5 text-accent"/>
+                            <CardTitle className="text-lg">Analogy</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-muted-foreground">{item.content.analogy}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            );
+        case 'Practice Test':
+            return (
+              <div>
+                <div className="flex gap-4 mb-4">
+                    {item.score !== undefined && <Badge>Score: {item.score} / {item.content.length}</Badge>}
+                    {item.duration !== undefined && <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{formatDuration(item.duration)}</Badge>}
+                </div>
+                <ul className="space-y-4">{item.content.map((qa: any, index: number) => (<li key={index}><p className="font-semibold">{index + 1}. {qa.question}</p><p className="text-sm text-emerald-600 dark:text-emerald-400 pl-2">Answer: {qa.answer}</p></li>))}</ul>
+              </div>
+            );
+        default:
+            return <p>{JSON.stringify(item.content)}</p>;
     }
   };
 
@@ -247,7 +295,15 @@ export default function StudentDetailPage() {
                         </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                        <Card className="bg-muted/50"><CardContent className="pt-6">{renderContent(item)}</CardContent></Card>
+                            <Card className="bg-muted/50">
+                                <CardHeader>
+                                    <CardTitle className="text-lg">{item.type}</CardTitle>
+                                    <CardDescription>{item.title}</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    {renderContent(item)}
+                                </CardContent>
+                            </Card>
                         </AccordionContent>
                     </AccordionItem>
                     ))}
@@ -263,3 +319,5 @@ export default function StudentDetailPage() {
     </AppLayout>
   );
 }
+
+    

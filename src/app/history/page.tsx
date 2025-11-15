@@ -1,3 +1,4 @@
+
 'use client';
 
 import AppLayout from '@/components/layout/app-layout';
@@ -15,7 +16,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useHistory } from '@/hooks/use-history';
-import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote, TrendingUp } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -26,11 +27,13 @@ import {
     TableHeader,
     TableRow,
   } from "@/components/ui/table";
+import { ReportDisplayCard } from '@/components/progress/report-generator';
 
 const iconMap = {
   'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
   'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
   'Practice Test': <FileText className="h-5 w-5 text-accent" />,
+  'Progress Report': <TrendingUp className="h-5 w-5 text-accent" />,
 };
 
 const formatDuration = (seconds?: number) => {
@@ -100,8 +103,8 @@ export default function HistoryPage() {
   const renderContent = (item: any) => {
     switch (item.type) {
       case 'Study Plan':
-        if (typeof item.content === 'string') {
-            return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        if (typeof item.content === 'string' || !item.content.weeklySchedule) {
+            return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: (item.content.toString()).replace(/\n/g, '<br />') }} />;
         }
         return (
             <div className="space-y-6">
@@ -187,7 +190,9 @@ export default function HistoryPage() {
           </ul>
           </div>
         );
-      default:
+    case 'Progress Report':
+        return <ReportDisplayCard report={item.content} studentId={item.title.split(' ').pop() || 'user'} />
+    default:
         return <p>{JSON.stringify(item.content)}</p>;
     }
   };
@@ -222,8 +227,8 @@ export default function HistoryPage() {
                   <AccordionItem value={item.id} key={item.id}>
                     <AccordionTrigger>
                       <div className="flex items-center gap-4 w-full">
-                        {iconMap[item.type]}
-                        <div className="flex flex-col items-start">
+                        {iconMap[item.type as keyof typeof iconMap]}
+                        <div className="flex flex-col items-start text-left">
                           <span className="font-semibold">{item.title}</span>
                           <span className="text-xs text-muted-foreground">
                             {format(new Date(item.timestamp), "PPP p")}
@@ -274,3 +279,5 @@ export default function HistoryPage() {
     </AppLayout>
   );
 }
+
+    
