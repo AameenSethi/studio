@@ -306,7 +306,7 @@ export function PerformanceByTopic() {
             </CardHeader>
             <CardContent className="grid gap-6">
                 {topicPerformanceData.map((topicData, index) => (
-                    <div key={topicData.topic}>
+                    <div key={`${topicData.topic}-${index}`}>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                             <div className="md:col-span-1">
                                 <h3 className="text-lg font-semibold">{topicData.topic}</h3>
