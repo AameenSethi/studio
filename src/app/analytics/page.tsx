@@ -1,3 +1,4 @@
+
 'use client';
 import AppLayout from '@/components/layout/app-layout';
 import {
@@ -42,14 +43,24 @@ export default function AnalyticsPage() {
                 <StudyTimeChart />
               </CardContent>
             </Card>
-            <TopicMasteryChart />
           </div>
           <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
              <div className="lg:col-span-2">
-                <PerformanceByTopic />
+                <TopicMasteryChart />
             </div>
             <ManageTrackedTopics />
           </div>
+          <Card>
+            <CardHeader>
+                <CardTitle>Performance by Topic</CardTitle>
+                <CardDescription>
+                    A detailed breakdown of your performance in each topic.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <PerformanceByTopic />
+            </CardContent>
+          </Card>
         </div>
       </TrackedTopicsProvider>
     </AppLayout>

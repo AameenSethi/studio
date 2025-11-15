@@ -155,7 +155,7 @@ export function TopicMasteryChart() {
 
 
   return (
-    <>
+    <div className="grid gap-4 md:gap-8 lg:grid-cols-2">
       <Card>
         <CardHeader>
           <CardTitle>Topic Mastery</CardTitle>
@@ -222,7 +222,7 @@ export function TopicMasteryChart() {
           </p>
         </CardContent>
       </Card>
-    </>
+    </div>
   );
 }
 
@@ -280,73 +280,55 @@ export function PerformanceByTopic() {
 
     if (topicPerformanceData.length === 0) {
         return (
-            <Card className="lg:col-span-2">
-                <CardHeader>
-                    <CardTitle>Performance by Topic</CardTitle>
-                    <CardDescription>
-                        A detailed breakdown of your performance in each topic.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">No test data available.</p>
-                        <p className="text-sm text-muted-foreground">Complete a practice test to see your performance breakdown.</p>
-                    </div>
-                </CardContent>
-            </Card>
+            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">No test data available.</p>
+                <p className="text-sm text-muted-foreground">Complete a practice test to see your performance breakdown.</p>
+            </div>
         );
     }
 
     return (
-        <Card className="lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Performance by Topic</CardTitle>
-                <CardDescription>
-                    A detailed breakdown of your performance in each topic.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-6">
-                {topicPerformanceData.map((topicData, index) => (
-                    <div key={`${topicData.topic}-${index}`}>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                            <div className="md:col-span-1">
-                                <h3 className="text-lg font-semibold">{topicData.topic}</h3>
-                                <p className="text-sm text-muted-foreground">{topicData.subject}</p>
-                                <div className="flex items-center gap-4 mt-2">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Avg. Score</p>
-                                        <p className="text-2xl font-bold">{topicData.averageScore}%</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">Tests Taken</p>
-                                        <p className="text-2xl font-bold">{topicData.testCount}</p>
-                                    </div>
+        <div className="grid gap-6">
+            {topicPerformanceData.map((topicData, index) => (
+                <div key={`${topicData.topic}-${index}`}>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="md:col-span-1">
+                            <h3 className="text-lg font-semibold">{topicData.topic}</h3>
+                            <p className="text-sm text-muted-foreground">{topicData.subject}</p>
+                            <div className="flex items-center gap-4 mt-2">
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Avg. Score</p>
+                                    <p className="text-2xl font-bold">{topicData.averageScore}%</p>
                                 </div>
-                            </div>
-                            <div className="md:col-span-2">
-                            {topicData.scores.length > 0 ? (
-                                <ChartContainer config={topicPerformanceChartConfig} className="h-[100px] w-full">
-                                    <ResponsiveContainer>
-                                        <LineChart data={topicData.scores} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                            <XAxis dataKey="attempt" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `Test ${val}`} />
-                                            <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
-                                            <Tooltip content={<ChartTooltipContent indicator="dot" />} />
-                                            <Line type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={2} />
-                                        </LineChart>
-                                    </ResponsiveContainer>
-                                </ChartContainer>
-                            ) : (
-                                <div className="flex items-center justify-center h-[100px] text-sm text-muted-foreground border-2 border-dashed rounded-lg">
-                                    No tests taken for this topic.
+                                <div>
+                                    <p className="text-sm text-muted-foreground">Tests Taken</p>
+                                    <p className="text-2xl font-bold">{topicData.testCount}</p>
                                 </div>
-                            )}
                             </div>
                         </div>
-                        {index < topicPerformanceData.length - 1 && <Separator />}
+                        <div className="md:col-span-2">
+                        {topicData.scores.length > 0 ? (
+                            <ChartContainer config={topicPerformanceChartConfig} className="h-[100px] w-full">
+                                <ResponsiveContainer>
+                                    <LineChart data={topicData.scores} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <XAxis dataKey="attempt" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(val) => `Test ${val}`} />
+                                        <YAxis domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}%`} />
+                                        <Tooltip content={<ChartTooltipContent indicator="dot" />} />
+                                        <Line type="monotone" dataKey="score" stroke="hsl(var(--accent))" strokeWidth={2} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </ChartContainer>
+                        ) : (
+                            <div className="flex items-center justify-center h-[100px] text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                                No tests taken for this topic.
+                            </div>
+                        )}
+                        </div>
                     </div>
-                ))}
-            </CardContent>
-        </Card>
+                    {index < topicPerformanceData.length - 1 && <Separator />}
+                </div>
+            ))}
+        </div>
     );
 }
 
