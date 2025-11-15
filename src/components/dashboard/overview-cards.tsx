@@ -9,6 +9,8 @@ import {
   YAxis,
   Tooltip,
   Cell,
+  Defs,
+  Filter,
 } from 'recharts';
 import {
   ChartConfig,
@@ -60,6 +62,15 @@ export function WeeklyProgressChart() {
             data={chartData}
             onMouseLeave={() => setActiveIndex(null)}
         >
+          <Defs>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </Defs>
           <XAxis
             dataKey="day"
             tickLine={false}
@@ -90,7 +101,8 @@ export function WeeklyProgressChart() {
                 <Cell 
                     key={`cell-${index}`} 
                     fill="hsl(var(--primary))"
-                    opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
+                    filter={activeIndex === index ? 'url(#glow)' : 'none'}
+                    style={{ transition: 'filter 0.2s ease-in-out' }}
                 />
             ))}
           </Bar>
