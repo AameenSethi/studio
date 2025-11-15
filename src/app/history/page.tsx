@@ -17,6 +17,7 @@ import {
 import { useHistory } from '@/hooks/use-history';
 import { History, Wand2, Lightbulb, FileText } from 'lucide-react';
 import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 const iconMap = {
   'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
@@ -35,6 +36,12 @@ export default function HistoryPage() {
         return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
       case 'Practice Test':
         return (
+          <div>
+            {item.score !== undefined && (
+                 <div className="mb-4">
+                    <Badge>Score: {item.score} / {item.content.length}</Badge>
+                </div>
+            )}
           <ul className="space-y-4">
             {item.content.map((qa: any, index: number) => (
               <li key={index}>
@@ -43,6 +50,7 @@ export default function HistoryPage() {
               </li>
             ))}
           </ul>
+          </div>
         );
       default:
         return <p>{JSON.stringify(item.content)}</p>;
@@ -85,6 +93,13 @@ export default function HistoryPage() {
                           {format(new Date(item.timestamp), "PPP p")}
                         </span>
                       </div>
+                       {item.type === 'Practice Test' && item.score !== undefined && (
+                        <div className="ml-auto pr-4">
+                            <Badge variant="outline">
+                                {((item.score / item.content.length) * 100).toFixed(0)}%
+                            </Badge>
+                        </div>
+                    )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent>

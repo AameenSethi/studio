@@ -125,6 +125,8 @@ function StudentTestGenerator() {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [formValues, setFormValues] = useState<z.infer<typeof studentFormSchema> | null>(null);
+
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -163,6 +165,7 @@ function StudentTestGenerator() {
     setStartTime(null);
     setEndTime(null);
     setElapsedTime(0);
+    setFormValues(values);
 
     const subject =
       values.subject === 'other' ? values.customSubject! : values.subject;
@@ -176,11 +179,7 @@ function StudentTestGenerator() {
       });
       setTest(result);
       setStartTime(new Date());
-      addHistoryItem({
-        type: 'Practice Test',
-        title: `Test on: ${values.topic}`,
-        content: result.answerKey,
-      });
+
       toast({
         title: 'Practice Test Generated!',
         description: 'Your custom test is ready to go. The timer has started.',
@@ -202,9 +201,10 @@ function StudentTestGenerator() {
   };
 
   const handleSubmitAnswers = async () => {
-    if (!test?.answerKey) return;
+    if (!test?.answerKey || !formValues) return;
     setIsSubmitting(true);
-    setEndTime(new Date());
+    const submissionTime = new Date();
+    setEndTime(submissionTime);
 
     let correctAnswers = 0;
     const correctness: AnswerCorrectness = {};
@@ -237,6 +237,13 @@ function StudentTestGenerator() {
     setScore(correctAnswers);
     setAnswersSubmitted(true);
     setIsSubmitting(false);
+
+    addHistoryItem({
+        type: 'Practice Test',
+        title: `Test on: ${formValues.topic}`,
+        content: test.answerKey,
+        score: correctAnswers,
+    });
 
     toast({
       title: 'Answers Submitted!',
