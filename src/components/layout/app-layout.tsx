@@ -112,8 +112,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-       <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
-          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-4 md:text-sm">
+       <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
+          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
             <Link
                 href="/dashboard"
                 className="flex items-center gap-2 text-lg font-semibold md:text-base mr-2"
@@ -123,16 +123,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Link>
             {navItems.map((item, index) => (
                 <Fragment key={item.href}>
-                  {index > 0 && <Separator orientation="vertical" className="h-6" />}
+                  {index > 0 && <Separator orientation="vertical" className="h-10" />}
                   <Link
                       href={item.href}
                       className={cn(
-                          "flex items-center gap-2 transition-colors hover:text-foreground px-2",
-                          pathname === item.href ? "text-foreground" : "text-muted-foreground"
+                          "flex flex-col items-center justify-center gap-1 transition-colors hover:text-foreground w-20 text-center",
+                          pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground"
                       )}
                   >
-                      <item.icon className="h-4 w-4" />
-                      {item.label}
+                      <item.icon className="h-5 w-5" />
+                      <span className="text-xs">{item.label}</span>
                   </Link>
                 </Fragment>
             ))}
