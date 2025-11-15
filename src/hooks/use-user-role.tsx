@@ -110,7 +110,18 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUser must be used within a UserProvider');
+    // This can happen on the server or if the provider is missing.
+    // We return a default state to prevent crashing, but functionality will be limited.
+    return {
+        userRole: 'Student' as Role,
+        setUserRole: () => {},
+        userName: 'Guest',
+        setUserName: () => {},
+        userEmail: '',
+        userAvatar: undefined,
+        setUserAvatar: () => {},
+        userId: '',
+    };
   }
   return context;
 };
