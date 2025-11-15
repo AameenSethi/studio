@@ -36,7 +36,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2, ArrowRight } from 'lucide-react';
+import { Loader2, Wand2, ArrowRight, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistory } from '@/hooks/use-history';
 
@@ -93,6 +93,19 @@ export function PersonalizedStudyPlan() {
       setIsLoading(false);
     }
   }
+  
+  const handleDownload = () => {
+    if (!studyPlan) return;
+    const blob = new Blob([studyPlan.studyPlan], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'study-plan.txt';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const PlanDisplay = ({ plan }: { plan: string }) => {
     // Simple markdown-like parsing
@@ -205,8 +218,12 @@ export function PersonalizedStudyPlan() {
           )}
         >
           <Card className="w-full bg-muted/50">
-            <CardHeader>
+            <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Your Custom Study Plan</CardTitle>
+              <Button onClick={handleDownload} variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" />
+                Download
+              </Button>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none">
               <PlanDisplay plan={studyPlan.studyPlan} />
