@@ -118,12 +118,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                       )}
                   >
-                      <item.icon className="h-5 w-5" />
+                      <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
                       <span className="text-xs">{item.label}</span>
                   </Link>
                 </Fragment>
             ))}
-            <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300 ease-in-out" style={underlineStyle} />
+            <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
           </nav>
           <Sheet>
             <SheetTrigger asChild>
