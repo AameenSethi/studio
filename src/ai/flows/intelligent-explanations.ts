@@ -67,8 +67,8 @@ const intelligentExplanationFlow = ai.defineFlow(
         throw new Error('Failed to generate explanation text.');
     }
 
-    const diagramResult = await ai.generate({
-        model: googleAI.model('imagen-2.0-fast-generate-001'),
+    const { media } = await ai.generate({
+        model: googleAI.model('imagen-4.0-fast-generate-001'),
         prompt: explanationOutput.diagramPrompt,
     });
     
@@ -76,7 +76,7 @@ const intelligentExplanationFlow = ai.defineFlow(
         summary: explanationOutput.summary,
         detailedExplanation: explanationOutput.detailedExplanation,
         analogy: explanationOutput.analogy,
-        diagramUrl: diagramResult.media?.url || '',
+        diagramUrl: media?.url || '',
     };
   }
 );
