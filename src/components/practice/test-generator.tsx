@@ -104,6 +104,17 @@ type TestOutput = (
 type StudentAnswers = { [key: number]: string };
 type AnswerCorrectness = { [key: number]: boolean };
 
+const subjectMap: Record<string, string[]> = {
+    '6th Grade': ['Mathematics', 'Science', 'English', 'History', 'Geography'],
+    '7th Grade': ['Mathematics', 'Science', 'English', 'History', 'Geography'],
+    '8th Grade': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Civics'],
+    '9th Grade': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Economics'],
+    '10th Grade': ['Mathematics', 'Physics', 'Chemistry', 'Biology', 'English', 'History', 'Geography', 'Economics', 'Computer Science'],
+    '11th Grade': ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'English', 'Accountancy', 'Business Studies', 'Economics'],
+    '12th Grade': ['Physics', 'Chemistry', 'Mathematics', 'Biology', 'Computer Science', 'English', 'Accountancy', 'Business Studies', 'Economics'],
+    'Undergraduate': ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'],
+  };
+
 export function TestGenerator() {
   const { userRole } = useUser();
   if (userRole === 'Parent') {
@@ -153,7 +164,20 @@ function StudentTestGenerator() {
     },
   });
 
+  const watchClass = form.watch('class');
   const watchSubject = form.watch('subject');
+  const [availableSubjects, setAvailableSubjects] = useState(subjectMap[form.getValues('class')] || []);
+
+  useEffect(() => {
+    const selectedClass = form.getValues('class');
+    const newSubjects = subjectMap[selectedClass] || [];
+    setAvailableSubjects(newSubjects);
+    // Reset subject if it's not in the new list
+    if (!newSubjects.includes(form.getValues('subject')) && form.getValues('subject') !== 'other') {
+      form.setValue('subject', newSubjects[0] || '');
+    }
+  }, [watchClass, form]);
+
 
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
     setIsLoading(true);
@@ -317,7 +341,9 @@ function StudentTestGenerator() {
                   <FormItem>
                     <FormLabel>Class</FormLabel>
                     <Select
-                      onValueChange={field.onChange}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }}
                       defaultValue={field.value}
                     >
                       <FormControl>
@@ -352,7 +378,7 @@ function StudentTestGenerator() {
                     <FormLabel>Subject</FormLabel>
                     <Select
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -360,19 +386,9 @@ function StudentTestGenerator() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Mathematics">Mathematics</SelectItem>
-                        <SelectItem value="Physics">Physics</SelectItem>
-                        <SelectItem value="Chemistry">Chemistry</SelectItem>
-                        <SelectItem value="Biology">Biology</SelectItem>
-                        <SelectItem value="Science">Science</SelectItem>
-                        <SelectItem value="History">History</SelectItem>
-                        <SelectItem value="Geography">Geography</SelectItem>
-                        <SelectItem value="Civics">Civics</SelectItem>
-                        <SelectItem value="Economics">Economics</SelectItem>
-                        <SelectItem value="English">English</SelectItem>
-                        <SelectItem value="Computer Science">
-                          Computer Science
-                        </SelectItem>
+                        {availableSubjects.map((subject) => (
+                            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                        ))}
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
                     </Select>
