@@ -32,7 +32,13 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, FileText, ArrowRight, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -45,14 +51,20 @@ import {
 import { useUser } from '@/hooks/use-user-role';
 
 const studentFormSchema = z.object({
-  studyPlan: z.string().min(10, {
-    message: 'Please provide some study plan details.',
-  }),
-  learningHistory: z.string().min(10, {
-    message: 'Please provide some learning history.',
-  }),
-  numberOfQuestions: z.number().min(1).max(20),
-});
+    class: z.string().min(1, { message: 'Please select a class.' }),
+    subject: z.string().min(1, { message: 'Please select or enter a subject.' }),
+    customSubject: z.string().optional(),
+    topic: z.string().min(2, { message: 'Topic must be at least 2 characters.' }),
+    numberOfQuestions: z.number().min(1).max(20),
+  }).refine(data => {
+      if (data.subject === 'other') {
+          return data.customSubject && data.customSubject.length > 0;
+      }
+      return true;
+  }, {
+      message: 'Please specify the subject.',
+      path: ['customSubject'],
+  });
 
 const parentFormSchema = z.object({
     studentId: z.string().min(1, { message: 'Please enter a student UID.' }),
@@ -79,17 +91,29 @@ function StudentTestGenerator() {
   const form = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
-      studyPlan: 'Focus on advanced calculus, specifically differentiation and integration techniques. Review linear algebra basics.',
-      learningHistory: 'Scored well on differentiation quizzes, but struggled with integration by parts. Has not studied linear algebra recently.',
+      class: '10th Grade',
+      subject: 'Mathematics',
+      customSubject: '',
+      topic: 'Algebra',
       numberOfQuestions: 10,
     },
   });
 
+  const watchSubject = form.watch('subject');
+
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
     setIsLoading(true);
     setTest(null);
+
+    const subject = values.subject === 'other' ? values.customSubject! : values.subject;
+
     try {
-      const result = await generatePracticeTest(values);
+      const result = await generatePracticeTest({
+          class: values.class,
+          subject: subject,
+          topic: values.topic,
+          numberOfQuestions: values.numberOfQuestions,
+      });
       setTest(result);
       toast({
         title: 'Practice Test Generated!',
@@ -115,22 +139,87 @@ function StudentTestGenerator() {
           Generate a Practice Test
         </CardTitle>
         <CardDescription>
-          The AI will generate questions based on your study plan and past performance.
+          Select your class, subject, and topic to generate a custom test.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                 <FormField
+                    control={form.control}
+                    name="class"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Class</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a class" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="9th Grade">9th Grade</SelectItem>
+                            <SelectItem value="10th Grade">10th Grade</SelectItem>
+                            <SelectItem value="11th Grade">11th Grade</SelectItem>
+                            <SelectItem value="12th Grade">12th Grade</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+                 <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a subject" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="Mathematics">Mathematics</SelectItem>
+                            <SelectItem value="Science">Science</SelectItem>
+                            <SelectItem value="History">History</SelectItem>
+                            <SelectItem value="English">English</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
+            </div>
+
+            {watchSubject === 'other' && (
+                 <FormField
+                    control={form.control}
+                    name="customSubject"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Custom Subject</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Enter a subject" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+            )}
+
             <FormField
               control={form.control}
-              name="studyPlan"
+              name="topic"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Study Plan Focus</FormLabel>
+                  <FormLabel>Topic</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="What topics are you focusing on?"
-                      className="resize-none"
+                    <Input
+                      placeholder="e.g., 'Algebra' or 'The Cold War'"
                       {...field}
                     />
                   </FormControl>
@@ -138,23 +227,7 @@ function StudentTestGenerator() {
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="learningHistory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Learning History / Weaknesses</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder="What have you struggled with recently?"
-                      className="resize-none"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+           
             <FormField
               control={form.control}
               name="numberOfQuestions"

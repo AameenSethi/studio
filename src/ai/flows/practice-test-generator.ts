@@ -16,15 +16,10 @@ import {z} from 'genkit';
 
 // For Students
 const GeneratePracticeTestInputSchema = z.object({
-  studyPlan: z
-    .string()
-    .describe('The study plan to generate a practice test for.'),
-  learningHistory: z
-    .string()
-    .describe('The learning history of the user.'),
-  numberOfQuestions: z
-    .number()
-    .describe('The number of questions to generate.'),
+  class: z.string().describe('The class level of the student (e.g., "9th Grade").'),
+  subject: z.string().describe('The subject for the test (e.g., "Mathematics").'),
+  topic: z.string().describe('The specific topic within the subject (e.g., "Algebra").'),
+  numberOfQuestions: z.number().describe('The number of questions to generate.'),
 });
 export type GeneratePracticeTestInput = z.infer<typeof GeneratePracticeTestInputSchema>;
 
@@ -65,12 +60,13 @@ const studentPrompt = ai.definePrompt({
   name: 'generatePracticeTestPrompt',
   input: {schema: GeneratePracticeTestInputSchema},
   output: {schema: GeneratePracticeTestOutputSchema},
-  prompt: `You are an expert in generating practice tests based on a user's study plan and learning history.
+  prompt: `You are an expert in generating practice tests for students.
 
-  Study Plan: {{{studyPlan}}}
-  Learning History: {{{learningHistory}}}
+  Class: {{{class}}}
+  Subject: {{{subject}}}
+  Topic: {{{topic}}}
 
-  Generate {{{numberOfQuestions}}} practice test questions based on the study plan and learning history. Return the questions as a JSON array of strings.
+  Generate {{{numberOfQuestions}}} practice test questions based on the provided details. Return the questions as a JSON array of strings.
   `,
 });
 
