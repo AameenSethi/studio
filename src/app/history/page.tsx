@@ -119,81 +119,83 @@ export default function HistoryPage() {
 
   return (
     <AppLayout>
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight font-headline">
-            Action History
-          </h2>
-          <p className="text-muted-foreground">
-            A log of all your recent AI-powered activities.
-          </p>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between space-y-2">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight font-headline">
+              Action History
+            </h2>
+            <p className="text-muted-foreground">
+              A log of all your recent AI-powered activities.
+            </p>
+          </div>
         </div>
-      </div>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-6 w-6" />
-            Recent Actions
-          </CardTitle>
-          <CardDescription>
-            Here are the study plans, explanations, and tests you've generated.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {history.length > 0 ? (
-            <Accordion type="multiple" className="w-full">
-              {history.map((item) => (
-                <AccordionItem value={item.id} key={item.id}>
-                  <AccordionTrigger>
-                    <div className="flex items-center gap-4 w-full">
-                      {iconMap[item.type]}
-                      <div className="flex flex-col items-start">
-                        <span className="font-semibold">{item.title}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {format(new Date(item.timestamp), "PPP p")}
-                        </span>
-                      </div>
-                       {item.type === 'Practice Test' && item.score !== undefined && (
-                        <div className="ml-auto pr-4 flex items-center gap-4">
-                            {item.duration !== undefined && (
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3"/>
-                                    {formatDuration(item.duration)}
-                                </Badge>
-                            )}
-                            <Badge variant="outline">
-                                {((item.score / item.content.length) * 100).toFixed(0)}%
-                            </Badge>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <History className="h-6 w-6" />
+              Recent Actions
+            </CardTitle>
+            <CardDescription>
+              Here are the study plans, explanations, and tests you've generated.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {history.length > 0 ? (
+              <Accordion type="multiple" className="w-full">
+                {history.map((item) => (
+                  <AccordionItem value={item.id} key={item.id}>
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-4 w-full">
+                        {iconMap[item.type]}
+                        <div className="flex flex-col items-start">
+                          <span className="font-semibold">{item.title}</span>
+                          <span className="text-xs text-muted-foreground">
+                            {format(new Date(item.timestamp), "PPP p")}
+                          </span>
                         </div>
-                    )}
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <Card className="bg-background/50">
-                        <CardHeader>
-                            <CardTitle className="text-lg">{item.type}</CardTitle>
-                            <CardDescription>{item.title}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {renderContent(item)}
-                        </CardContent>
-                    </Card>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
-              <p className="text-muted-foreground">
-                Your history is currently empty.
-              </p>
-              <p className="text-sm text-muted-foreground">
-                Generated content will appear here.
-              </p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                         {item.type === 'Practice Test' && item.score !== undefined && (
+                          <div className="ml-auto pr-4 flex items-center gap-4">
+                              {item.duration !== undefined && (
+                                  <Badge variant="outline" className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3"/>
+                                      {formatDuration(item.duration)}
+                                  </Badge>
+                              )}
+                              <Badge variant="outline">
+                                  {((item.score / item.content.length) * 100).toFixed(0)}%
+                              </Badge>
+                          </div>
+                      )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <Card className="bg-background/50">
+                          <CardHeader>
+                              <CardTitle className="text-lg">{item.type}</CardTitle>
+                              <CardDescription>{item.title}</CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                              {renderContent(item)}
+                          </CardContent>
+                      </Card>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
+                <p className="text-muted-foreground">
+                  Your history is currently empty.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Generated content will appear here.
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </AppLayout>
   );
 }
