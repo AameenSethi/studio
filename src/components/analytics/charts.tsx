@@ -105,17 +105,16 @@ export function TopicMasteryChart() {
     const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
 
     testHistory.forEach(item => {
-      const topicMatch = item.title.match(/Test on: (.*)/);
-      const topic = topicMatch ? topicMatch[1] : 'General';
+      const name = item.topic || item.subject || 'General';
       
-      // Only consider topics that are being tracked
-      if (trackedTopics.includes(topic)) {
+      // Check if the topic or subject is being tracked
+      if (trackedTopics.includes(name)) {
         const percentage = (item.score! / item.content.length) * 100;
-        if (!topicScores[topic]) {
-          topicScores[topic] = { scores: [], count: 0 };
+        if (!topicScores[name]) {
+          topicScores[name] = { scores: [], count: 0 };
         }
-        topicScores[topic].scores.push(percentage);
-        topicScores[topic].count++;
+        topicScores[name].scores.push(percentage);
+        topicScores[name].count++;
       }
     });
     
@@ -137,9 +136,8 @@ export function TopicMasteryChart() {
 
     const relevantTestHistory = history.filter(item => {
         if (item.type !== 'Practice Test' || item.score === undefined) return false;
-        const topicMatch = item.title.match(/Test on: (.*)/);
-        const topic = topicMatch ? topicMatch[1] : 'General';
-        return trackedTopics.includes(topic);
+        const name = item.topic || item.subject || 'General';
+        return trackedTopics.includes(name);
     });
 
     const totalTests = relevantTestHistory.length;
@@ -242,16 +240,15 @@ export function PerformanceByTopic() {
         const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number } } = {};
 
         testHistory.reverse().forEach((item) => {
-            const topicMatch = item.title.match(/Test on: (.*)/);
-            const topic = topicMatch ? topicMatch[1] : 'General';
+            const name = item.topic || item.subject || 'General';
 
-            if (trackedTopics.includes(topic)) {
+            if (trackedTopics.includes(name)) {
                 const percentage = (item.score! / item.content.length) * 100;
-                if (!topicData[topic]) {
-                    topicData[topic] = { scores: [], count: 0 };
+                if (!topicData[name]) {
+                    topicData[name] = { scores: [], count: 0 };
                 }
-                topicData[topic].scores.push({ score: Math.round(percentage), attempt: topicData[topic].count + 1 });
-                topicData[topic].count++;
+                topicData[name].scores.push({ score: Math.round(percentage), attempt: topicData[name].count + 1 });
+                topicData[name].count++;
             }
         });
 

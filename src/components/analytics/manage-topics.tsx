@@ -80,8 +80,8 @@ export function ManageTopics() {
           Manage Tracked Topics
         </CardTitle>
         <CardDescription>
-          Add or remove topics to customize your analytics dashboard. Performance
-          is automatically tracked for these topics.
+          Add or remove subjects or topics to customize your analytics dashboard. Performance
+          is automatically tracked for these items.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -94,19 +94,19 @@ export function ManageTopics() {
                 <FormItem className="flex-grow">
                   <FormLabel className="sr-only">New Topic</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 'Calculus' or 'World History'" {...field} />
+                    <Input placeholder="e.g., 'Mathematics', 'Calculus', or 'World History'" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" disabled={isLoading}>
-              <Plus className="mr-2 h-4 w-4" /> Add Topic
+              <Plus className="mr-2 h-4 w-4" /> Add Item
             </Button>
           </form>
         </Form>
         <div className="space-y-4">
-          <h4 className="text-sm font-medium text-muted-foreground">Currently Tracked Topics:</h4>
+          <h4 className="text-sm font-medium text-muted-foreground">Currently Tracked Items:</h4>
           {trackedTopics.length > 0 ? (
             <div className="flex flex-wrap gap-2">
               {trackedTopics.map((topic) => (
@@ -126,7 +126,7 @@ export function ManageTopics() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground italic">
-              No topics are being tracked. Add one above to get started!
+              No items are being tracked. Add one above to get started!
             </p>
           )}
         </div>

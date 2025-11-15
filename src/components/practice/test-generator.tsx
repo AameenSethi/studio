@@ -189,15 +189,15 @@ function StudentTestGenerator() {
     setStartTime(null);
     setEndTime(null);
     setElapsedTime(0);
-    setFormValues(values);
+    
+    const finalSubject = values.subject === 'other' ? values.customSubject! : values.subject;
+    setFormValues({...values, subject: finalSubject});
 
-    const subject =
-      values.subject === 'other' ? values.customSubject! : values.subject;
 
     try {
       const result = await generatePracticeTest({
         class: `${values.class} (${values.board})`,
-        subject: subject,
+        subject: finalSubject,
         topic: values.topic,
         numberOfQuestions: values.numberOfQuestions,
       });
@@ -271,6 +271,8 @@ function StudentTestGenerator() {
         content: test.answerKey,
         score: correctAnswers,
         duration: finalElapsedTime,
+        subject: formValues.subject,
+        topic: formValues.topic,
     });
 
     toast({
