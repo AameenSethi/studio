@@ -70,7 +70,7 @@ const weeklyProgressReportPrompt = ai.definePrompt({
   {{#each learningData}}
   **Subject: {{subject}}**
   - **Time Spent:** {{timeSpent}}
-  - **Topics Covered:** {{#join topicsStudied ", "}}{{/join}}
+  - **Topics Covered:** {{#each topicsStudied}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
   - **Practice Test Performance:**
     {{#each practiceTestScores}}
     - {{testName}}: {{score}}
