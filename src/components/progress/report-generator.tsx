@@ -31,7 +31,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, TrendingUp, ArrowRight, Download, KeyRound } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, subDays } from 'date-fns';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useUser } from '@/hooks/use-user-role';
 
 const formSchema = z.object({
   studentId: z.string().min(1, {
@@ -47,7 +47,7 @@ const learningData = `
     `;
 
 export function ReportGenerator() {
-  const { userRole } = useUserRole();
+  const { userRole } = useUser();
 
   if (userRole === 'Student') {
     return <StudentReportViewer />;

@@ -24,7 +24,7 @@ import {
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useUser } from '@/hooks/use-user-role';
 
 const allNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher'] },
@@ -37,7 +37,7 @@ const allNavItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { userRole } = useUserRole();
+  const { userRole } = useUser();
   const [navItems, setNavItems] = useState(allNavItems);
 
   useEffect(() => {

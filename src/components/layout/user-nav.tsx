@@ -21,15 +21,25 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks/use-user-role';
 
 export function UserNav() {
   const router = useRouter();
+  const { userName, userEmail } = useUser();
   const userAvatarImage = PlaceHolderImages.find(
     (img) => img.id === 'user-avatar'
   );
 
   const handleLogout = () => {
     router.push('/');
+  };
+
+  const getInitials = (name: string) => {
+    const names = name.split(' ');
+    if (names.length > 1) {
+      return names[0][0] + names[names.length - 1][0];
+    }
+    return name.substring(0, 2);
   };
 
   return (
@@ -44,16 +54,16 @@ export function UserNav() {
                 data-ai-hint={userAvatarImage.imageHint}
               />
             )}
-            <AvatarFallback>U</AvatarFallback>
+            <AvatarFallback>{getInitials(userName)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">Learner</p>
+            <p className="text-sm font-medium leading-none">{userName}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              learner@example.com
+              {userEmail}
             </p>
           </div>
         </DropdownMenuLabel>

@@ -42,7 +42,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useUser } from '@/hooks/use-user-role';
 
 const studentFormSchema = z.object({
   studyPlan: z.string().min(10, {
@@ -64,7 +64,7 @@ const parentFormSchema = z.object({
 type TestOutput = (GeneratePracticeTestOutput | GeneratePracticeTestForChildOutput) & { answerKey?: { question: string, answer: string }[] };
 
 export function TestGenerator() {
-    const { userRole } = useUserRole();
+    const { userRole } = useUser();
     if (userRole === 'Parent') {
         return <ParentTestGenerator />;
     }

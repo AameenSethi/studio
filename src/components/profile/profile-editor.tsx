@@ -34,7 +34,7 @@ import { Loader2, User, Save, Camera, School, KeyRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
-import { useUserRole } from '@/hooks/use-user-role';
+import { useUser } from '@/hooks/use-user-role';
 
 const profileSchema = z
   .object({
@@ -61,12 +61,12 @@ export function ProfileEditor() {
   const userAvatarImage = PlaceHolderImages.find((img) => img.id === 'user-avatar');
   const [avatar, setAvatar] = useState(userAvatarImage?.imageUrl);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userRole, setUserRole } = useUserRole();
+  const { userRole, setUserRole, userName, setUserName } = useUser();
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: 'Valeriy Trubnikov',
+      name: userName,
       role: userRole,
       institutionName: 'State University',
     },
@@ -78,6 +78,10 @@ export function ProfileEditor() {
     form.setValue('role', userRole);
   }, [userRole, form]);
 
+  useEffect(() => {
+    form.setValue('name', userName);
+  }, [userName, form]);
+
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
     const submissionValues = { ...values };
@@ -86,6 +90,7 @@ export function ProfileEditor() {
     }
     console.log(submissionValues);
     setUserRole(submissionValues.role); // Update global role state
+    setUserName(submissionValues.name);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);

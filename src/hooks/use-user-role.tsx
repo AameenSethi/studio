@@ -4,27 +4,32 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 type Role = 'Student' | 'Teacher' | 'Parent';
 
-interface UserRoleContextType {
+interface UserContextType {
   userRole: Role;
   setUserRole: (role: Role) => void;
+  userName: string;
+  setUserName: (name: string) => void;
+  userEmail: string;
 }
 
-const UserRoleContext = createContext<UserRoleContextType | undefined>(undefined);
+const UserContext = createContext<UserContextType | undefined>(undefined);
 
-export const UserRoleProvider = ({ children }: { children: ReactNode }) => {
+export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userRole, setUserRole] = useState<Role>('Student');
+  const [userName, setUserName] = useState<string>('Valeriy Trubnikov');
+  const userEmail = 'learner@example.com';
 
   return (
-    <UserRoleContext.Provider value={{ userRole, setUserRole }}>
+    <UserContext.Provider value={{ userRole, setUserRole, userName, setUserName, userEmail }}>
       {children}
-    </UserRoleContext.Provider>
+    </UserContext.Provider>
   );
 };
 
-export const useUserRole = () => {
-  const context = useContext(UserRoleContext);
+export const useUser = () => {
+  const context = useContext(UserContext);
   if (context === undefined) {
-    throw new Error('useUserRole must be used within a UserRoleProvider');
+    throw new Error('useUser must be used within a UserProvider');
   }
   return context;
 };

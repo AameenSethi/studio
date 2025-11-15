@@ -1,3 +1,5 @@
+'use client';
+
 import AppLayout from '@/components/layout/app-layout';
 import {
   Card,
@@ -11,14 +13,17 @@ import { Lightbulb, FileText, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { PersonalizedStudyPlan } from '@/components/dashboard/personalized-study-plan';
 import { WeeklyProgressChart } from '@/components/dashboard/overview-cards';
+import { useUser } from '@/hooks/use-user-role';
 
 export default function DashboardPage() {
+  const { userName } = useUser();
+
   return (
     <AppLayout>
       <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-3xl font-bold tracking-tight font-headline">
-            Welcome back, Learner!
+            Welcome back, {userName.split(' ')[0]}!
           </h2>
           <p className="text-muted-foreground">
             Here&apos;s your learning snapshot for today.
