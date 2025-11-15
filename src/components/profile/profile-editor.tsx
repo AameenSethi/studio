@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -77,15 +78,39 @@ export function ProfileEditor() {
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
-    defaultValues: {
-      name: userName,
-      email: userEmail,
-      institutionName: userInstitution,
-      class: userClass,
-      field: '',
-      customField: '',
-      engineeringField: '',
-      customEngineeringField: '',
+    defaultValues: () => {
+      const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
+      const engineeringFields = ['Computer Engg', 'Civil', 'Mechanical'];
+      
+      let mainField = userField || '';
+      let engField = '';
+      let customEngField = '';
+      let customMainField = '';
+  
+      if (userField?.includes('Engineering: ')) {
+          mainField = 'Engineering';
+          const specificEngField = userField.replace('Engineering: ', '');
+          if (engineeringFields.includes(specificEngField)) {
+              engField = specificEngField;
+          } else {
+              engField = 'Other';
+              customEngField = specificEngField;
+          }
+      } else if (userField && !predefinedFields.includes(userField)) {
+          mainField = 'Other';
+          customMainField = userField;
+      }
+
+      return {
+        name: userName,
+        email: userEmail,
+        institutionName: userInstitution,
+        class: userClass,
+        field: mainField,
+        customField: customMainField,
+        engineeringField: engField,
+        customEngineeringField: customEngField,
+      };
     },
   });
 
@@ -97,7 +122,6 @@ export function ProfileEditor() {
     const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
     const engineeringFields = ['Computer Engg', 'Civil', 'Mechanical'];
     
-    let isCustom = false;
     let mainField = userField || '';
     let engField = '';
     let customEngField = '';
@@ -442,3 +466,5 @@ export function ProfileEditor() {
     </>
   );
 }
+
+    
