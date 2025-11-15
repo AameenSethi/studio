@@ -23,18 +23,30 @@ import {
 } from '@/components/ui/tooltip';
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/explanations', icon: Lightbulb, label: 'Explanations' },
-  { href: '/practice', icon: FileText, label: 'Practice Tests' },
-  { href: '/analytics', icon: BarChart2, label: 'Analytics' },
-  { href: '/progress', icon: TrendingUp, label: 'Progress Reports' },
-  { href: '/profile', icon: User, label: 'Profile' },
+const allNavItems = [
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher'] },
+  { href: '/explanations', icon: Lightbulb, label: 'Explanations', roles: ['Student', 'Teacher'] },
+  { href: '/practice', icon: FileText, label: 'Practice Tests', roles: ['Student', 'Teacher', 'Parent'] },
+  { href: '/analytics', icon: BarChart2, label: 'Analytics', roles: ['Student', 'Teacher'] },
+  { href: '/progress', icon: TrendingUp, label: 'Progress Reports', roles: ['Student', 'Teacher', 'Parent'] },
+  { href: '/profile', icon: User, label: 'Profile', roles: ['Student', 'Teacher', 'Parent'] },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [userRole, setUserRole] = useState('Parent'); // Default to Parent for this feature
+  const [navItems, setNavItems] = useState(allNavItems);
+
+  useEffect(() => {
+    // In a real app, you would fetch the user's role.
+    // For now, we allow switching for demonstration.
+    // We are hardcoding to 'Parent' to fulfill the request.
+    const filteredNavItems = allNavItems.filter(item => item.roles.includes(userRole));
+    setNavItems(filteredNavItems);
+  }, [userRole]);
+
 
   const NavLink = ({
     href,
