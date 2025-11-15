@@ -84,7 +84,7 @@ export function StudyTimeChart() {
     <ChartContainer config={studyTimeConfig} className="h-[250px] w-full">
       <ResponsiveContainer>
         <LineChart data={studyTimeData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
-          <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+          <XAxis dataKey="date" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} interval={4} />
           <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value}h`} />
           <Tooltip content={<ChartTooltipContent />} />
           <Line type="monotone" dataKey="hours" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
