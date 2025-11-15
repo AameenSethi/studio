@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  Cell,
 } from 'recharts';
 import {
   ChartConfig,
@@ -15,7 +16,7 @@ import {
   ChartTooltipContent,
 } from '@/components/ui/chart';
 import { useHistory } from '@/hooks/use-history';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { format, subDays, parseISO } from 'date-fns';
 
 const chartConfig = {
@@ -27,6 +28,7 @@ const chartConfig = {
 
 export function WeeklyProgressChart() {
     const { history } = useHistory();
+    const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
     const chartData = useMemo(() => {
         const days = Array.from({ length: 7 }).map((_, i) => {
@@ -53,7 +55,11 @@ export function WeeklyProgressChart() {
   return (
     <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
       <ResponsiveContainer width="100%" height={250}>
-        <BarChart accessibilityLayer data={chartData}>
+        <BarChart 
+            accessibilityLayer 
+            data={chartData}
+            onMouseLeave={() => setActiveIndex(null)}
+        >
           <XAxis
             dataKey="day"
             tickLine={false}
@@ -77,9 +83,17 @@ export function WeeklyProgressChart() {
           />
           <Bar 
             dataKey="activities" 
-            fill="hsl(var(--primary))" 
-            radius={4} 
-        />
+            radius={4}
+            onMouseEnter={(_, index) => setActiveIndex(index)}
+          >
+            {chartData.map((entry, index) => (
+                <Cell 
+                    key={`cell-${index}`} 
+                    fill="hsl(var(--primary))"
+                    opacity={activeIndex === null || activeIndex === index ? 1 : 0.6}
+                />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
