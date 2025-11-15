@@ -64,11 +64,10 @@ import { useUser } from '@/hooks/use-user-role';
 
 const studentFormSchema = z
   .object({
-    stream: z
-      .string()
-      .min(1, { message: 'Please select or enter a stream.' }),
+    stream: z.string().min(1, { message: 'Please select or enter a stream.' }),
     customStream: z.string().optional(),
     subject: z.string().min(1, { message: 'Please select a subject.' }),
+    customSubject: z.string().optional(),
     topic: z.string().min(2, { message: 'Topic must be at least 2 characters.' }),
     numberOfQuestions: z.number().min(1).max(20),
   })
@@ -82,6 +81,18 @@ const studentFormSchema = z
     {
       message: 'Please specify the stream.',
       path: ['customStream'],
+    }
+  )
+  .refine(
+    (data) => {
+        if (data.subject === 'other') {
+            return data.customSubject && data.customSubject.length > 0;
+        }
+        return true;
+    },
+    {
+        message: 'Please specify the subject.',
+        path: ['customSubject'],
     }
   );
 
@@ -157,6 +168,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       stream: '',
       customStream: '',
       subject: '',
+      customSubject: '',
       topic: '',
       numberOfQuestions: 5,
     },
@@ -221,7 +233,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   }, [watchStream, userClass, form]);
 
   useEffect(() => {
-    if (userClass && watchStream && watchStream !== 'other' && watchSubject) {
+    if (userClass && watchStream && watchStream !== 'other' && watchSubject && watchSubject !== 'other') {
         const classStreams = streamAndSubjectMap[userClass] || {};
         const streamSubjects = classStreams[watchStream] || {};
         const suggestedTopic = streamSubjects[watchSubject];
@@ -248,13 +260,14 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     setElapsedTime(0);
     
     const finalStream = values.stream === 'other' ? values.customStream! : values.stream;
-    setFormValues({...values, stream: finalStream});
+    const finalSubject = values.subject === 'other' ? values.customSubject! : values.subject;
+    setFormValues({...values, stream: finalStream, subject: finalSubject});
 
 
     try {
       const result = await generatePracticeTest({
         class: userClass === 'Undergraduate' ? `${userClass} (${userField})` : userClass,
-        subject: values.subject,
+        subject: finalSubject,
         topic: values.topic,
         numberOfQuestions: values.numberOfQuestions,
       });
@@ -444,7 +457,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                                 <Select
                                 onValueChange={field.onChange}
                                 value={field.value}
-                                disabled={availableSubjects.length === 0}
+                                disabled={availableSubjects.length === 0 && watchStream !== 'other'}
                                 >
                                 <FormControl>
                                     <SelectTrigger>
@@ -455,12 +468,29 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                                     {availableSubjects.map((subject) => (
                                         <SelectItem key={subject} value={subject}>{subject}</SelectItem>
                                     ))}
+                                    <SelectItem value="other">Other</SelectItem>
                                 </SelectContent>
                                 </Select>
                                 <FormMessage />
                             </FormItem>
                             )}
                         />
+
+                        {watchSubject === 'other' && (
+                            <FormField
+                                control={form.control}
+                                name="customSubject"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Custom Subject</FormLabel>
+                                        <FormControl>
+                                            <Input placeholder="Enter a subject" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
                     </div>
 
                     <FormField
@@ -657,4 +687,5 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     
 
     
+
 
