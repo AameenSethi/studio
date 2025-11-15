@@ -26,6 +26,7 @@ import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
 import { useUser } from '@/hooks/use-user-role';
+import { ModeToggle } from './mode-toggle';
 
 const allNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher'] },
@@ -134,7 +135,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </nav>
             </SheetContent>
           </Sheet>
-          <UserNav />
+          <div className="flex items-center gap-4">
+            <ModeToggle />
+            <UserNav />
+          </div>
         </header>
         <main className="grid flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
           {children}

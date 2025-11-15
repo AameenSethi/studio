@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { cn } from '@/lib/utils';
 import { UserProvider } from '@/hooks/use-user-role';
 import { HistoryProvider } from '@/hooks/use-history';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Study Journey',
@@ -26,12 +27,19 @@ export default function RootLayout({
         />
       </head>
       <body className={cn('font-body antialiased', 'min-h-screen bg-background font-sans')}>
-        <UserProvider>
-          <HistoryProvider>
-            {children}
-          </HistoryProvider>
-        </UserProvider>
-        <Toaster />
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <UserProvider>
+            <HistoryProvider>
+              {children}
+            </HistoryProvider>
+          </UserProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
