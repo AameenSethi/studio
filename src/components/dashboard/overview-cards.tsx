@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -74,7 +75,12 @@ export function WeeklyProgressChart() {
             cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
             content={<ChartTooltipContent hideIndicator />}
           />
-          <Bar dataKey="activities" fill="hsl(var(--primary))" radius={4} />
+          <Bar 
+            dataKey="activities" 
+            fill="hsl(var(--primary))" 
+            radius={4} 
+            className='transition-opacity opacity-75 hover:opacity-100'
+        />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
