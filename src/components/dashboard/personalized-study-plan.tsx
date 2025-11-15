@@ -38,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Wand2, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHistory } from '@/hooks/use-history';
 
 const formSchema = z.object({
   goals: z.string().min(10, {
@@ -51,6 +52,7 @@ const formSchema = z.object({
 
 export function PersonalizedStudyPlan() {
   const { toast } = useToast();
+  const { addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [studyPlan, setStudyPlan] =
     useState<PersonalizedStudyPlanOutput | null>(null);
@@ -70,6 +72,11 @@ export function PersonalizedStudyPlan() {
     try {
       const result = await generatePersonalizedStudyPlan(values);
       setStudyPlan(result);
+      addHistoryItem({
+        type: 'Study Plan',
+        title: `For: ${values.goals}`,
+        content: result.studyPlan,
+      });
       toast({
         title: 'Study Plan Generated!',
         description: 'Your personalized study plan is ready.',

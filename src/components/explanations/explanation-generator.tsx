@@ -34,6 +34,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lightbulb, ArrowRight, Volume2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useHistory } from '@/hooks/use-history';
 
 const formSchema = z.object({
   topic: z.string().min(5, {
@@ -43,6 +44,7 @@ const formSchema = z.object({
 
 export function ExplanationGenerator() {
   const { toast } = useToast();
+  const { addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingSpeech, setIsGeneratingSpeech] = useState(false);
   const [explanation, setExplanation] =
@@ -60,6 +62,11 @@ export function ExplanationGenerator() {
     try {
       const result = await intelligentExplanation(values);
       setExplanation(result);
+      addHistoryItem({
+        type: 'Explanation',
+        title: `Explanation of: ${values.topic}`,
+        content: result.explanation,
+      });
       toast({
         title: 'Explanation Ready!',
         description: `We've broken down ${values.topic} for you.`,

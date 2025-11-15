@@ -61,6 +61,7 @@ import {
 import { useUser } from '@/hooks/use-user-role';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { useHistory } from '@/hooks/use-history';
 
 const studentFormSchema = z
   .object({
@@ -110,6 +111,7 @@ export function TestGenerator() {
 
 function StudentTestGenerator() {
   const { toast } = useToast();
+  const { addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [test, setTest] = useState<GeneratePracticeTestOutput | null>(null);
   const [studentAnswers, setStudentAnswers] = useState<StudentAnswers>({});
@@ -168,6 +170,11 @@ function StudentTestGenerator() {
       });
       setTest(result);
       setStartTime(new Date());
+      addHistoryItem({
+        type: 'Practice Test',
+        title: `Test on: ${values.topic}`,
+        content: result.answerKey,
+      });
       toast({
         title: 'Practice Test Generated!',
         description: 'Your custom test is ready to go. The timer has started.',
@@ -533,6 +540,7 @@ function StudentTestGenerator() {
 
 function ParentTestGenerator() {
   const { toast } = useToast();
+  const { addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [test, setTest] = useState<TestOutput | null>(null);
 
@@ -552,6 +560,11 @@ function ParentTestGenerator() {
     try {
       const result = await generatePracticeTestForChild(values);
       setTest(result);
+      addHistoryItem({
+        type: 'Practice Test',
+        title: `Test for ${values.studentId} on: ${values.topic}`,
+        content: result.answerKey,
+      });
       toast({
         title: 'Practice Test Generated!',
         description: `A test on ${values.topic} has been created for your child.`,
@@ -720,5 +733,3 @@ function ParentTestGenerator() {
     </Card>
   );
 }
-
-    
