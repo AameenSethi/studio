@@ -11,6 +11,7 @@ interface UserContextType {
   userName: string;
   setUserName: (name: string) => void;
   userEmail: string;
+  setUserEmail: (email: string) => void;
   userAvatar: string | undefined;
   setUserAvatar: (avatar: string) => void;
   userId: string;
@@ -19,89 +20,103 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Helper to get initial state from localStorage
-const getInitialState = () => {
+const getInitialState = (email?: string) => {
+  const isTeacher = email?.includes('teacher');
+  const defaultStudent = {
+    role: 'Student' as Role,
+    name: 'Alex Johnson',
+    avatar: 'https://i.pravatar.cc/150?u=user-123',
+    email: 'student@example.com',
+    id: 'user-123',
+  };
+  const defaultTeacher = {
+    role: 'Teacher' as Role,
+    name: 'Valeriy Trubnikov',
+    avatar: PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
+    email: 'teacher@example.com',
+    id: 'valeriy-trubnikov-01',
+  };
+
+  const selectedUser = isTeacher ? defaultTeacher : defaultStudent;
+
   if (typeof window === 'undefined') {
-    return {
-      role: 'Student' as Role,
-      name: 'Valeriy Trubnikov',
-      avatar: PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
-    };
+    return selectedUser;
   }
   try {
     const storedRole = localStorage.getItem('userRole');
     const storedName = localStorage.getItem('userName');
     const storedAvatar = localStorage.getItem('userAvatar');
+    const storedEmail = localStorage.getItem('userEmail');
+    const storedId = localStorage.getItem('userId');
 
     return {
-      role: (storedRole ? JSON.parse(storedRole) : 'Student') as Role,
-      name: storedName ? JSON.parse(storedName) : 'Valeriy Trubnikov',
-      avatar: storedAvatar ? JSON.parse(storedAvatar) : PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
+      role: (storedRole ? JSON.parse(storedRole) : selectedUser.role) as Role,
+      name: storedName ? JSON.parse(storedName) : selectedUser.name,
+      avatar: storedAvatar ? JSON.parse(storedAvatar) : selectedUser.avatar,
+      email: storedEmail ? JSON.parse(storedEmail) : selectedUser.email,
+      id: storedId ? JSON.parse(storedId) : selectedUser.id,
     };
   } catch (error) {
     console.error("Failed to parse from localStorage", error);
-    return {
-      role: 'Student' as Role,
-      name: 'Valeriy Trubnikov',
-      avatar: PlaceHolderImages.find((img) => img.id === 'user-avatar')?.imageUrl,
-    };
+    return selectedUser;
   }
 };
 
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [isMounted, setIsMounted] = useState(false);
-  const initialState = getInitialState();
+  
+  const [userEmail, setUserEmailState] = useState<string>(() => getInitialState().email);
+  
+  const initialState = getInitialState(userEmail);
 
   const [userRole, setUserRole] = useState<Role>(initialState.role);
   const [userName, setUserName] = useState<string>(initialState.name);
-  const userEmail = 'learner@example.com';
   const [userAvatar, setUserAvatar] = useState<string | undefined>(initialState.avatar);
-  const userId = 'valeriy-trubnikov-01'; // Simulating a fixed ID for the logged-in user
+  const [userId, setUserId] = useState<string>(initialState.id);
+
+  const setUserEmail = (email: string) => {
+    const isTeacher = email.toLowerCase().includes('teacher');
+    const newState = getInitialState(email);
+    
+    setUserEmailState(email);
+    setUserRole(newState.role);
+    setUserName(newState.name);
+    setUserAvatar(newState.avatar);
+    setUserId(newState.id);
+  }
 
   useEffect(() => {
     setIsMounted(true);
-    const savedState = getInitialState();
-    setUserRole(savedState.role);
-    setUserName(savedState.name);
-    setUserAvatar(savedState.avatar);
+    const savedEmail = localStorage.getItem('userEmail');
+    const state = getInitialState(savedEmail ? JSON.parse(savedEmail) : undefined);
+    setUserEmailState(state.email);
+    setUserRole(state.role);
+    setUserName(state.name);
+    setUserAvatar(state.avatar);
+    setUserId(state.id);
   }, []);
 
   useEffect(() => {
     if (isMounted) {
         try {
             localStorage.setItem('userRole', JSON.stringify(userRole));
-        } catch (error) {
-            console.error("Failed to save role to localStorage", error);
-        }
-    }
-  }, [userRole, isMounted]);
-
-  useEffect(() => {
-    if (isMounted) {
-        try {
             localStorage.setItem('userName', JSON.stringify(userName));
-        } catch (error) {
-            console.error("Failed to save name to localStorage", error);
-        }
-    }
-  }, [userName, isMounted]);
-
-  useEffect(() => {
-    if (isMounted) {
-        try {
             localStorage.setItem('userAvatar', JSON.stringify(userAvatar));
+            localStorage.setItem('userEmail', JSON.stringify(userEmail));
+            localStorage.setItem('userId', JSON.stringify(userId));
         } catch (error) {
-            console.error("Failed to save avatar to localStorage", error);
+            console.error("Failed to save to localStorage", error);
         }
     }
-  }, [userAvatar, isMounted]);
+  }, [userRole, userName, userAvatar, userEmail, userId, isMounted]);
 
   if (!isMounted) {
     return null; // or a loading spinner
   }
 
   return (
-    <UserContext.Provider value={{ userRole, setUserRole, userName, setUserName, userEmail, userAvatar, setUserAvatar, userId }}>
+    <UserContext.Provider value={{ userRole, setUserRole, userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId }}>
       {children}
     </UserContext.Provider>
   );
@@ -110,14 +125,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {
-    // This can happen on the server or if the provider is missing.
-    // We return a default state to prevent crashing, but functionality will be limited.
     return {
         userRole: 'Student' as Role,
         setUserRole: () => {},
         userName: 'Guest',
         setUserName: () => {},
         userEmail: '',
+        setUserEmail: () => {},
         userAvatar: undefined,
         setUserAvatar: () => {},
         userId: '',

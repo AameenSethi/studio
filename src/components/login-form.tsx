@@ -19,6 +19,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useUser } from '@/hooks/use-user-role';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -33,6 +34,7 @@ export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const { setUserEmail } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -47,6 +49,7 @@ export function LoginForm() {
     // Simulate API call
     setTimeout(() => {
       // In a real app, you'd handle success/error from an API
+      setUserEmail(values.email);
       toast({
         title: 'Login Successful',
         description: "Welcome back! You're being redirected to your dashboard.",
@@ -66,7 +69,7 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="name@example.com" {...field} />
+                <Input placeholder="teacher@example.com or student@example.com" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
