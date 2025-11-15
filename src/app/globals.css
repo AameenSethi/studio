@@ -4,14 +4,14 @@
 
 @layer base {
   :root {
-    --background: 210 40% 98%;
-    --background-end: 210 40% 94%;
-    --foreground: 222 84% 5%;
-    --card: 210 40% 100% / 0.7;
+    --background: 222 84% 5%;
+    --background-end: 222 84% 8%;
+    --foreground: 210 40% 98%;
+    --card: 210 40% 100% / 0.8;
     --card-foreground: 222 84% 5%;
     --popover: 210 40% 100%;
     --popover-foreground: 222 84% 5%;
-    --primary: 221 83% 53%;
+    --primary: 217 91% 60%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 91%;
     --secondary-foreground: 222 47% 11%;
@@ -23,7 +23,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 214 32% 91%;
     --input: 214 32% 91%;
-    --ring: 221 83% 53%;
+    --ring: 217 91% 60%;
     --radius: 0.5rem;
     --chart-1: 221 83% 53%;
     --chart-2: 217 91% 60%;
@@ -36,7 +36,7 @@
     --background: 222 84% 5%;
     --background-end: 222 84% 8%;
     --foreground: 210 40% 98%;
-    --card: 222 84% 7% / 0.7;
+    --card: 222 84% 7% / 0.8;
     --card-foreground: 210 40% 98%;
     --popover: 222 84% 7%;
     --popover-foreground: 210 40% 98%;
@@ -66,7 +66,10 @@
     @apply border-border;
   }
   body {
-    background-image: linear-gradient(to bottom right, hsl(var(--background)), hsl(var(--background-end)));
+    background-image: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://images.unsplash.com/photo-1533130061792-64b126245196?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxkYXJrJTIwc3R1ZHklMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc2NDA0Mzc0Nnww&ixlib=rb-4.1.0&q=80&w=1920');
+    background-size: cover;
+    background-attachment: fixed;
+    background-position: center;
     @apply text-foreground;
     @apply transition-colors duration-300;
   }
