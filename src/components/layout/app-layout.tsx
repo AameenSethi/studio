@@ -14,7 +14,7 @@ import {
   History,
   ArrowDown,
   ArrowUp,
-  LifeBuoy,
+  HelpCircle,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -44,7 +44,7 @@ const navItems = [
   { href: '/progress', icon: TrendingUp, label: 'Progress' },
   { href: '/history', icon: History, label: 'History' },
   { href: '/profile', icon: User, label: 'Profile' },
-  { href: '/help', icon: LifeBuoy, label: 'Help' },
+  { href: '/help', icon: HelpCircle, label: 'Help' },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
