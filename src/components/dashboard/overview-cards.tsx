@@ -72,14 +72,13 @@ export function WeeklyProgressChart() {
             tickFormatter={(value) => `${value}`}
           />
           <Tooltip
-            cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
+            cursor={false}
             content={<ChartTooltipContent hideIndicator />}
           />
           <Bar 
             dataKey="activities" 
             fill="hsl(var(--primary))" 
             radius={4} 
-            className='transition-opacity opacity-75 hover:opacity-100'
         />
         </BarChart>
       </ResponsiveContainer>
