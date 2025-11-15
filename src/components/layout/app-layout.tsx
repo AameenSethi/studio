@@ -9,6 +9,7 @@ import {
   BarChart2,
   TrendingUp,
   PanelLeft,
+  User
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -29,6 +30,7 @@ const navItems = [
   { href: '/practice', icon: FileText, label: 'Practice Tests' },
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/progress', icon: TrendingUp, label: 'Progress Reports' },
+  { href: '/profile', icon: User, label: 'Profile' },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
