@@ -43,7 +43,20 @@ const profileSchema = z
     institutionName: z.string().optional(),
     class: z.string().optional(),
     field: z.string().optional(),
-  });
+    customField: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+        if (data.class === 'Undergraduate' && data.field === 'Other') {
+            return data.customField && data.customField.trim().length > 0;
+        }
+        return true;
+    },
+    {
+        message: 'Please specify your field of study.',
+        path: ['customField'],
+    }
+  );
 
 export function ProfileEditor() {
   const { toast } = useToast();
@@ -60,27 +73,37 @@ export function ProfileEditor() {
       institutionName: userInstitution,
       class: userClass,
       field: userField,
+      customField: '',
     },
   });
 
   const watchClass = form.watch('class');
+  const watchField = form.watch('field');
 
   useEffect(() => {
+    // Check if the current userField is one of the predefined options
+    const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
+    const isCustom = userField && !predefinedFields.includes(userField);
+
     form.reset({
       name: userName,
       email: userEmail,
       institutionName: userInstitution,
       class: userClass,
-      field: userField,
+      field: isCustom ? 'Other' : userField,
+      customField: isCustom ? userField : '',
     });
   }, [userName, userEmail, userClass, userField, userInstitution, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
+
+    const finalField = values.field === 'Other' ? values.customField : values.field;
+
     setUserName(values.name);
     setUserEmail(values.email);
     if(values.class) setUserClass(values.class);
-    if(values.field) setUserField(values.field);
+    if(finalField) setUserField(finalField);
     if(values.institutionName) setUserInstitution(values.institutionName);
     
     // If class is not undergraduate, clear the field
@@ -246,26 +269,52 @@ export function ProfileEditor() {
                         )}
                         />
                     {watchClass === 'Undergraduate' && (
-                         <FormField
-                            control={form.control}
-                            name="field"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Field of Study</FormLabel>
-                                <FormControl>
-                                    <div className="relative">
-                                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                        <Input
-                                            placeholder="e.g., 'Computer Science'"
-                                            {...field}
-                                            className="pl-10"
-                                        />
-                                    </div>
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
+                        <div className='space-y-6'>
+                            <FormField
+                                control={form.control}
+                                name="field"
+                                render={({ field }) => (
+                                    <FormItem>
+                                    <FormLabel>Field of Study</FormLabel>
+                                    <Select onValueChange={field.onChange} value={field.value}>
+                                        <FormControl>
+                                            <div className='relative'>
+                                                <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                <SelectTrigger className='pl-10'>
+                                                    <SelectValue placeholder="Select your field of study" />
+                                                </SelectTrigger>
+                                            </div>
+                                        </FormControl>
+                                        <SelectContent>
+                                            <SelectItem value="Computer Science">Computer Science</SelectItem>
+                                            <SelectItem value="Engineering">Engineering</SelectItem>
+                                            <SelectItem value="Medicine">Medicine</SelectItem>
+                                            <SelectItem value="Business">Business</SelectItem>
+                                            <SelectItem value="Arts">Arts</SelectItem>
+                                            <SelectItem value="Law">Law</SelectItem>
+                                            <SelectItem value="Other">Other</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            {watchField === 'Other' && (
+                                <FormField
+                                    control={form.control}
+                                    name="customField"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Custom Field of Study</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="e.g., 'Neuroscience'" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
                             )}
-                        />
+                        </div>
                     )}
                     <FormField
                       control={form.control}
