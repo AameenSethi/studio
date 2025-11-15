@@ -47,8 +47,15 @@ const generateDynamicReportData = (history: HistoryItem[], studentId?: string): 
   const lastWeek = subDays(today, 7);
 
   // In a real application, you would fetch the history for the given studentId.
-  // Here, we'll just use the locally available history as a stand-in for any student.
-  const weeklyHistory = history.filter(item => {
+  // For this simulation, if a studentId is provided, we'll use a subset of the global history.
+  // If no studentId is provided (for a student's own report), we use all their history.
+  let studentHistory = history;
+  if (studentId) {
+      const studentHash = studentId.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+      studentHistory = history.filter((_, index) => (index + studentHash) % 4 === 0); // Simulate different data per student
+  }
+
+  const weeklyHistory = studentHistory.filter(item => {
     const itemDate = parseISO(item.timestamp);
     return itemDate >= lastWeek && itemDate <= today;
   });
@@ -138,51 +145,67 @@ const generateDynamicReportData = (history: HistoryItem[], studentId?: string): 
   return { learningData, overallSummary };
 }
 
-export function ReportGenerator() {
+interface ReportGeneratorProps {
+    studentId?: string;
+}
+
+export function ReportGenerator({ studentId }: ReportGeneratorProps) {
   const { userRole } = useUser();
+
+  if (studentId) {
+      return <StudentReportViewer studentId={studentId} />;
+  }
 
   if (userRole === 'Student') {
     return <StudentReportViewer />;
   }
+  
   return <TeacherParentReportGenerator />;
 }
 
-function StudentReportViewer() {
+function StudentReportViewer({ studentId }: { studentId?: string}) {
   const { toast } = useToast();
   const { history, addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<WeeklyProgressReportOutput | null>(null);
+  const effectiveStudentId = studentId || 'user-123'; // Default to own ID if not provided
 
   useEffect(() => {
-    // Find the most recent progress report from history on mount
-    const lastReport = history.find(item => item.type === 'Progress Report');
-    if (lastReport) {
-        setReport(lastReport.content);
+    // If a specific studentId is provided, generate the report automatically on mount.
+    // Otherwise, find the most recent progress report from history on mount for the logged-in student.
+    if (studentId) {
+        handleGenerateReport(true); // `true` to suppress toast on initial load
+    } else {
+        const lastReport = history.find(item => item.type === 'Progress Report');
+        if (lastReport) {
+            setReport(lastReport.content);
+        }
     }
-  }, [history]);
+  }, [history, studentId]);
 
-  const handleGenerateReport = async () => {
+  const handleGenerateReport = async (isInitialLoad = false) => {
     setIsLoading(true);
     setReport(null);
     try {
       const today = new Date();
       const lastWeek = subDays(today, 7);
-      const studentId = 'user-123'; // Hardcoded for student's own report
 
-      const { learningData, overallSummary } = generateDynamicReportData(history);
+      const { learningData, overallSummary } = generateDynamicReportData(history, studentId);
 
       if (learningData.length === 0) {
-        toast({
-            variant: 'destructive',
-            title: 'No Data Available',
-            description: 'There is no learning activity recorded in the last 7 days to generate a report.',
-        });
+        if (!isInitialLoad) {
+            toast({
+                variant: 'destructive',
+                title: 'No Data Available',
+                description: 'There is no learning activity recorded in the last 7 days to generate a report.',
+            });
+        }
         setIsLoading(false);
         return;
       }
 
       const result = await generateWeeklyProgressReport({
-        userId: studentId,
+        userId: effectiveStudentId,
         startDate: format(lastWeek, 'yyyy-MM-dd'),
         endDate: format(today, 'yyyy-MM-dd'),
         learningData: learningData,
@@ -190,41 +213,50 @@ function StudentReportViewer() {
       });
 
       setReport(result);
-      addHistoryItem({
-        type: 'Progress Report',
-        title: `Weekly Report for ${studentId}`,
-        content: result,
-      });
-      toast({
-        title: 'Report Generated!',
-        description: `Your weekly progress report is ready.`,
-      });
+      if (!studentId) { // Only add to history if it's the student generating their own report
+          addHistoryItem({
+            type: 'Progress Report',
+            title: `Weekly Report for ${effectiveStudentId}`,
+            content: result,
+          });
+      }
+      if (!isInitialLoad) {
+          toast({
+            title: 'Report Generated!',
+            description: `Weekly progress report is ready.`,
+          });
+      }
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error Generating Report',
-        description: 'There was an issue creating your report. Please try again.',
-      });
+        if (!isInitialLoad) {
+            toast({
+                variant: 'destructive',
+                title: 'Error Generating Report',
+                description: 'There was an issue creating your report. Please try again.',
+            });
+        }
       console.error(error);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const cardTitle = studentId ? "AI-Generated Weekly Report" : "My Weekly Progress Report";
+  const cardDescription = studentId 
+    ? "An AI-powered analysis of this student's learning progress from the past week."
+    : "Click the button to generate an AI-powered analysis of your learning progress from the past week. Your last generated report is shown below.";
+
+
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-accent" />
-          My Weekly Progress Report
+          {cardTitle}
         </CardTitle>
-        <CardDescription>
-          Click the button to generate an AI-powered analysis of your learning progress from the
-          past week. Your last generated report is shown below.
-        </CardDescription>
+        <CardDescription>{cardDescription}</CardDescription>
       </CardHeader>
       <CardContent>
-        <Button onClick={handleGenerateReport} disabled={isLoading}>
+        <Button onClick={() => handleGenerateReport()} disabled={isLoading}>
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -232,15 +264,30 @@ function StudentReportViewer() {
             </>
           ) : (
             <>
-              Generate New Report
+              {studentId ? 'Refresh Report' : 'Generate New Report'}
               <ArrowRight className="ml-2 h-4 w-4" />
             </>
           )}
         </Button>
       </CardContent>
-      {report && (
+      {isLoading && (
+          <CardFooter>
+              <div className="w-full text-center p-8 text-muted-foreground">
+                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                  Generating report...
+              </div>
+          </CardFooter>
+      )}
+      {!isLoading && report && (
         <CardFooter>
-          <ReportDisplayCard report={report} studentId={'user-123'} title="Last Generated Report" />
+          <ReportDisplayCard report={report} studentId={effectiveStudentId} title={studentId ? "" : "Last Generated Report"} />
+        </CardFooter>
+      )}
+      {!isLoading && !report && (
+        <CardFooter>
+            <div className="w-full text-center p-8 border-2 border-dashed rounded-lg text-muted-foreground">
+                No report generated. Click the button above to create one.
+            </div>
         </CardFooter>
       )}
     </Card>

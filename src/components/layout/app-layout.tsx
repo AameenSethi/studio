@@ -13,6 +13,7 @@ import {
   History,
   ArrowDown,
   ArrowUp,
+  Users,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -41,6 +42,7 @@ const allNavItems = [
   { href: '/practice', icon: FileText, label: 'Practice Tests', roles: ['Student', 'Teacher', 'Parent'] },
   { href: '/analytics', icon: BarChart2, label: 'Analytics', roles: ['Student', 'Teacher'] },
   { href: '/progress', icon: TrendingUp, label: 'Progress Reports', roles: ['Student', 'Teacher', 'Parent'] },
+  { href: '/students', icon: Users, label: 'Students', roles: ['Teacher'] },
   { href: '/history', icon: History, label: 'History', roles: ['Student', 'Teacher', 'Parent'] },
   { href: '/profile', icon: User, label: 'Profile', roles: ['Student', 'Teacher', 'Parent'] },
 ];
