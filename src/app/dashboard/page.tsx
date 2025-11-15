@@ -15,6 +15,8 @@ import { Lightbulb, FileText, ArrowRight, History, User } from 'lucide-react';
 import Link from 'next/link';
 import { WeeklyProgressChart } from '@/components/dashboard/overview-cards';
 import { useUser } from '@/hooks/use-user-role';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const motivationalQuotes = [
   "The secret to getting ahead is getting started.",
@@ -32,6 +34,7 @@ const motivationalQuotes = [
 export default function DashboardPage() {
   const { userName } = useUser();
   const [quote, setQuote] = useState('');
+  const heroImage = PlaceHolderImages.find((img) => img.id === 'login-hero');
 
   useEffect(() => {
     // Select a random quote on the client-side to avoid hydration mismatch
@@ -56,58 +59,71 @@ export default function DashboardPage() {
           </div>
         </div>
         
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card className="col-span-1 lg:col-span-2">
-            <CardHeader>
-                <CardTitle>Weekly Progress</CardTitle>
-                <CardDescription>
-                Your study activities over the last 7 days.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="pl-2">
-                <WeeklyProgressChart />
-            </CardContent>
-            </Card>
-            <Card className="col-span-1 lg:col-span-2 flex flex-col">
-            <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>
-                Jump right back into your learning journey.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-grow flex flex-col justify-center gap-4">
-                <Link href="/explanations" passHref>
-                <Button variant="outline" className="w-full justify-start">
-                    <Lightbulb className="mr-2 h-4 w-4" />
-                    Explain a Complex Topic
-                    <ArrowRight className="ml-auto h-4 w-4" />
-                </Button>
-                </Link>
-                <Link href="/practice" passHref>
-                <Button variant="outline" className="w-full justify-start">
-                    <FileText className="mr-2 h-4 w-4" />
-                    Generate a Practice Test
-                    <ArrowRight className="ml-auto h-4 w-4" />
-                </Button>
-                </Link>
-                <Link href="/history" passHref>
-                <Button variant="outline" className="w-full justify-start">
-                    <History className="mr-2 h-4 w-4" />
-                    View Action History
-                    <ArrowRight className="ml-auto h-4 w-4" />
-                </Button>
-                </Link>
-                <Link href="/profile" passHref>
-                <Button variant="outline" className="w-full justify-start">
-                    <User className="mr-2 h-4 w-4" />
-                    Edit Your Profile
-                    <ArrowRight className="ml-auto h-4 w-4" />
-                </Button>
-                </Link>
-            </CardContent>
-            </Card>
-        </div>
-
+        <Card className="relative overflow-hidden">
+          {heroImage && (
+              <Image
+                  src={heroImage.imageUrl}
+                  alt={heroImage.description}
+                  layout="fill"
+                  objectFit="cover"
+                  className="opacity-10 dark:opacity-5"
+                  data-ai-hint={heroImage.imageHint}
+              />
+          )}
+          <div className="relative z-10 p-6">
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card className="col-span-1 lg:col-span-2 bg-background/70 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle>Weekly Progress</CardTitle>
+                    <CardDescription>
+                    Your study activities over the last 7 days.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="pl-2">
+                    <WeeklyProgressChart />
+                </CardContent>
+                </Card>
+                <Card className="col-span-1 lg:col-span-2 flex flex-col bg-background/70 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>
+                    Jump right back into your learning journey.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="flex-grow flex flex-col justify-center gap-4">
+                    <Link href="/explanations" passHref>
+                    <Button variant="outline" className="w-full justify-start">
+                        <Lightbulb className="mr-2 h-4 w-4" />
+                        Explain a Complex Topic
+                        <ArrowRight className="ml-auto h-4 w-4" />
+                    </Button>
+                    </Link>
+                    <Link href="/practice" passHref>
+                    <Button variant="outline" className="w-full justify-start">
+                        <FileText className="mr-2 h-4 w-4" />
+                        Generate a Practice Test
+                        <ArrowRight className="ml-auto h-4 w-4" />
+                    </Button>
+                    </Link>
+                    <Link href="/history" passHref>
+                    <Button variant="outline" className="w-full justify-start">
+                        <History className="mr-2 h-4 w-4" />
+                        View Action History
+                        <ArrowRight className="ml-auto h-4 w-4" />
+                    </Button>
+                    </Link>
+                    <Link href="/profile" passHref>
+                    <Button variant="outline" className="w-full justify-start">
+                        <User className="mr-2 h-4 w-4" />
+                        Edit Your Profile
+                        <ArrowRight className="ml-auto h-4 w-4" />
+                    </Button>
+                    </Link>
+                </CardContent>
+                </Card>
+            </div>
+          </div>
+        </Card>
       </div>
     </AppLayout>
   );
