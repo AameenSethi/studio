@@ -39,7 +39,7 @@ import {
   } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lightbulb, ArrowRight, Volume2, Download, Quote } from 'lucide-react';
+import { Loader2, Lightbulb, ArrowRight, Volume2, Download, Quote, Image as ImageIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistory } from '@/hooks/use-history';
 import {
@@ -48,6 +48,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import Image from 'next/image';
 
 const formSchema = z.object({
   topic: z.string().min(1, {
@@ -300,6 +301,25 @@ export function ExplanationGenerator() {
                 <div className='p-4 rounded-lg bg-background/50 border'>
                     <ExplanationDisplay text={explanation.detailedExplanation} />
                 </div>
+
+                {explanation.diagramUrl && (
+                  <Card className="bg-background/50">
+                    <CardHeader className="flex-row items-center gap-2 pb-2">
+                        <ImageIcon className="h-5 w-5 text-accent"/>
+                        <CardTitle className="text-lg">Diagram</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex justify-center items-center">
+                        <Image
+                            src={explanation.diagramUrl}
+                            alt={`Diagram for ${formValues?.topic}`}
+                            width={400}
+                            height={400}
+                            className="rounded-md border bg-muted"
+                            />
+                    </CardContent>
+                  </Card>
+                )}
+
                 <Card className="bg-background/50">
                     <CardHeader className="flex-row items-center gap-2 pb-2">
                         <Quote className="h-5 w-5 text-accent"/>
