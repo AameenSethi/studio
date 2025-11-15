@@ -1,3 +1,6 @@
+
+'use client';
+
 import AppLayout from '@/components/layout/app-layout';
 import { TestGenerator } from '@/components/practice/test-generator';
 import { useUser } from '@/hooks/use-user-role';
