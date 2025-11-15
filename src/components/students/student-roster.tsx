@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useHistory } from '@/hooks/use-history';
 import { useMemo, useState } from 'react';
-import { ChevronRight, Trash2, UserPlus, KeyRound } from 'lucide-react';
+import { ChevronRight, Trash2, UserPlus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStudents, type Student } from '@/hooks/use-students';
 import { useToast } from '@/hooks/use-toast';
@@ -56,7 +56,6 @@ import {
 
 
 const addStudentSchema = z.object({
-    id: z.string().min(1, 'UID is required.'),
     name: z.string().min(2, 'Name is required.'),
     class: z.string().min(1, 'Class is required.'),
 });
@@ -70,7 +69,6 @@ export function StudentRoster() {
   const form = useForm<z.infer<typeof addStudentSchema>>({
     resolver: zodResolver(addStudentSchema),
     defaultValues: {
-        id: '',
         name: '',
         class: '',
     },
@@ -78,14 +76,16 @@ export function StudentRoster() {
 
   const onSubmit = (values: z.infer<typeof addStudentSchema>) => {
     try {
+        const newId = `user-${Date.now()}`;
         const newStudent: Student = {
             ...values,
-            avatarUrl: `https://i.pravatar.cc/150?u=${values.id}`,
+            id: newId,
+            avatarUrl: `https://i.pravatar.cc/150?u=${newId}`,
         };
         addStudent(newStudent);
         toast({
             title: 'Student Added',
-            description: `${values.name} has been added to the roster.`,
+            description: `${values.name} has been added to the roster with UID: ${newId}.`,
         });
         form.reset();
     } catch (error: any) {
@@ -101,19 +101,15 @@ export function StudentRoster() {
     const performanceMap = new Map<string, { totalTests: number; totalScore: number; totalQuestions: number }>();
 
     history.forEach(item => {
-      if (item.type === 'Practice Test' && item.score !== undefined) {
-        // In a real app, we'd filter by student ID from the item.
-        // For this simulation, we apply test scores to all students for demonstration.
-        students.forEach(student => {
-            const studentId = student.id;
-            if (!performanceMap.has(studentId)) {
-                performanceMap.set(studentId, { totalTests: 0, totalScore: 0, totalQuestions: 0 });
-            }
-            const current = performanceMap.get(studentId)!;
-            current.totalTests += 1;
-            current.totalScore += item.score!;
-            current.totalQuestions += item.content.length;
-        });
+      if (item.type === 'Practice Test' && item.score !== undefined && item.studentId) {
+        const studentId = item.studentId;
+        if (!performanceMap.has(studentId)) {
+            performanceMap.set(studentId, { totalTests: 0, totalScore: 0, totalQuestions: 0 });
+        }
+        const current = performanceMap.get(studentId)!;
+        current.totalTests += 1;
+        current.totalScore += item.score!;
+        current.totalQuestions += item.content.length;
       }
     });
 
@@ -147,28 +143,12 @@ export function StudentRoster() {
             Add New Student
         </CardTitle>
         <CardDescription>
-          Enter the student's details to add them to the roster.
+          Enter the student's details to add them to the roster. A unique UID will be generated automatically.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-4 gap-4 items-start">
-                <FormField
-                    control={form.control}
-                    name="id"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Student UID</FormLabel>
-                            <FormControl>
-                                <div className="relative">
-                                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                                    <Input placeholder="e.g., user-202" {...field} className="pl-10" />
-                                </div>
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-3 gap-4 items-start">
                  <FormField
                     control={form.control}
                     name="name"
@@ -190,7 +170,7 @@ export function StudentRoster() {
                             <FormLabel>Class</FormLabel>
                             <Select
                                 onValueChange={field.onChange}
-                                defaultValue={field.value}
+                                value={field.value}
                                 >
                                 <FormControl>
                                     <SelectTrigger>
@@ -245,7 +225,10 @@ export function StudentRoster() {
                         <AvatarImage src={student.avatarUrl} alt={student.name} />
                         <AvatarFallback>{getInitials(student.name)}</AvatarFallback>
                       </Avatar>
-                      <span className="font-medium">{student.name}</span>
+                      <div>
+                        <p className="font-medium">{student.name}</p>
+                        <p className="text-xs text-muted-foreground">UID: {student.id}</p>
+                      </div>
                     </div>
                   </TableCell>
                   <TableCell onClick={() => handleRowClick(student.id)} className="cursor-pointer">{student.class}</TableCell>
