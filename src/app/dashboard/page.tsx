@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -12,18 +13,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { Lightbulb, FileText, ArrowRight, History, User } from 'lucide-react';
 import Link from 'next/link';
-import { PersonalizedStudyPlan } from '@/components/dashboard/personalized-study-plan';
 import { WeeklyProgressChart } from '@/components/dashboard/overview-cards';
 import { useUser } from '@/hooks/use-user-role';
-import { useHistory } from '@/hooks/use-history';
-import { TestGenerator } from '@/components/practice/test-generator';
-import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
-  } from "@/components/ui/tabs";
-import { Badge } from '@/components/ui/badge';
 
 const motivationalQuotes = [
   "The secret to getting ahead is getting started.",
@@ -117,7 +108,6 @@ export default function DashboardPage() {
             </Card>
         </div>
 
-        <PersonalizedStudyPlan />
       </div>
     </AppLayout>
   );

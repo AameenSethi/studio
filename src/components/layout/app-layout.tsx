@@ -15,6 +15,7 @@ import {
   ArrowDown,
   ArrowUp,
   HelpCircle,
+  Wand2,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -38,6 +39,7 @@ import { Separator } from '@/components/ui/separator';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { href: '/study-plan', icon: Wand2, label: 'Study Plan' },
   { href: '/explanations', icon: Lightbulb, label: 'Explanations' },
   { href: '/practice', icon: FileText, label: 'Practice' },
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
@@ -108,7 +110,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
                 {navItems.map((item, index) => (
                     <Fragment key={item.href}>
-                      {index > 0 && <Separator orientation="vertical" className="h-10" />}
+                      {index > 0 && item.label !== 'Study Plan' && <Separator orientation="vertical" className="h-10" />}
                       <Link
                           href={item.href}
                           className={cn(
