@@ -53,8 +53,8 @@ export function WeeklyProgressChart() {
             tickFormatter={(value) => `${value}h`}
           />
           <Tooltip
-            cursor={false}
-            content={<ChartTooltipContent indicator="dot" />}
+            cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
+            content={<ChartTooltipContent hideIndicator />}
           />
           <Bar dataKey="hours" fill="hsl(var(--primary))" radius={4} />
         </BarChart>
