@@ -7,10 +7,10 @@ export default function ProgressPage() {
       <div className="flex items-center justify-between space-y-2">
         <div>
           <h2 className="text-3xl font-bold tracking-tight font-headline">
-            Weekly Progress Report
+            Student Progress Report
           </h2>
           <p className="text-muted-foreground">
-            Generate an AI-powered summary of your weekly learning.
+            Generate an AI-powered summary of a student&apos;s weekly learning by entering their UID.
           </p>
         </div>
       </div>
