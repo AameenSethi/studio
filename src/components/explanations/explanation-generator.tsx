@@ -30,6 +30,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lightbulb, ArrowRight, Volume2 } from 'lucide-react';
@@ -40,6 +47,7 @@ const formSchema = z.object({
   topic: z.string().min(5, {
     message: 'Please describe the topic in at least 5 characters.',
   }),
+  explanationLevel: z.enum(['Simple', 'Detailed', 'Expert']),
 });
 
 export function ExplanationGenerator() {
@@ -53,6 +61,10 @@ export function ExplanationGenerator() {
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+        topic: '',
+        explanationLevel: 'Detailed',
+    }
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
@@ -156,6 +168,31 @@ export function ExplanationGenerator() {
                 </FormItem>
               )}
             />
+            <FormField
+                control={form.control}
+                name="explanationLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Level of Detail</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a level of detail" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="Simple">Simple</SelectItem>
+                        <SelectItem value="Detailed">Detailed</SelectItem>
+                        <SelectItem value="Expert">Expert</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             <Button type="submit" disabled={isLoading}>
               {isLoading ? (
                 <>

@@ -13,6 +13,7 @@ import {z} from 'genkit';
 
 const IntelligentExplanationInputSchema = z.object({
   topic: z.string().describe('The complex topic to be explained.'),
+  explanationLevel: z.enum(['Simple', 'Detailed', 'Expert']).describe('The desired level of detail for the explanation.'),
 });
 export type IntelligentExplanationInput = z.infer<typeof IntelligentExplanationInputSchema>;
 
@@ -33,9 +34,9 @@ const prompt = ai.definePrompt({
   output: {schema: IntelligentExplanationOutputSchema},
   prompt: `You are an expert educator skilled at explaining complex topics in simple terms.
 
-You will explain the topic "{{topic}}" in a clear, text-based format.
+You will explain the topic "{{topic}}" at a "{{explanationLevel}}" level.
 
-Ensure the explanation is easy to understand.
+Ensure the explanation is clear, text-based, and tailored to the requested level of detail.
 
 Explanation:`,
 });
