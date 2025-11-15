@@ -96,8 +96,14 @@ export function ImageCropDialog({
           reject(new Error('Canvas is empty'));
           return;
         }
-        const fileUrl = window.URL.createObjectURL(blob);
-        resolve(fileUrl);
+        const reader = new FileReader();
+        reader.readAsDataURL(blob);
+        reader.onloadend = () => {
+          resolve(reader.result as string);
+        };
+        reader.onerror = (error) => {
+            reject(error);
+        }
       }, 'image/jpeg');
     });
   }
@@ -113,17 +119,8 @@ export function ImageCropDialog({
     }
 
     try {
-        const croppedImage = await getCroppedImg(imgRef.current, crop);
-        
-        // Convert blob URL to base64 data URI
-        const response = await fetch(croppedImage);
-        const blob = await response.blob();
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = () => {
-            const base64data = reader.result as string;
-            onCropComplete(base64data);
-        };
+        const base64Image = await getCroppedImg(imgRef.current, crop);
+        onCropComplete(base64Image);
 
     } catch (e) {
       console.error(e);
