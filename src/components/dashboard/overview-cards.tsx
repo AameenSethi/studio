@@ -52,8 +52,8 @@ export function WeeklyProgressChart() {
     }, [history]);
 
   return (
-    <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
-      <ResponsiveContainer width="100%" height={200}>
+    <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+      <ResponsiveContainer width="100%" height={250}>
         <BarChart accessibilityLayer data={chartData}>
           <XAxis
             dataKey="day"
