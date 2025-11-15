@@ -42,6 +42,12 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Lightbulb, ArrowRight, Volume2, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistory } from '@/hooks/use-history';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 const formSchema = z.object({
   topic: z.string().min(5, {
@@ -238,20 +244,36 @@ export function ExplanationGenerator() {
           <Card className="w-full bg-muted/50">
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Here&apos;s the Breakdown</CardTitle>
-              <div className="flex gap-2">
-                <Button onClick={handleTextToSpeech} disabled={isGeneratingSpeech} variant="outline" size="sm">
-                    {isGeneratingSpeech ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <Volume2 className="mr-2 h-4 w-4" />
-                    )}
-                    Listen
-                </Button>
-                 <Button onClick={handleDownload} variant="outline" size="sm">
-                    <Download className="mr-2 h-4 w-4" />
-                    Download
-                </Button>
-              </div>
+              <TooltipProvider>
+                <div className="flex gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button onClick={handleTextToSpeech} disabled={isGeneratingSpeech} variant="outline" size="sm">
+                          {isGeneratingSpeech ? (
+                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          ) : (
+                              <Volume2 className="mr-2 h-4 w-4" />
+                          )}
+                          Listen
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Listen to the explanation</p>
+                    </TooltipContent>
+                  </Tooltip>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button onClick={handleDownload} variant="outline" size="sm">
+                          <Download className="mr-2 h-4 w-4" />
+                          Download
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Download as .txt</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </TooltipProvider>
             </CardHeader>
             <CardContent>
                 <div className='p-4 rounded-lg bg-background/50 border'>
