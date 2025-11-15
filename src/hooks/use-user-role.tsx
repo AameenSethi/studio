@@ -21,13 +21,13 @@ const UserContext = createContext<UserContextType | undefined>(undefined);
 
 // Helper to get initial state from localStorage
 const getInitialState = (email?: string) => {
-  const isTeacher = email?.includes('teacher');
+  const isTeacher = email?.toLowerCase().includes('teacher');
   const defaultStudent = {
     role: 'Student' as Role,
     name: 'Alex Johnson',
-    avatar: 'https://i.pravatar.cc/150?u=user-123',
+    avatar: 'https://i.pravatar.cc/150?u=student-007',
     email: 'student@example.com',
-    id: 'user-123',
+    id: 'student-007', // Changed student UID to be unique
   };
   const defaultTeacher = {
     role: 'Teacher' as Role,
@@ -48,7 +48,13 @@ const getInitialState = (email?: string) => {
     const storedAvatar = localStorage.getItem('userAvatar');
     const storedEmail = localStorage.getItem('userEmail');
     const storedId = localStorage.getItem('userId');
+    
+    // If an email is passed, it means we are logging in, so we should ignore stored values.
+    if (email) {
+        return selectedUser;
+    }
 
+    // Otherwise, load from storage or use defaults.
     return {
       role: (storedRole ? JSON.parse(storedRole) : selectedUser.role) as Role,
       name: storedName ? JSON.parse(storedName) : selectedUser.name,
@@ -76,7 +82,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userId, setUserId] = useState<string>(initialState.id);
 
   const setUserEmail = (email: string) => {
-    const isTeacher = email.toLowerCase().includes('teacher');
     const newState = getInitialState(email);
     
     setUserEmailState(email);
@@ -112,7 +117,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   }, [userRole, userName, userAvatar, userEmail, userId, isMounted]);
 
   if (!isMounted) {
-    return null; // or a loading spinner
+    // or a loading spinner
+    return (
+      <UserContext.Provider value={{ userRole: 'Student', setUserRole: () => {}, userName: 'Guest', setUserName: () => {}, userEmail: '', setUserEmail: () => {}, userAvatar: undefined, setUserAvatar: () => {}, userId: '' }}>
+        {children}
+      </UserContext.Provider>
+    );
   }
 
   return (
@@ -134,7 +144,7 @@ export const useUser = () => {
         setUserEmail: () => {},
         userAvatar: undefined,
         setUserAvatar: () => {},
-        userId: '',
+        userId: 'guest-id',
     };
   }
   return context;
