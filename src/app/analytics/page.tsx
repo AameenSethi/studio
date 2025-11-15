@@ -12,6 +12,7 @@ import {
   TopicMasteryChart,
   PerformanceByTopic,
 } from '@/components/analytics/charts';
+import { ManageTrackedTopics } from '@/components/analytics/manage-topics';
 import { TrackedTopicsProvider } from '@/hooks/use-tracked-topics';
 
 export default function AnalyticsPage() {
@@ -43,7 +44,12 @@ export default function AnalyticsPage() {
             </Card>
             <TopicMasteryChart />
           </div>
-          <PerformanceByTopic />
+          <div className="grid gap-4 md:gap-8 lg:grid-cols-3">
+             <div className="lg:col-span-2">
+                <PerformanceByTopic />
+            </div>
+            <ManageTrackedTopics />
+          </div>
         </div>
       </TrackedTopicsProvider>
     </AppLayout>

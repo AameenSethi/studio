@@ -1,31 +1,70 @@
 'use client';
 
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
-import { useHistory } from './use-history';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+
+const defaultTopics = ['Algebra', 'Calculus', 'Physics'];
 
 interface TrackedTopicsContextType {
   trackedTopics: string[];
+  addTrackedTopic: (topic: string) => void;
+  removeTrackedTopic: (topic: string) => void;
 }
 
 const TrackedTopicsContext = createContext<TrackedTopicsContextType | undefined>(undefined);
 
-export const TrackedTopicsProvider = ({ children }: { children: ReactNode }) => {
-  const { history } = useHistory();
+const getInitialTopics = (): string[] => {
+  if (typeof window === 'undefined') {
+    return defaultTopics;
+  }
+  try {
+    const item = window.localStorage.getItem('trackedTopics');
+    return item ? JSON.parse(item) : defaultTopics;
+  } catch (error) {
+    console.error('Error reading topics from localStorage', error);
+    return defaultTopics;
+  }
+};
 
-  const trackedTopics = useMemo(() => {
-    const testHistory = history.filter(item => item.type === 'Practice Test');
-    const topics = new Set<string>();
-    testHistory.forEach(item => {
-      const name = item.topic || item.subject;
-      if (name) {
-        topics.add(name);
+export const TrackedTopicsProvider = ({ children }: { children: ReactNode }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  const [trackedTopics, setTrackedTopics] = useState<string[]>(getInitialTopics);
+
+  useEffect(() => {
+    setIsMounted(true);
+    setTrackedTopics(getInitialTopics());
+  }, []);
+
+  useEffect(() => {
+    if (isMounted) {
+      try {
+        window.localStorage.setItem('trackedTopics', JSON.stringify(trackedTopics));
+      } catch (error) {
+        console.error('Error saving topics to localStorage', error);
       }
-    });
-    return Array.from(topics);
-  }, [history]);
+    }
+  }, [trackedTopics, isMounted]);
+
+  const addTrackedTopic = (topic: string) => {
+    if (trackedTopics.find(t => t.toLowerCase() === topic.toLowerCase())) {
+        throw new Error(`Topic "${topic}" is already being tracked.`);
+    }
+    setTrackedTopics(prevTopics => [...prevTopics, topic]);
+  };
+
+  const removeTrackedTopic = (topic: string) => {
+    setTrackedTopics(prevTopics => prevTopics.filter(t => t !== topic));
+  };
+  
+  if (!isMounted) {
+    return (
+        <TrackedTopicsContext.Provider value={{ trackedTopics: defaultTopics, addTrackedTopic: ()=>{}, removeTrackedTopic: ()=>{} }}>
+            {children}
+        </TrackedTopicsContext.Provider>
+    );
+  }
 
   return (
-    <TrackedTopicsContext.Provider value={{ trackedTopics }}>
+    <TrackedTopicsContext.Provider value={{ trackedTopics, addTrackedTopic, removeTrackedTopic }}>
       {children}
     </TrackedTopicsContext.Provider>
   );
@@ -37,7 +76,9 @@ export const useTrackedTopics = () => {
     // This can happen on the server or if the provider is missing.
     // We return a default state to prevent crashing, but functionality will be limited.
     return {
-        trackedTopics: [],
+        trackedTopics: defaultTopics,
+        addTrackedTopic: (topic: string) => {},
+        removeTrackedTopic: (topic: string) => {},
     };
   }
   return context;
