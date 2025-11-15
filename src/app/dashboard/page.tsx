@@ -226,9 +226,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (selectedDate && dailyHistoryRef.current) {
-      setTimeout(() => {
         dailyHistoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 100);
     }
   }, [selectedDate]);
   
@@ -238,7 +236,11 @@ export default function DashboardPage() {
   }, [selectedDate, history]);
 
   const handleBarClick = (date: string) => {
-    setSelectedDate(date);
+    // By setting it to null first, we ensure the useEffect hook always fires
+    setSelectedDate(null); 
+    setTimeout(() => {
+      setSelectedDate(date);
+    }, 0);
   }
 
   const handleCloseDailyHistory = () => {
