@@ -11,6 +11,7 @@ import {
   PanelLeft,
   User,
   History,
+  ArrowDown,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -42,12 +43,30 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { userRole } = useUser();
   const [navItems, setNavItems] = useState(allNavItems);
+  const [showScrollDownButton, setShowScrollDownButton] = useState(false);
 
   useEffect(() => {
     const filteredNavItems = allNavItems.filter(item => item.roles.includes(userRole));
     setNavItems(filteredNavItems);
   }, [userRole]);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      const isScrolled = window.scrollY > 100;
+      const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 50; // 50px buffer
+      setShowScrollDownButton(isScrolled && !atBottom);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.body.scrollHeight,
+      behavior: 'smooth',
+    });
+  };
 
   const NavLink = ({
     href,
@@ -144,6 +163,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </div>
+      {showScrollDownButton && (
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        variant="default"
+                        size="icon"
+                        className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg z-50"
+                        onClick={scrollToBottom}
+                    >
+                        <ArrowDown className="h-6 w-6" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent side="left">
+                    Scroll to Bottom
+                </TooltipContent>
+            </Tooltip>
+        </TooltipProvider>
+      )}
     </div>
   );
 }
