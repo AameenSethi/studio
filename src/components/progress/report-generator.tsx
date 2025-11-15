@@ -33,7 +33,7 @@ import { Loader2, TrendingUp, ArrowRight, Download, KeyRound, CheckCircle, Targe
 import { cn } from '@/lib/utils';
 import { format, subDays, parseISO } from 'date-fns';
 import { useUser } from '@/hooks/use-user-role';
-import { useHistory } from '@/hooks/use-history';
+import { useHistory, type HistoryItem } from '@/hooks/use-history';
 import { Separator } from '../ui/separator';
 
 const formSchema = z.object({
@@ -42,7 +42,7 @@ const formSchema = z.object({
   }),
 });
 
-const generateDynamicReportData = (history: any[], studentId?: string): Omit<WeeklyProgressReportInput, 'userId' | 'startDate' | 'endDate'> => {
+const generateDynamicReportData = (history: HistoryItem[], studentId?: string): Omit<WeeklyProgressReportInput, 'userId' | 'startDate' | 'endDate'> => {
   const today = new Date();
   const lastWeek = subDays(today, 7);
 
@@ -58,22 +58,25 @@ const generateDynamicReportData = (history: any[], studentId?: string): Omit<Wee
   weeklyHistory.forEach(item => {
     let subject: string | undefined;
     let topic: string | undefined;
+    let timeSpentSeconds = 0;
 
     if (item.type === 'Practice Test') {
       subject = item.subject || 'General Knowledge';
       topic = item.topic || item.title;
+      timeSpentSeconds = item.duration || 0;
 
       if (!subjectData[subject]) {
         subjectData[subject] = {
           subject: subject,
           topicsStudied: new Set(),
-          timeSpent: "N/A", // This could be enhanced to aggregate `item.duration`
+          timeSpent: 0,
           practiceTestScores: [],
         };
       }
       if (topic) subjectData[subject].topicsStudied.add(topic);
+      subjectData[subject].timeSpent += timeSpentSeconds;
 
-      const scorePercentage = (item.score / item.content.length) * 100;
+      const scorePercentage = (item.score! / item.content.length) * 100;
       subjectData[subject].practiceTestScores.push({
         testName: item.title,
         score: `${scorePercentage.toFixed(0)}%`,
@@ -82,43 +85,54 @@ const generateDynamicReportData = (history: any[], studentId?: string): Omit<Wee
         const topicMatch = item.title.match(/Explanation of: (.*)/);
         topic = topicMatch ? topicMatch[1] : 'General Study';
         subject = "General Study";
+        timeSpentSeconds = 600; // Approx. 10 mins per explanation
 
          if (!subjectData[subject]) {
             subjectData[subject] = {
                 subject: subject,
                 topicsStudied: new Set(),
-                timeSpent: "N/A", // Approx. 5-10 mins per explanation
+                timeSpent: 0,
                 practiceTestScores: [],
             };
         }
         if (topic) subjectData[subject].topicsStudied.add(topic);
+        subjectData[subject].timeSpent += timeSpentSeconds;
 
     } else if (item.type === 'Study Plan') {
         const goalMatch = item.title.match(/For: (.*)/);
         topic = goalMatch ? goalMatch[1] : 'General Goal';
         subject = "Planning & Organization";
+        timeSpentSeconds = 300; // Approx. 5 mins per plan
 
         if (!subjectData[subject]) {
             subjectData[subject] = {
                 subject: subject,
                 topicsStudied: new Set(),
-                timeSpent: "N/A", // Approx. 2-5 mins per plan
+                timeSpent: 0, 
                 practiceTestScores: [],
             };
         }
         if (topic) subjectData[subject].topicsStudied.add(topic);
+        subjectData[subject].timeSpent += timeSpentSeconds;
     }
   });
 
 
-  const learningData = Object.values(subjectData).map(data => ({
-    ...data,
-    topicsStudied: Array.from(data.topicsStudied),
-  }));
+  const learningData = Object.values(subjectData).map(data => {
+    const totalMinutes = Math.round(data.timeSpent / 60);
+    return {
+      ...data,
+      topicsStudied: Array.from(data.topicsStudied),
+      timeSpent: `${totalMinutes} minutes`,
+    }
+  });
+  
+  const totalTimeSpentSeconds = Object.values(subjectData).reduce((total, current) => total + current.timeSpent, 0);
+  const totalTimeSpentMinutes = Math.round(totalTimeSpentSeconds / 60);
 
   const overallSummary = {
-    totalTimeSpent: "Not tracked", // This could be a sum of durations
-    generalObservations: weeklyHistory.length > 0 ? `The user engaged in ${weeklyHistory.length} activities this week.` : "No activity was recorded in the last 7 days.",
+    totalTimeSpent: `${totalTimeSpentMinutes} minutes`,
+    generalObservations: weeklyHistory.length > 0 ? `The user engaged in ${weeklyHistory.length} activities this week, spending a total of ${totalTimeSpentMinutes} minutes.` : "No activity was recorded in the last 7 days.",
   };
 
   return { learningData, overallSummary };
@@ -497,5 +511,3 @@ function ReportDisplayCard({
     </Card>
   );
 }
-
-    
