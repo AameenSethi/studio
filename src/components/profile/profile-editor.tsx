@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, User, Save, Camera, School, KeyRound } from 'lucide-react';
+import { Loader2, User, Save, Camera, School, KeyRound, BookCopy } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user-role';
@@ -41,6 +41,7 @@ const profileSchema = z
     name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
     role: z.enum(['Student', 'Teacher', 'Parent']),
     institutionName: z.string().optional(),
+    class: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -52,6 +53,18 @@ const profileSchema = z
     {
       message: 'Institution name is required for students.',
       path: ['institutionName'],
+    }
+  )
+  .refine(
+    (data) => {
+        if (data.role === 'Student') {
+            return data.class && data.class.length > 0;
+        }
+        return true;
+    },
+    {
+        message: 'Please select a class.',
+        path: ['class'],
     }
   );
 
@@ -68,6 +81,7 @@ export function ProfileEditor() {
       name: userName,
       role: userRole,
       institutionName: 'State University',
+      class: '10th Grade',
     },
   });
 
@@ -86,6 +100,7 @@ export function ProfileEditor() {
     const submissionValues = { ...values };
     if (submissionValues.role !== 'Student') {
       delete submissionValues.institutionName;
+      delete submissionValues.class;
     }
     console.log(submissionValues);
     setUserRole(submissionValues.role); // Update global role state
@@ -224,13 +239,47 @@ export function ProfileEditor() {
                 />
                 <div
                   className={cn(
-                    'transition-all duration-300 ease-in-out',
+                    'transition-all duration-300 ease-in-out space-y-6',
                     watchRole === 'Student'
-                      ? 'opacity-100 max-h-40'
+                      ? 'opacity-100 max-h-96'
                       : 'opacity-0 max-h-0 overflow-hidden'
                   )}
                 >
                   {watchRole === 'Student' && (
+                    <>
+                    <FormField
+                        control={form.control}
+                        name="class"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Class</FormLabel>
+                                <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                >
+                                <FormControl>
+                                    <div className="relative">
+                                        <BookCopy className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <SelectTrigger className='pl-10'>
+                                            <SelectValue placeholder="Select your class" />
+                                        </SelectTrigger>
+                                    </div>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="6th Grade">6th Grade</SelectItem>
+                                    <SelectItem value="7th Grade">7th Grade</SelectItem>
+                                    <SelectItem value="8th Grade">8th Grade</SelectItem>
+                                    <SelectItem value="9th Grade">9th Grade</SelectItem>
+                                    <SelectItem value="10th Grade">10th Grade</SelectItem>
+                                    <SelectItem value="11th Grade">11th Grade</SelectItem>
+                                    <SelectItem value="12th Grade">12th Grade</SelectItem>
+                                    <SelectItem value="Undergraduate">Undergraduate</SelectItem>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                     <FormField
                       control={form.control}
                       name="institutionName"
@@ -251,6 +300,7 @@ export function ProfileEditor() {
                         </FormItem>
                       )}
                     />
+                    </>
                   )}
                 </div>
                 <Button type="submit" disabled={isLoading}>
