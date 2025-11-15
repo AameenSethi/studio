@@ -166,7 +166,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-4 px-2.5 transition-colors duration-300",
+                                "flex items-center gap-4 px-2.5 transition-colors",
                                 pathname === item.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
