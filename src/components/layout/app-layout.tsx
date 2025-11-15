@@ -110,7 +110,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
                 {navItems.map((item, index) => (
                     <Fragment key={item.href}>
-                      {index > 0 && item.label !== 'Study Plan' && <Separator orientation="vertical" className="h-10" />}
+                      {index > 0 && <Separator orientation="vertical" className="h-10" />}
                       <Link
                           href={item.href}
                           className={cn(
