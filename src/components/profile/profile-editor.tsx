@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, User, Save, Camera, School, KeyRound, BookCopy, AtSign } from 'lucide-react';
+import { Loader2, User, Save, Camera, School, KeyRound, BookCopy, AtSign, Briefcase } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user-role';
@@ -42,13 +42,14 @@ const profileSchema = z
     email: z.string().email({ message: 'Please enter a valid email.' }),
     institutionName: z.string().optional(),
     class: z.string().optional(),
+    field: z.string().optional(),
   });
 
 export function ProfileEditor() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId, userClass, setUserClass, userInstitution, setUserInstitution } = useUser();
+  const { userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId, userClass, setUserClass, userField, setUserField, userInstitution, setUserInstitution } = useUser();
   const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -58,24 +59,35 @@ export function ProfileEditor() {
       email: userEmail,
       institutionName: userInstitution,
       class: userClass,
+      field: userField,
     },
   });
+
+  const watchClass = form.watch('class');
 
   useEffect(() => {
     form.reset({
       name: userName,
       email: userEmail,
       institutionName: userInstitution,
-      class: userClass
+      class: userClass,
+      field: userField,
     });
-  }, [userName, userEmail, userClass, userInstitution, form]);
+  }, [userName, userEmail, userClass, userField, userInstitution, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
     setUserName(values.name);
     setUserEmail(values.email);
     if(values.class) setUserClass(values.class);
+    if(values.field) setUserField(values.field);
     if(values.institutionName) setUserInstitution(values.institutionName);
+    
+    // If class is not undergraduate, clear the field
+    if (values.class !== 'Undergraduate') {
+        setUserField('');
+    }
+
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
@@ -233,6 +245,28 @@ export function ProfileEditor() {
                             </FormItem>
                         )}
                         />
+                    {watchClass === 'Undergraduate' && (
+                         <FormField
+                            control={form.control}
+                            name="field"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Field of Study</FormLabel>
+                                <FormControl>
+                                    <div className="relative">
+                                        <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                        <Input
+                                            placeholder="e.g., 'Computer Science'"
+                                            {...field}
+                                            className="pl-10"
+                                        />
+                                    </div>
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
                     <FormField
                       control={form.control}
                       name="institutionName"

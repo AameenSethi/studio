@@ -60,11 +60,10 @@ import {
 import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useHistory, type HistoryItem } from '@/hooks/use-history';
+import { useUser } from '@/hooks/use-user-role';
 
 const studentFormSchema = z
   .object({
-    board: z.string().min(1, { message: 'Please select a board.' }),
-    class: z.string().min(1, { message: 'Please select a class.' }),
     subject: z
       .string()
       .min(1, { message: 'Please select or enter a subject.' }),
@@ -106,6 +105,8 @@ interface StudentTestGeneratorProps {
 export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const { toast } = useToast();
   const { addHistoryItem, updateHistoryItem } = useHistory();
+  const { userClass, userField } = useUser();
+
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [test, setTest] = useState<GeneratePracticeTestOutput | null>(assignedTest ? { answerKey: assignedTest.content } : null);
@@ -135,8 +136,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const form = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
-      board: 'CBSE',
-      class: '10th Grade',
       subject: 'Mathematics',
       customSubject: '',
       topic: 'Algebra',
@@ -144,19 +143,17 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     },
   });
 
-  const watchClass = form.watch('class');
   const watchSubject = form.watch('subject');
-  const [availableSubjects, setAvailableSubjects] = useState(subjectMap[form.getValues('class')] || []);
+  const [availableSubjects, setAvailableSubjects] = useState(subjectMap[userClass] || []);
 
   useEffect(() => {
-    const selectedClass = form.getValues('class');
-    const newSubjects = subjectMap[selectedClass] || [];
+    const newSubjects = subjectMap[userClass] || [];
     setAvailableSubjects(newSubjects);
     // Reset subject if it's not in the new list
     if (!newSubjects.includes(form.getValues('subject')) && form.getValues('subject') !== 'other') {
       form.setValue('subject', newSubjects[0] || '');
     }
-  }, [watchClass, form]);
+  }, [userClass, form]);
 
 
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
@@ -176,7 +173,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
 
     try {
       const result = await generatePracticeTest({
-        class: `${values.class} (${values.board})`,
+        class: userClass === 'Undergraduate' ? `${userClass} (${userField})` : userClass,
         subject: finalSubject,
         topic: values.topic,
         numberOfQuestions: values.numberOfQuestions,
@@ -307,78 +304,13 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                 Generate a Practice Test
                 </CardTitle>
                 <CardDescription>
-                Select your board, class, subject, and topic to generate a custom
-                test.
+                Select your subject and topic to generate a custom
+                test. Your class is automatically set from your profile.
                 </CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                        control={form.control}
-                        name="board"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Board</FormLabel>
-                            <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                            >
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select a board" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="CBSE">CBSE</SelectItem>
-                                <SelectItem value="ICSE">ICSE</SelectItem>
-                                <SelectItem value="State Board">State Board</SelectItem>
-                                <SelectItem value="IB">
-                                IB (International Baccalaureate)
-                                </SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
-                            </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="class"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Class</FormLabel>
-                            <Select
-                            onValueChange={(value) => {
-                                field.onChange(value);
-                            }}
-                            defaultValue={field.value}
-                            >
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select a class" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                <SelectItem value="6th Grade">6th Grade</SelectItem>
-                                <SelectItem value="7th Grade">7th Grade</SelectItem>
-                                <SelectItem value="8th Grade">8th Grade</SelectItem>
-                                <SelectItem value="9th Grade">9th Grade</SelectItem>
-                                <SelectItem value="10th Grade">10th Grade</SelectItem>
-                                <SelectItem value="11th Grade">11th Grade</SelectItem>
-                                <SelectItem value="12th Grade">12th Grade</SelectItem>
-                                <SelectItem value="Undergraduate">
-                                Undergraduate
-                                </SelectItem>
-                            </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <FormField
                         control={form.control}

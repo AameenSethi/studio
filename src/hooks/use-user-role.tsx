@@ -15,6 +15,8 @@ interface UserContextType {
   userId: string;
   userClass: string;
   setUserClass: (userClass: string) => void;
+  userField: string;
+  setUserField: (userField: string) => void;
   userInstitution: string;
   setUserInstitution: (userInstitution: string) => void;
 }
@@ -29,6 +31,7 @@ const getInitialState = () => {
     email: 'student@example.com',
     id: 'student-007',
     userClass: '10th Grade',
+    userField: '',
     userInstitution: 'State University',
   };
 
@@ -42,6 +45,7 @@ const getInitialState = () => {
     const storedEmail = localStorage.getItem('userEmail');
     const storedId = localStorage.getItem('userId');
     const storedClass = localStorage.getItem('userClass');
+    const storedField = localStorage.getItem('userField');
     const storedInstitution = localStorage.getItem('userInstitution');
 
     return {
@@ -51,6 +55,7 @@ const getInitialState = () => {
       email: storedEmail ? JSON.parse(storedEmail) : defaultUser.email,
       id: storedId ? JSON.parse(storedId) : defaultUser.id,
       userClass: storedClass ? JSON.parse(storedClass) : defaultUser.userClass,
+      userField: storedField ? JSON.parse(storedField) : defaultUser.userField,
       userInstitution: storedInstitution ? JSON.parse(storedInstitution) : defaultUser.userInstitution,
     };
   } catch (error) {
@@ -70,6 +75,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userId] = useState<string>(initialState.id);
   const [userEmail, setUserEmailState] = useState<string>(initialState.email);
   const [userClass, setUserClassState] = useState<string>(initialState.userClass);
+  const [userField, setUserFieldState] = useState<string>(initialState.userField);
   const [userInstitution, setUserInstitutionState] = useState<string>(initialState.userInstitution);
 
   const setUserEmail = (email: string) => {
@@ -78,6 +84,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
 
   const setUserClass = (userClass: string) => {
     setUserClassState(userClass);
+  }
+
+  const setUserField = (userField: string) => {
+    setUserFieldState(userField);
   }
 
   const setUserInstitution = (userInstitution: string) => {
@@ -91,6 +101,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setUserName(state.name);
     setUserAvatar(state.avatar);
     setUserClassState(state.userClass);
+    setUserFieldState(state.userField);
     setUserInstitutionState(state.userInstitution);
   }, []);
 
@@ -102,12 +113,13 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
         localStorage.setItem('userEmail', JSON.stringify(userEmail));
         localStorage.setItem('userId', JSON.stringify(userId));
         localStorage.setItem('userClass', JSON.stringify(userClass));
+        localStorage.setItem('userField', JSON.stringify(userField));
         localStorage.setItem('userInstitution', JSON.stringify(userInstitution));
       } catch (error) {
         console.error("Failed to save to localStorage", error);
       }
     }
-  }, [userName, userAvatar, userEmail, userId, userClass, userInstitution, isMounted]);
+  }, [userName, userAvatar, userEmail, userId, userClass, userField, userInstitution, isMounted]);
 
   const value: UserContextType = {
     userRole,
@@ -120,6 +132,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     userId,
     userClass,
     setUserClass,
+    userField,
+    setUserField,
     userInstitution,
     setUserInstitution,
   };
@@ -136,6 +150,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       userId: '',
       userClass: '',
       setUserClass: () => {},
+      userField: '',
+      setUserField: () => {},
       userInstitution: '',
       setUserInstitution: () => {},
     };
@@ -164,6 +180,8 @@ export const useUser = () => {
       userId: 'student-007',
       userClass: '10th Grade',
       setUserClass: (userClass: string) => {},
+      userField: '',
+      setUserField: (userField: string) => {},
       userInstitution: 'State University',
       setUserInstitution: (userInstitution: string) => {},
     };
