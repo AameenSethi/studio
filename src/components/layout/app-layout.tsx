@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/tooltip';
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, Fragment } from 'react';
+import { useState, useEffect, Fragment, useRef } from 'react';
 import { useUser } from '@/hooks/use-user-role';
 import { ModeToggle } from './mode-toggle';
 import { Separator } from '@/components/ui/separator';
@@ -50,6 +50,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { userRole } = useUser();
   const [navItems, setNavItems] = useState(allNavItems);
   const [isAtBottom, setIsAtBottom] = useState(false);
+  const [underlineStyle, setUnderlineStyle] = useState({});
+  const navRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const filteredNavItems = allNavItems.filter(item => item.roles.includes(userRole));
@@ -63,10 +65,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     };
 
     window.addEventListener('scroll', handleScroll);
-    // Initial check
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (navRef.current) {
+        const activeLink = navRef.current.querySelector(`a[href="${pathname}"]`) as HTMLElement;
+        if (activeLink) {
+            const { offsetLeft, offsetWidth } = activeLink;
+            setUnderlineStyle({
+                left: `${offsetLeft}px`,
+                width: `${offsetWidth}px`,
+            });
+        }
+    }
+}, [pathname, navItems]);
+
 
   const scrollToBottom = () => {
     window.scrollTo({
@@ -82,38 +97,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     });
   };
 
-  const NavLink = ({
-    href,
-    icon: Icon,
-    label,
-    isMobile = false,
-  }: {
-    href: string;
-    icon: React.ElementType;
-    label: string;
-    isMobile?: boolean;
-  }) => {
-    const isActive = pathname === href;
-    const linkClasses = cn(
-      'flex items-center gap-2 transition-colors',
-      isActive
-        ? 'font-semibold text-primary'
-        : 'text-muted-foreground hover:text-foreground',
-      isMobile ? 'p-2 rounded-lg text-lg' : 'px-3 py-2 rounded-md text-sm'
-    );
-
-    return (
-      <Link href={href} className={linkClasses}>
-        <Icon className="h-5 w-5" />
-        {label}
-      </Link>
-    );
-  };
-
   return (
     <div className="flex min-h-screen w-full flex-col">
        <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
-          <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+          <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
             <Link
                 href="/dashboard"
                 className="flex items-center gap-2 text-lg font-semibold md:text-base mr-2"
@@ -133,13 +120,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   >
                       <item.icon className="h-5 w-5" />
                       <span className="text-xs">{item.label}</span>
-                       <span className={cn(
-                            "absolute -bottom-[29px] h-0.5 w-full bg-primary transition-all duration-300",
-                            pathname === item.href ? "scale-x-100" : "scale-x-0 group-hover:scale-x-50"
-                        )}></span>
                   </Link>
                 </Fragment>
             ))}
+            <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300 ease-in-out" style={underlineStyle} />
           </nav>
           <Sheet>
             <SheetTrigger asChild>
@@ -166,7 +150,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             key={item.href}
                             href={item.href}
                             className={cn(
-                                "flex items-center gap-4 px-2.5 transition-colors",
+                                "flex items-center gap-4 px-2.5 transition-colors duration-300",
                                 pathname === item.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
