@@ -158,26 +158,32 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   useEffect(() => {
     let subjects: Record<string, string> = {};
     if (userClass === 'Undergraduate') {
-        subjects = subjectMap['Undergraduate'] || {};
-        // If userField is a custom field, it won't be in the map.
-        if (userField && !subjects[userField] && !userField.startsWith('Engineering: ')) {
-            subjects[userField] = ''; // Add custom field to available subjects
+        const undergraduateSubjects = subjectMap['Undergraduate'] || {};
+        // Filter subjects based on the user's field
+        subjects = Object.keys(undergraduateSubjects)
+          .filter(key => userField && key.startsWith(userField.split(':')[0]))
+          .reduce((obj, key) => {
+            obj[key] = undergraduateSubjects[key];
+            return obj;
+          }, {} as Record<string, string>);
+        
+        // If no subjects match (e.g. custom field), allow all undergraduate subjects
+        if (Object.keys(subjects).length === 0) {
+            subjects = undergraduateSubjects;
         }
-    } else {
+
+    } else if (userClass) {
         subjects = subjectMap[userClass] || {};
     }
     setAvailableSubjects(subjects);
 
-    // Set initial subject and topic
+    // Set initial subject and topic from the derived list
     const firstSubject = Object.keys(subjects)[0];
     if (firstSubject) {
         form.setValue('subject', firstSubject);
         form.setValue('topic', subjects[firstSubject] || '');
-    } else {
-        form.setValue('subject', '');
-        form.setValue('topic', '');
     }
-  }, [userClass, userField, form]);
+}, [userClass, userField, form]);
 
   useEffect(() => {
     if (watchSubject && watchSubject !== 'other') {
@@ -579,6 +585,8 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     </Card>
   );
 }
+
+    
 
     
 
