@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import AppLayout from '@/components/layout/app-layout';
 import {
   Card,
@@ -47,7 +47,7 @@ const motivationalQuotes = [
 const iconMap = {
     'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
     'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
-    'Practice Test': <FileText className="h-5 w-5 text-accent" />,
+    'Practice Test': <FileText className="h-5 w_5 text-accent" />,
     'Progress Report': <TrendingUp className="h-5 w-5 text-accent" />,
 };
 
@@ -216,12 +216,21 @@ export default function DashboardPage() {
   const [quote, setQuote] = useState('');
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const heroImage = PlaceHolderImages.find((img) => img.id === 'login-hero');
+  const dailyHistoryRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Select a random quote on the client-side to avoid hydration mismatch
     const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
     setQuote(randomQuote);
   }, []);
+
+  useEffect(() => {
+    if (selectedDate && dailyHistoryRef.current) {
+      setTimeout(() => {
+        dailyHistoryRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [selectedDate]);
   
   const dailyHistory = useMemo(() => {
     if (!selectedDate) return [];
@@ -319,42 +328,44 @@ export default function DashboardPage() {
         </Card>
 
         {selectedDate && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Activities for {format(parseISO(selectedDate), 'PPP')}</CardTitle>
-                <CardDescription>A log of your activities on this day.</CardDescription>
-              </div>
-              <Button variant="ghost" size="icon" onClick={handleCloseDailyHistory}>
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {dailyHistory.length > 0 ? (
-                <div className="space-y-4">
-                  {dailyHistory.map((item) => (
-                    <Card key={item.id} className="bg-muted/50">
-                        <CardHeader>
-                            <CardTitle className="text-lg flex items-center gap-2">
-                                {iconMap[item.type as keyof typeof iconMap]}
-                                {item.title}
-                            </CardTitle>
-                            <CardDescription>
-                                {format(parseISO(item.timestamp), 'p')}
-                            </CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            {renderContent(item)}
-                        </CardContent>
-                    </Card>
-                  ))}
+          <div ref={dailyHistoryRef}>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Activities for {format(parseISO(selectedDate), 'PPP')}</CardTitle>
+                  <CardDescription>A log of your activities on this day.</CardDescription>
                 </div>
-              ) : (
-                <p className="text-muted-foreground text-center py-8">No activities recorded on this day.</p>
-              )}
-            </CardContent>
-          </Card>
+                <Button variant="ghost" size="icon" onClick={handleCloseDailyHistory}>
+                  <X className="h-4 w-4" />
+                  <span className="sr-only">Close</span>
+                </Button>
+              </CardHeader>
+              <CardContent>
+                {dailyHistory.length > 0 ? (
+                  <div className="space-y-4">
+                    {dailyHistory.map((item) => (
+                      <Card key={item.id} className="bg-muted/50">
+                          <CardHeader>
+                              <CardTitle className="text-lg flex items-center gap-2">
+                                  {iconMap[item.type as keyof typeof iconMap]}
+                                  {item.title}
+                              </CardTitle>
+                              <CardDescription>
+                                  {format(parseISO(item.timestamp), 'p')}
+                              </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                              {renderContent(item)}
+                          </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground text-center py-8">No activities recorded on this day.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
         )}
       </div>
     </AppLayout>
