@@ -49,26 +49,20 @@ const defaultUser: UserProfile = {
     institution: 'State University',
 };
 
-const getInitialState = (): UserProfile => {
-  if (typeof window === 'undefined') {
-    return defaultUser;
-  }
-
-  try {
-    const item = localStorage.getItem('userProfile');
-    return item ? { ...defaultUser, ...JSON.parse(item) } : defaultUser;
-  } catch (error) {
-    console.error("Failed to parse from localStorage", error);
-    return defaultUser;
-  }
-};
-
 export const UserProvider = ({ children }: { children: ReactNode }) => {
+  const [user, setUser] = useState<UserProfile>(defaultUser);
   const [isMounted, setIsMounted] = useState(false);
-  const [user, setUser] = useState<UserProfile>(getInitialState);
 
   useEffect(() => {
     setIsMounted(true);
+    try {
+      const item = window.localStorage.getItem('userProfile');
+      if (item) {
+        setUser(JSON.parse(item));
+      }
+    } catch (error) {
+      console.error("Failed to parse from localStorage", error);
+    }
   }, []);
 
   useEffect(() => {
@@ -93,7 +87,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const setUserField = (userField: string) => updateUser({ field: userField });
   const setUserInstitution = (userInstitution: string) => updateUser({ institution: userInstitution });
 
-
   const value: UserContextType = {
     user,
     updateUser,
@@ -113,27 +106,30 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
   
   if (!isMounted) {
-      return (
-          <UserContext.Provider value={{
-              user: defaultUser,
-              updateUser: () => {},
-              userName: defaultUser.name,
-              userEmail: defaultUser.email,
-              userAvatar: defaultUser.avatar,
-              userId: defaultUser.id,
-              userClass: defaultUser.class,
-              userField: defaultUser.field,
-              userInstitution: defaultUser.institution,
-              setUserName: () => {},
-              setUserEmail: () => {},
-              setUserAvatar: () => {},
-              setUserClass: () => {},
-              setUserField: () => {},
-              setUserInstitution: () => {},
-          }}>
-              {children}
-          </UserContext.Provider>
-      )
+    // On the server, or before the client has mounted, return a default state
+    // to avoid hydration mismatches, but don't provide update functions.
+    const defaultContext: UserContextType = {
+        user: defaultUser,
+        updateUser: () => {},
+        userName: defaultUser.name,
+        userEmail: defaultUser.email,
+        userAvatar: defaultUser.avatar,
+        userId: defaultUser.id,
+        userClass: defaultUser.class,
+        userField: defaultUser.field,
+        userInstitution: defaultUser.institution,
+        setUserName: () => {},
+        setUserEmail: () => {},
+        setUserAvatar: () => {},
+        setUserClass: () => {},
+        setUserField: () => {},
+        setUserInstitution: () => {},
+    };
+    return (
+        <UserContext.Provider value={defaultContext}>
+            {children}
+        </UserContext.Provider>
+    )
   }
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;
