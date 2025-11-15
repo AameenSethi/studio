@@ -98,19 +98,6 @@ export function TopicMasteryChart() {
   const { history } = useHistory();
 
   const { topicMasteryData, overallPerformance } = useMemo(() => {
-    const allTopics = new Set<string>();
-    history.forEach(item => {
-        let topic;
-        if (item.type === 'Practice Test') {
-            const topicMatch = item.title.match(/Test on: (.*)/);
-            topic = topicMatch ? topicMatch[1] : null;
-        } else if (item.type === 'Explanation') {
-            const topicMatch = item.title.match(/Explanation of: (.*)/);
-            topic = topicMatch ? topicMatch[1] : null;
-        }
-        if (topic) allTopics.add(topic);
-    });
-
     const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
 
     const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
@@ -127,19 +114,13 @@ export function TopicMasteryChart() {
       topicScores[topic].count++;
     });
 
-    const calculatedMasteryData = Array.from(allTopics).map(topic => {
-      if (topicScores[topic]) {
-          const data = topicScores[topic];
-          const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
-          return {
-              topic: topic,
-              mastery: Math.round(averageScore),
-          };
-      }
-      return {
-          topic: topic,
-          mastery: 0,
-      };
+    const calculatedMasteryData = Object.keys(topicScores).map(topic => {
+        const data = topicScores[topic];
+        const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
+        return {
+            topic: topic,
+            mastery: Math.round(averageScore),
+        };
     });
 
     const totalTests = testHistory.length;
@@ -264,7 +245,22 @@ export function PerformanceByTopic() {
     }, [history]);
 
     if (topicPerformanceData.length === 0) {
-        return null; // Don't render if no data
+        return (
+            <Card className="lg:col-span-2">
+                <CardHeader>
+                    <CardTitle>Performance by Topic</CardTitle>
+                    <CardDescription>
+                        A detailed breakdown of your performance in each topic.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
+                        <p className="text-muted-foreground">No performance data available.</p>
+                        <p className="text-sm text-muted-foreground">Take a practice test to see your performance breakdown.</p>
+                    </div>
+                </CardContent>
+            </Card>
+        );
     }
 
     return (
@@ -312,9 +308,3 @@ export function PerformanceByTopic() {
         </Card>
     );
 }
-
-    
-
-    
-
-    
