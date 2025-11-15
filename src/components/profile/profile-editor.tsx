@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -79,15 +78,15 @@ export function ProfileEditor() {
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      institutionName: '',
-      class: '',
-      field: '',
-      customField: '',
-      engineeringField: '',
-      customEngineeringField: '',
-    },
+        name: '',
+        email: '',
+        institutionName: '',
+        class: '',
+        field: '',
+        customField: '',
+        engineeringField: '',
+        customEngineeringField: '',
+      },
   });
 
   const watchClass = form.watch('class');
@@ -104,7 +103,7 @@ export function ProfileEditor() {
         let customEngField = '';
         let customMainField = '';
 
-        if (user.field?.includes('Engineering: ')) {
+        if (user.field?.startsWith('Engineering: ')) {
             mainField = 'Engineering';
             const specificEngField = user.field.replace('Engineering: ', '');
             if (engineeringFields.includes(specificEngField)) {
@@ -135,30 +134,26 @@ export function ProfileEditor() {
     setIsLoading(true);
 
     let finalField = values.field;
-    if (values.field === 'Other') {
-        finalField = values.customField;
-    } else if (values.field === 'Engineering') {
-        if (values.engineeringField === 'Other') {
-            finalField = `Engineering: ${values.customEngineeringField}`;
-        } else {
-            finalField = `Engineering: ${values.engineeringField}`;
+    if (values.class === 'Undergraduate') {
+        if (values.field === 'Other') {
+            finalField = values.customField;
+        } else if (values.field === 'Engineering') {
+            if (values.engineeringField === 'Other') {
+                finalField = `Engineering: ${values.customEngineeringField}`;
+            } else {
+                finalField = `Engineering: ${values.engineeringField}`;
+            }
         }
+    } else {
+        finalField = '';
     }
     
-    const updates: Partial<z.infer<typeof profileSchema>> = {
+    updateUser({
       name: values.name,
       email: values.email,
       class: values.class,
-      field: values.class === 'Undergraduate' ? finalField : '',
-      institutionName: values.institutionName,
-    };
-    
-    updateUser({
-      name: updates.name,
-      email: updates.email,
-      class: updates.class,
-      field: updates.field,
-      institution: updates.institutionName,
+      field: finalField,
+      institution: values.institutionName,
     });
 
     // Simulate API call
@@ -293,7 +288,7 @@ export function ProfileEditor() {
                                 <FormLabel>Class</FormLabel>
                                 <Select
                                 onValueChange={field.onChange}
-                                value={field.value}
+                                value={field.value || ''}
                                 >
                                 <FormControl>
                                     <div className="relative">
@@ -326,7 +321,7 @@ export function ProfileEditor() {
                                 render={({ field }) => (
                                     <FormItem>
                                     <FormLabel>Field of Study</FormLabel>
-                                    <Select onValueChange={field.onChange} value={field.value}>
+                                    <Select onValueChange={field.onChange} value={field.value || ''}>
                                         <FormControl>
                                             <div className='relative'>
                                                 <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -357,7 +352,7 @@ export function ProfileEditor() {
                                         <FormItem>
                                             <FormLabel>Custom Field of Study</FormLabel>
                                             <FormControl>
-                                                <Input placeholder="e.g., 'Neuroscience'" {...field} />
+                                                <Input placeholder="e.g., 'Neuroscience'" {...field} value={field.value || ''} />
                                             </FormControl>
                                             <FormMessage />
                                         </FormItem>
@@ -372,7 +367,7 @@ export function ProfileEditor() {
                                     render={({ field }) => (
                                         <FormItem>
                                         <FormLabel>Engineering Field</FormLabel>
-                                        <Select onValueChange={field.onChange} value={field.value}>
+                                        <Select onValueChange={field.onChange} value={field.value || ''}>
                                             <FormControl>
                                                 <div className='relative'>
                                                     <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -400,7 +395,7 @@ export function ProfileEditor() {
                                             <FormItem>
                                                 <FormLabel>Custom Engineering Field</FormLabel>
                                                 <FormControl>
-                                                    <Input placeholder="e.g., 'Aerospace'" {...field} />
+                                                    <Input placeholder="e.g., 'Aerospace'" {...field} value={field.value || ''} />
                                                 </FormControl>
                                                 <FormMessage />
                                             </FormItem>
@@ -424,6 +419,7 @@ export function ProfileEditor() {
                                 placeholder="e.g., 'State University'"
                                 {...field}
                                 className="pl-10"
+                                value={field.value || ''}
                               />
                             </div>
                           </FormControl>
