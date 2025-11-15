@@ -56,7 +56,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [userName, setUserName] = useState<string>(initialState.name);
   const userEmail = 'learner@example.com';
   const [userAvatar, setUserAvatar] = useState<string | undefined>(initialState.avatar);
-  const userId = 'current-user-01'; // Simulating a fixed ID for the logged-in user
+  const userId = 'valeriy-trubnikov-01'; // Simulating a fixed ID for the logged-in user
 
   useEffect(() => {
     setIsMounted(true);
