@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -14,12 +15,11 @@ export type HistoryItem = {
   topic?: string;
   studentId?: string; // For tests assigned by teachers/parents
   isComplete?: boolean; // For assigned tests
-  includeInAnalytics?: boolean; // For practice tests
 };
 
 interface HistoryContextType {
   history: HistoryItem[];
-  addHistoryItem: (item: Omit<HistoryItem, 'id' | 'timestamp'>) => void;
+  addHistoryItem: (item: Omit<HistoryItem, 'id' | 'timestamp'>) => string;
   updateHistoryItem: (id: string, updates: Partial<HistoryItem>) => void;
   clearHistory: () => void;
 }
@@ -58,13 +58,14 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [history, isMounted]);
 
-  const addHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+  const addHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>): string => {
     const newItem: HistoryItem = {
       ...item,
       id: new Date().toISOString() + Math.random().toString(),
       timestamp: new Date().toISOString(),
     };
     setHistory(prevHistory => [newItem, ...prevHistory]);
+    return newItem.id;
   };
 
   const updateHistoryItem = (id: string, updates: Partial<HistoryItem>) => {

@@ -64,6 +64,7 @@ import { useHistory, type HistoryItem } from '@/hooks/use-history';
 import { useUser } from '@/hooks/use-user-role';
 import { Switch } from '../ui/switch';
 import { Label } from '../ui/label';
+import { useTrackedTopics } from '@/hooks/use-tracked-topics';
 
 const studentFormSchema = z
   .object({
@@ -73,7 +74,6 @@ const studentFormSchema = z
     customSubject: z.string().optional(),
     topic: z.string().min(2, { message: 'Topic must be at least 2 characters.' }),
     numberOfQuestions: z.number().min(1).max(20),
-    includeInAnalytics: z.boolean().default(true),
   })
   .refine(
     (data) => {
@@ -139,6 +139,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const { toast } = useToast();
   const { addHistoryItem, updateHistoryItem } = useHistory();
   const { userClass, userField } = useUser();
+  const { addTrackedTopic } = useTrackedTopics();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -150,8 +151,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const [startTime, setStartTime] = useState<Date | null>(assignedTest ? new Date() : null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [formValues, setFormValues] = useState<z.infer<typeof studentFormSchema> | null>(null);
-  const [includeInAnalytics, setIncludeInAnalytics] = useState(true);
+  const [formValues, setFormValues] = useState<Omit<z.infer<typeof studentFormSchema>, 'includeInAnalytics'> | null>(null);
   const [currentTestId, setCurrentTestId] = useState<string | null>(assignedTest?.id || null);
 
 
@@ -177,7 +177,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       customSubject: '',
       topic: '',
       numberOfQuestions: 5,
-      includeInAnalytics: true,
     },
   });
 
@@ -273,7 +272,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     const finalStream = values.stream === 'other' ? values.customStream! : values.stream;
     const finalSubject = values.subject === 'other' ? values.customSubject! : values.subject;
     setFormValues({...values, stream: finalStream, subject: finalSubject});
-    setIncludeInAnalytics(values.includeInAnalytics);
 
 
     try {
@@ -350,12 +348,20 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     setAnswersSubmitted(true);
     setIsSubmitting(false);
 
+    // Automatically add the topic to tracked topics
+    try {
+        addTrackedTopic({ topic: testTopic, subject: testSubject });
+    } catch (e) {
+        // Topic might already be tracked, fail silently.
+        console.log("Did not add topic, it might already be tracked:", e);
+    }
+
+
     if (assignedTest) {
         updateHistoryItem(assignedTest.id, {
             score: correctAnswers,
             duration: finalElapsedTime,
             isComplete: true,
-            includeInAnalytics: includeInAnalytics,
         });
         setCurrentTestId(assignedTest.id);
     } else {
@@ -368,7 +374,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             subject: testSubject,
             topic: testTopic,
             isComplete: true,
-            includeInAnalytics: includeInAnalytics,
         };
         const newId = addHistoryItem(newHistoryItem);
         setCurrentTestId(newId);
@@ -545,24 +550,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                         <FormMessage />
                         </FormItem>
                     )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="includeInAnalytics"
-                        render={({ field }) => (
-                            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                            <div className="space-y-0.5">
-                                <FormLabel>Add to Analytics</FormLabel>
-                                <FormMessage />
-                            </div>
-                            <FormControl>
-                                <Switch
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                                />
-                            </FormControl>
-                            </FormItem>
-                        )}
                     />
                     <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
