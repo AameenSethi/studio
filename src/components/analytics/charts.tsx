@@ -31,6 +31,7 @@ import { Badge } from '../ui/badge';
 import { useHistory } from '@/hooks/use-history';
 import { Separator } from '../ui/separator';
 import { subDays, format, parseISO } from 'date-fns';
+import { useTrackedTopics } from '@/hooks/use-tracked-topics';
 
 const studyTimeConfig = {
   hours: {
@@ -96,6 +97,7 @@ export function StudyTimeChart() {
 
 export function TopicMasteryChart() {
   const { history } = useHistory();
+  const { trackedTopics } = useTrackedTopics();
 
   const { topicMasteryData, overallPerformance } = useMemo(() => {
     const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
@@ -105,26 +107,43 @@ export function TopicMasteryChart() {
     testHistory.forEach(item => {
       const topicMatch = item.title.match(/Test on: (.*)/);
       const topic = topicMatch ? topicMatch[1] : 'General';
-      const percentage = (item.score! / item.content.length) * 100;
-
-      if (!topicScores[topic]) {
-        topicScores[topic] = { scores: [], count: 0 };
+      
+      // Only consider topics that are being tracked
+      if (trackedTopics.includes(topic)) {
+        const percentage = (item.score! / item.content.length) * 100;
+        if (!topicScores[topic]) {
+          topicScores[topic] = { scores: [], count: 0 };
+        }
+        topicScores[topic].scores.push(percentage);
+        topicScores[topic].count++;
       }
-      topicScores[topic].scores.push(percentage);
-      topicScores[topic].count++;
     });
-
-    const calculatedMasteryData = Object.keys(topicScores).map(topic => {
-        const data = topicScores[topic];
+    
+    // Create mastery data for all tracked topics
+    const calculatedMasteryData = trackedTopics.map(topic => {
+      const data = topicScores[topic];
+      if (data) {
         const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
         return {
-            topic: topic,
-            mastery: Math.round(averageScore),
+          topic: topic,
+          mastery: Math.round(averageScore),
         };
+      }
+      return {
+        topic: topic,
+        mastery: 0, // Default to 0 if no tests are taken for a tracked topic
+      };
     });
 
-    const totalTests = testHistory.length;
-    const totalPercentage = testHistory.reduce((acc, item) => {
+    const relevantTestHistory = history.filter(item => {
+        if (item.type !== 'Practice Test' || item.score === undefined) return false;
+        const topicMatch = item.title.match(/Test on: (.*)/);
+        const topic = topicMatch ? topicMatch[1] : 'General';
+        return trackedTopics.includes(topic);
+    });
+
+    const totalTests = relevantTestHistory.length;
+    const totalPercentage = relevantTestHistory.reduce((acc, item) => {
         const percentage = (item.score! / item.content.length) * 100;
         return acc + percentage;
     }, 0);
@@ -132,7 +151,7 @@ export function TopicMasteryChart() {
     const overallAverage = totalTests > 0 ? Math.round(totalPercentage / totalTests) : 0;
 
     return { topicMasteryData: calculatedMasteryData, overallPerformance: overallAverage };
-  }, [history]);
+  }, [history, trackedTopics]);
 
 
   return (
@@ -141,7 +160,7 @@ export function TopicMasteryChart() {
         <CardHeader>
           <CardTitle>Topic Mastery</CardTitle>
           <CardDescription>
-            Your estimated mastery level based on practice test performance.
+            Your mastery level for tracked topics based on practice tests.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,8 +178,8 @@ export function TopicMasteryChart() {
           </ChartContainer>
         ) : (
             <div className="flex flex-col items-center justify-center h-[250px] text-center p-4 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">No test data available.</p>
-                <p className="text-sm text-muted-foreground">Complete some practice tests to see your mastery here.</p>
+                <p className="text-muted-foreground">No topics are being tracked.</p>
+                <p className="text-sm text-muted-foreground">Add some topics below to start tracking your mastery.</p>
             </div>
         )}
         </CardContent>
@@ -172,7 +191,7 @@ export function TopicMasteryChart() {
             Overall Performance
           </CardTitle>
           <CardDescription>
-            Your average score across all practice tests.
+            Your average score across all tests for tracked topics.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center h-[250px]">
@@ -216,33 +235,45 @@ const topicPerformanceChartConfig = {
 
 export function PerformanceByTopic() {
     const { history } = useHistory();
+    const { trackedTopics } = useTrackedTopics();
 
     const topicPerformanceData = useMemo(() => {
         const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
         const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number } } = {};
 
-        testHistory.reverse().forEach((item, index) => {
+        testHistory.reverse().forEach((item) => {
             const topicMatch = item.title.match(/Test on: (.*)/);
             const topic = topicMatch ? topicMatch[1] : 'General';
-            const percentage = (item.score! / item.content.length) * 100;
 
-            if (!topicData[topic]) {
-                topicData[topic] = { scores: [], count: 0 };
+            if (trackedTopics.includes(topic)) {
+                const percentage = (item.score! / item.content.length) * 100;
+                if (!topicData[topic]) {
+                    topicData[topic] = { scores: [], count: 0 };
+                }
+                topicData[topic].scores.push({ score: Math.round(percentage), attempt: topicData[topic].count + 1 });
+                topicData[topic].count++;
             }
-            topicData[topic].scores.push({ score: Math.round(percentage), attempt: topicData[topic].count + 1 });
-            topicData[topic].count++;
         });
 
-        return Object.entries(topicData).map(([topic, data]) => {
-            const averageScore = data.scores.reduce((acc, s) => acc + s.score, 0) / data.count;
+        return trackedTopics.map(topic => {
+            const data = topicData[topic];
+            if (data) {
+                const averageScore = data.scores.reduce((acc, s) => acc + s.score, 0) / data.count;
+                return {
+                    topic,
+                    averageScore: Math.round(averageScore),
+                    testCount: data.count,
+                    scores: data.scores,
+                };
+            }
             return {
                 topic,
-                averageScore: Math.round(averageScore),
-                testCount: data.count,
-                scores: data.scores,
+                averageScore: 0,
+                testCount: 0,
+                scores: [],
             };
         });
-    }, [history]);
+    }, [history, trackedTopics]);
 
     if (topicPerformanceData.length === 0) {
         return (
@@ -250,13 +281,13 @@ export function PerformanceByTopic() {
                 <CardHeader>
                     <CardTitle>Performance by Topic</CardTitle>
                     <CardDescription>
-                        A detailed breakdown of your performance in each topic.
+                        A detailed breakdown of your performance in each tracked topic.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">No performance data available.</p>
-                        <p className="text-sm text-muted-foreground">Take a practice test to see your performance breakdown.</p>
+                        <p className="text-muted-foreground">No topics are being tracked.</p>
+                        <p className="text-sm text-muted-foreground">Add a topic below to see your performance breakdown.</p>
                     </div>
                 </CardContent>
             </Card>
@@ -268,7 +299,7 @@ export function PerformanceByTopic() {
             <CardHeader>
                 <CardTitle>Performance by Topic</CardTitle>
                 <CardDescription>
-                    A detailed breakdown of your performance in each topic.
+                    A detailed breakdown of your performance in each tracked topic.
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
@@ -289,6 +320,7 @@ export function PerformanceByTopic() {
                                 </div>
                             </div>
                             <div className="md:col-span-2">
+                            {topicData.scores.length > 0 ? (
                                 <ChartContainer config={topicPerformanceChartConfig} className="h-[100px] w-full">
                                     <ResponsiveContainer>
                                         <LineChart data={topicData.scores} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -299,6 +331,11 @@ export function PerformanceByTopic() {
                                         </LineChart>
                                     </ResponsiveContainer>
                                 </ChartContainer>
+                            ) : (
+                                <div className="flex items-center justify-center h-[100px] text-sm text-muted-foreground border-2 border-dashed rounded-lg">
+                                    No tests taken for this topic.
+                                </div>
+                            )}
                             </div>
                         </div>
                         {index < topicPerformanceData.length - 1 && <Separator />}
