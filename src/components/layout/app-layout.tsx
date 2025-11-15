@@ -127,12 +127,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   <Link
                       href={item.href}
                       className={cn(
-                          "flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300",
+                          "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
                           pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                       )}
                   >
                       <item.icon className="h-5 w-5" />
                       <span className="text-xs">{item.label}</span>
+                       <span className={cn(
+                            "absolute -bottom-[29px] h-0.5 w-full bg-primary transition-all duration-300",
+                            pathname === item.href ? "scale-x-100" : "scale-x-0 group-hover:scale-x-50"
+                        )}></span>
                   </Link>
                 </Fragment>
             ))}
