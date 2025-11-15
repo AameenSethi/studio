@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -78,8 +79,8 @@ export function ManageTrackedTopics() {
         </div>
         <div className="flex flex-wrap gap-2">
           {trackedTopics.length > 0 ? (
-            trackedTopics.map((item) => (
-              <Badge key={item.topic} variant="secondary" className="flex items-center gap-1 pr-1">
+            trackedTopics.map((item, index) => (
+              <Badge key={`${item.topic}-${item.subject}-${index}`} variant="secondary" className="flex items-center gap-1 pr-1">
                 {item.topic} <span className="text-muted-foreground/70 text-xs ml-1 mr-1">({item.subject})</span>
                 <button onClick={() => removeTrackedTopic(item.topic)} className='rounded-full hover:bg-muted-foreground/20 p-0.5'>
                   <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
