@@ -64,7 +64,7 @@ import {
 import { useUser } from '@/hooks/use-user-role';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useHistory } from '@/hooks/use-history';
+import { useHistory, type HistoryItem } from '@/hooks/use-history';
 
 const studentFormSchema = z
   .object({
@@ -124,17 +124,21 @@ export function TestGenerator() {
   return <StudentTestGenerator />;
 }
 
-function StudentTestGenerator() {
+interface StudentTestGeneratorProps {
+    assignedTest?: HistoryItem;
+  }
+  
+function StudentTestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const { toast } = useToast();
-  const { addHistoryItem } = useHistory();
+  const { addHistoryItem, updateHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [test, setTest] = useState<GeneratePracticeTestOutput | null>(null);
+  const [test, setTest] = useState<GeneratePracticeTestOutput | null>(assignedTest ? { answerKey: assignedTest.content } : null);
   const [studentAnswers, setStudentAnswers] = useState<StudentAnswers>({});
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
   const [answerCorrectness, setAnswerCorrectness] = useState<AnswerCorrectness>({});
   const [score, setScore] = useState(0);
-  const [startTime, setStartTime] = useState<Date | null>(null);
+  const [startTime, setStartTime] = useState<Date | null>(assignedTest ? new Date() : null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [formValues, setFormValues] = useState<z.infer<typeof studentFormSchema> | null>(null);
@@ -226,7 +230,10 @@ function StudentTestGenerator() {
   };
 
   const handleSubmitAnswers = async () => {
-    if (!test?.answerKey || !formValues) return;
+    if (!test?.answerKey) return;
+    const testTopic = formValues?.topic || assignedTest?.topic || 'Unknown Topic';
+    const testSubject = formValues?.subject || assignedTest?.subject || 'Unknown Subject';
+
     setIsSubmitting(true);
     const submissionTime = new Date();
     setEndTime(submissionTime);
@@ -266,15 +273,25 @@ function StudentTestGenerator() {
     setAnswersSubmitted(true);
     setIsSubmitting(false);
 
-    addHistoryItem({
-        type: 'Practice Test',
-        title: `Test on: ${formValues.topic}`,
-        content: test.answerKey,
-        score: correctAnswers,
-        duration: finalElapsedTime,
-        subject: formValues.subject,
-        topic: formValues.topic,
-    });
+    if (assignedTest) {
+        updateHistoryItem(assignedTest.id, {
+            score: correctAnswers,
+            duration: finalElapsedTime,
+            isComplete: true,
+        });
+    } else {
+        addHistoryItem({
+            type: 'Practice Test',
+            title: `Test on: ${testTopic}`,
+            content: test.answerKey,
+            score: correctAnswers,
+            duration: finalElapsedTime,
+            subject: testSubject,
+            topic: testTopic,
+            isComplete: true, // Self-generated tests are immediately complete
+        });
+    }
+
 
     toast({
       title: 'Answers Submitted!',
@@ -292,183 +309,200 @@ function StudentTestGenerator() {
     return answerCorrectness[index] === true;
   }
 
+  if (assignedTest && !test) {
+    return (
+        <Card className="w-full">
+            <CardHeader>
+                <CardTitle>Error</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p>Could not load the assigned test.</p>
+            </CardContent>
+        </Card>
+    )
+  }
+
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="h-6 w-6 text-accent" />
-          Generate a Practice Test
-        </CardTitle>
-        <CardDescription>
-          Select your board, class, subject, and topic to generate a custom
-          test.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="board"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Board</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a board" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="CBSE">CBSE</SelectItem>
-                        <SelectItem value="ICSE">ICSE</SelectItem>
-                        <SelectItem value="State Board">State Board</SelectItem>
-                        <SelectItem value="IB">
-                          IB (International Baccalaureate)
-                        </SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="class"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Class</FormLabel>
-                    <Select
-                      onValueChange={(value) => {
-                        field.onChange(value);
-                      }}
-                      defaultValue={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a class" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="6th Grade">6th Grade</SelectItem>
-                        <SelectItem value="7th Grade">7th Grade</SelectItem>
-                        <SelectItem value="8th Grade">8th Grade</SelectItem>
-                        <SelectItem value="9th Grade">9th Grade</SelectItem>
-                        <SelectItem value="10th Grade">10th Grade</SelectItem>
-                        <SelectItem value="11th Grade">11th Grade</SelectItem>
-                        <SelectItem value="12th Grade">12th Grade</SelectItem>
-                        <SelectItem value="Undergraduate">
-                          Undergraduate
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="subject"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Subject</FormLabel>
-                    <Select
-                      onValueChange={field.onChange}
-                      value={field.value}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a subject" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {availableSubjects.map((subject) => (
-                            <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                        ))}
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {watchSubject === 'other' && (
-                <FormField
-                  control={form.control}
-                  name="customSubject"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Custom Subject</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter a subject" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
-            </div>
-
-            <FormField
-              control={form.control}
-              name="topic"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Topic</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="e.g., 'Algebra', 'Thermodynamics', or 'The Cold War'"
-                      {...field}
+      {!assignedTest && (
+        <>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                <FileText className="h-6 w-6 text-accent" />
+                Generate a Practice Test
+                </CardTitle>
+                <CardDescription>
+                Select your board, class, subject, and topic to generate a custom
+                test.
+                </CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                        control={form.control}
+                        name="board"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Board</FormLabel>
+                            <Select
+                            onValueChange={field.onChange}
+                            defaultValue={field.value}
+                            >
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select a board" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="CBSE">CBSE</SelectItem>
+                                <SelectItem value="ICSE">ICSE</SelectItem>
+                                <SelectItem value="State Board">State Board</SelectItem>
+                                <SelectItem value="IB">
+                                IB (International Baccalaureate)
+                                </SelectItem>
+                                <SelectItem value="Other">Other</SelectItem>
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="numberOfQuestions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Number of Questions: {field.value}</FormLabel>
-                  <FormControl>
-                    <Slider
-                      min={1}
-                      max={20}
-                      step={1}
-                      defaultValue={[field.value]}
-                      onValueChange={(values) => field.onChange(values[0])}
+                    <FormField
+                        control={form.control}
+                        name="class"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Class</FormLabel>
+                            <Select
+                            onValueChange={(value) => {
+                                field.onChange(value);
+                            }}
+                            defaultValue={field.value}
+                            >
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select a class" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                <SelectItem value="6th Grade">6th Grade</SelectItem>
+                                <SelectItem value="7th Grade">7th Grade</SelectItem>
+                                <SelectItem value="8th Grade">8th Grade</SelectItem>
+                                <SelectItem value="9th Grade">9th Grade</SelectItem>
+                                <SelectItem value="10th Grade">10th Grade</SelectItem>
+                                <SelectItem value="11th Grade">11th Grade</SelectItem>
+                                <SelectItem value="12th Grade">12th Grade</SelectItem>
+                                <SelectItem value="Undergraduate">
+                                Undergraduate
+                                </SelectItem>
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
                     />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
-                  Generate Test
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </>
-              )}
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                        control={form.control}
+                        name="subject"
+                        render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Subject</FormLabel>
+                            <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                            >
+                            <FormControl>
+                                <SelectTrigger>
+                                <SelectValue placeholder="Select a subject" />
+                                </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                                {availableSubjects.map((subject) => (
+                                    <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                ))}
+                                <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                            </Select>
+                            <FormMessage />
+                        </FormItem>
+                        )}
+                    />
+
+                    {watchSubject === 'other' && (
+                        <FormField
+                        control={form.control}
+                        name="customSubject"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Custom Subject</FormLabel>
+                            <FormControl>
+                                <Input placeholder="Enter a subject" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                    )}
+                    </div>
+
+                    <FormField
+                    control={form.control}
+                    name="topic"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Topic</FormLabel>
+                        <FormControl>
+                            <Input
+                            placeholder="e.g., 'Algebra', 'Thermodynamics', or 'The Cold War'"
+                            {...field}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+
+                    <FormField
+                    control={form.control}
+                    name="numberOfQuestions"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Number of Questions: {field.value}</FormLabel>
+                        <FormControl>
+                            <Slider
+                            min={1}
+                            max={20}
+                            step={1}
+                            defaultValue={[field.value]}
+                            onValueChange={(values) => field.onChange(values[0])}
+                            />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <Button type="submit" disabled={isLoading}>
+                    {isLoading ? (
+                        <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                        </>
+                    ) : (
+                        <>
+                        Generate Test
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                    )}
+                    </Button>
+                </form>
+                </Form>
+            </CardContent>
+        </>
+      )}
       {test && test.answerKey && (
         <CardFooter
           className={cn(
@@ -480,7 +514,7 @@ function StudentTestGenerator() {
             <CardHeader>
                 <div className='flex justify-between items-start'>
                     <div>
-                        <CardTitle>Your Practice Test</CardTitle>
+                        <CardTitle>{assignedTest ? `Assigned Test: ${assignedTest.topic}`: "Your Practice Test"}</CardTitle>
                         <CardDescription>
                             Enter your answers below and submit to see the answer key.
                         </CardDescription>
@@ -628,12 +662,16 @@ function ParentTestGenerator() {
       setTest(result);
       addHistoryItem({
         type: 'Practice Test',
-        title: `Test for ${values.studentId} on: ${values.topic}`,
+        title: `Assigned Test: ${values.topic}`,
         content: result.answerKey,
+        studentId: values.studentId,
+        isComplete: false,
+        topic: values.topic,
+        subject: 'Assigned' // Placeholder subject for assigned tests
       });
       toast({
-        title: 'Practice Test Generated!',
-        description: `A test on ${values.topic} has been created for the student.`,
+        title: 'Practice Test Assigned!',
+        description: `A test on ${values.topic} has been created for student ${values.studentId}.`,
       });
     } catch (error) {
       toast({
@@ -652,11 +690,10 @@ function ParentTestGenerator() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-6 w-6 text-accent" />
-          Generate a Practice Test for a Student
+          Assign a Practice Test
         </CardTitle>
         <CardDescription>
-          Create a timed test with an answer key on a specific topic for a
-          student.
+          Create a timed test with an answer key for a specific student.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -740,11 +777,11 @@ function ParentTestGenerator() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
+                  Generating & Assigning...
                 </>
               ) : (
                 <>
-                  Generate Test
+                  Assign Test
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </>
               )}

@@ -12,11 +12,14 @@ export type HistoryItem = {
   duration?: number; // Add duration for practice tests in seconds
   subject?: string;
   topic?: string;
+  studentId?: string; // For tests assigned by teachers/parents
+  isComplete?: boolean; // For assigned tests
 };
 
 interface HistoryContextType {
   history: HistoryItem[];
   addHistoryItem: (item: Omit<HistoryItem, 'id' | 'timestamp'>) => void;
+  updateHistoryItem: (id: string, updates: Partial<HistoryItem>) => void;
   clearHistory: () => void;
 }
 
@@ -63,6 +66,14 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
     setHistory(prevHistory => [newItem, ...prevHistory]);
   };
 
+  const updateHistoryItem = (id: string, updates: Partial<HistoryItem>) => {
+    setHistory(prevHistory =>
+      prevHistory.map(item =>
+        item.id === id ? { ...item, ...updates } : item
+      )
+    );
+  };
+
   const clearHistory = () => {
     setHistory([]);
   };
@@ -72,7 +83,7 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
   }
 
   return (
-    <HistoryContext.Provider value={{ history, addHistoryItem, clearHistory }}>
+    <HistoryContext.Provider value={{ history, addHistoryItem, updateHistoryItem, clearHistory }}>
       {children}
     </HistoryContext.Provider>
   );

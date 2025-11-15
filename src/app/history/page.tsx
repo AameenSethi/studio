@@ -170,14 +170,17 @@ export default function HistoryPage() {
         return (
           <div>
             <div className="flex gap-4 mb-4">
-                {item.score !== undefined && (
+                {item.isComplete && item.score !== undefined && (
                     <Badge>Score: {item.score} / {item.content.length}</Badge>
                 )}
-                {item.duration !== undefined && (
+                {item.isComplete && item.duration !== undefined && (
                     <Badge variant="outline" className="flex items-center gap-1">
                         <Clock className="h-3 w-3"/>
                         {formatDuration(item.duration)}
                     </Badge>
+                )}
+                {!item.isComplete && item.studentId && (
+                     <Badge variant="secondary">Assigned to: {item.studentId}</Badge>
                 )}
             </div>
           <ul className="space-y-4">
@@ -234,17 +237,24 @@ export default function HistoryPage() {
                             {format(new Date(item.timestamp), "PPP p")}
                           </span>
                         </div>
-                         {item.type === 'Practice Test' && item.score !== undefined && (
+                         {item.type === 'Practice Test' && (
                           <div className="ml-auto pr-4 flex items-center gap-4">
-                              {item.duration !== undefined && (
+                              {item.isComplete && item.duration !== undefined && (
                                   <Badge variant="outline" className="flex items-center gap-1">
                                       <Clock className="h-3 w-3"/>
                                       {formatDuration(item.duration)}
                                   </Badge>
                               )}
-                              <Badge variant="outline">
-                                  {((item.score / item.content.length) * 100).toFixed(0)}%
-                              </Badge>
+                              {item.isComplete && item.score !== undefined && (
+                                  <Badge variant="outline">
+                                      {((item.score / item.content.length) * 100).toFixed(0)}%
+                                  </Badge>
+                              )}
+                              {!item.isComplete ? (
+                                <Badge variant="destructive">Pending</Badge>
+                              ) : (
+                                <Badge variant="secondary" className='bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'>Completed</Badge>
+                              )}
                           </div>
                       )}
                       </div>

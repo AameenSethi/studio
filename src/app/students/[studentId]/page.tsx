@@ -3,14 +3,14 @@
 
 import { useParams, useRouter } from 'next/navigation';
 import AppLayout from '@/components/layout/app-layout';
-import { getStudentById, studentData } from '@/lib/student-data';
+import { getStudentById } from '@/lib/student-data';
 import { useEffect, useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, User, BookOpen } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { ReportGenerator } from '@/components/progress/report-generator';
-import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote, TrendingUp } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { useHistory } from '@/hooks/use-history';
@@ -53,12 +53,10 @@ export default function StudentDetailPage() {
   }, [studentId, students]);
   
   const studentHistory = useMemo(() => {
-      // In a real app with a backend, you'd fetch history for this specific student.
-      // For this simulation, we'll use a portion of the global history for the student.
-      if (!student) return [];
-      const studentHash = student.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-      return history.filter((_, index) => (index + studentHash) % (students.length || 1) === 0);
-  }, [history, student, students]);
+    // In a real app, you'd fetch history for this specific student.
+    // For this simulation, we'll filter the global history for items assigned to this student.
+    return history.filter(item => item.studentId === studentId);
+  }, [history, studentId]);
 
 
   if (!isClient) {
@@ -92,7 +90,7 @@ export default function StudentDetailPage() {
     'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
     'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
     'Practice Test': <FileText className="h-5 w-5 text-accent" />,
-    'Progress Report': <History className="h-5 w-5 text-accent" />,
+    'Progress Report': <TrendingUp className="h-5 w-5 text-accent" />,
   };
   
   const formatDuration = (seconds?: number) => {
@@ -212,8 +210,8 @@ export default function StudentDetailPage() {
             return (
               <div>
                 <div className="flex gap-4 mb-4">
-                    {item.score !== undefined && <Badge>Score: {item.score} / {item.content.length}</Badge>}
-                    {item.duration !== undefined && <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{formatDuration(item.duration)}</Badge>}
+                    {item.isComplete && item.score !== undefined && <Badge>Score: {item.score} / {item.content.length}</Badge>}
+                    {item.isComplete && item.duration !== undefined && <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{formatDuration(item.duration)}</Badge>}
                 </div>
                 <ul className="space-y-4">{item.content.map((qa: any, index: number) => (<li key={index}><p className="font-semibold">{index + 1}. {qa.question}</p><p className="text-sm text-emerald-600 dark:text-emerald-400 pl-2">Answer: {qa.answer}</p></li>))}</ul>
               </div>
@@ -286,11 +284,16 @@ export default function StudentDetailPage() {
                                 {format(new Date(item.timestamp), "PPP p")}
                             </span>
                             </div>
-                            {item.type === 'Practice Test' && item.score !== undefined && (
-                            <div className="ml-auto pr-4 flex items-center gap-4">
-                                {item.duration !== undefined && <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{formatDuration(item.duration)}</Badge>}
-                                <Badge variant="outline">{((item.score / item.content.length) * 100).toFixed(0)}%</Badge>
-                            </div>
+                            {item.type === 'Practice Test' && (
+                                <div className="ml-auto pr-4 flex items-center gap-4">
+                                    {item.isComplete && item.duration !== undefined && <Badge variant="outline" className="flex items-center gap-1"><Clock className="h-3 w-3"/>{formatDuration(item.duration)}</Badge>}
+                                    {item.isComplete && item.score !== undefined && <Badge variant="outline">{((item.score / item.content.length) * 100).toFixed(0)}%</Badge>}
+                                    {!item.isComplete ? (
+                                        <Badge variant="destructive">Pending</Badge>
+                                    ) : (
+                                        <Badge variant="secondary" className='bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'>Completed</Badge>
+                                    )}
+                                </div>
                             )}
                         </div>
                         </AccordionTrigger>
