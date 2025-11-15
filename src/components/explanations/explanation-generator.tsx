@@ -39,7 +39,7 @@ import {
   } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Lightbulb, ArrowRight, Volume2 } from 'lucide-react';
+import { Loader2, Lightbulb, ArrowRight, Volume2, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistory } from '@/hooks/use-history';
 
@@ -58,6 +58,7 @@ export function ExplanationGenerator() {
   const [explanation, setExplanation] =
     useState<IntelligentExplanationOutput | null>(null);
   const [audioData, setAudioData] = useState<TextToSpeechOutput | null>(null);
+  const [formValues, setFormValues] = useState<z.infer<typeof formSchema> | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -71,6 +72,7 @@ export function ExplanationGenerator() {
     setIsLoading(true);
     setExplanation(null);
     setAudioData(null);
+    setFormValues(values);
     try {
       const result = await intelligentExplanation(values);
       setExplanation(result);
@@ -117,6 +119,23 @@ export function ExplanationGenerator() {
       setIsGeneratingSpeech(false);
     }
   }
+
+  const handleDownload = () => {
+    if (!explanation || !formValues) return;
+
+    const textContent = `Topic: ${formValues.topic}\nLevel: ${formValues.explanationLevel}\n\n---\n\n${explanation.explanation}`;
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${formValues.topic.replace(/ /g, '_')}_explanation.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
 
   const ExplanationDisplay = ({ text }: { text: string }) => {
     return (
@@ -219,14 +238,20 @@ export function ExplanationGenerator() {
           <Card className="w-full bg-muted/50">
             <CardHeader className="flex-row items-center justify-between">
               <CardTitle>Here&apos;s the Breakdown</CardTitle>
-              <Button onClick={handleTextToSpeech} disabled={isGeneratingSpeech} variant="outline" size="sm">
-                {isGeneratingSpeech ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Volume2 className="mr-2 h-4 w-4" />
-                )}
-                Listen
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleTextToSpeech} disabled={isGeneratingSpeech} variant="outline" size="sm">
+                    {isGeneratingSpeech ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    ) : (
+                        <Volume2 className="mr-2 h-4 w-4" />
+                    )}
+                    Listen
+                </Button>
+                 <Button onClick={handleDownload} variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
                 <ExplanationDisplay text={explanation.explanation} />
