@@ -158,7 +158,7 @@ export function TopicMasteryChart() {
         <CardHeader>
           <CardTitle>Topic Mastery</CardTitle>
           <CardDescription>
-            Your mastery level for tracked topics based on practice tests.
+            Your mastery level for topics based on your practice tests.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -176,8 +176,8 @@ export function TopicMasteryChart() {
           </ChartContainer>
         ) : (
             <div className="flex flex-col items-center justify-center h-[250px] text-center p-4 border-2 border-dashed rounded-lg">
-                <p className="text-muted-foreground">No topics are being tracked.</p>
-                <p className="text-sm text-muted-foreground">Add some topics below to start tracking your mastery.</p>
+                <p className="text-muted-foreground">No test data found.</p>
+                <p className="text-sm text-muted-foreground">Take a practice test to see your topic mastery.</p>
             </div>
         )}
         </CardContent>
@@ -189,7 +189,7 @@ export function TopicMasteryChart() {
             Overall Performance
           </CardTitle>
           <CardDescription>
-            Your average score across all tests for tracked topics.
+            Your average score across all practice tests.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center justify-center h-[250px]">
@@ -278,13 +278,13 @@ export function PerformanceByTopic() {
                 <CardHeader>
                     <CardTitle>Performance by Topic</CardTitle>
                     <CardDescription>
-                        A detailed breakdown of your performance in each tracked topic.
+                        A detailed breakdown of your performance in each topic.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
                     <div className="flex flex-col items-center justify-center h-48 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">No topics are being tracked.</p>
-                        <p className="text-sm text-muted-foreground">Add a topic below to see your performance breakdown.</p>
+                        <p className="text-muted-foreground">No test data available.</p>
+                        <p className="text-sm text-muted-foreground">Complete a practice test to see your performance breakdown.</p>
                     </div>
                 </CardContent>
             </Card>
@@ -296,7 +296,7 @@ export function PerformanceByTopic() {
             <CardHeader>
                 <CardTitle>Performance by Topic</CardTitle>
                 <CardDescription>
-                    A detailed breakdown of your performance in each tracked topic.
+                    A detailed breakdown of your performance in each topic.
                 </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-6">
