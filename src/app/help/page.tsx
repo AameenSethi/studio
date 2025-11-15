@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Mail, Phone } from 'lucide-react';
 
 const faqs = [
     {
@@ -69,6 +70,34 @@ export default function HelpPage() {
                 ))}
             </Accordion>
           </CardContent>
+        </Card>
+        <Card>
+            <CardHeader>
+                <CardTitle>Contact Us</CardTitle>
+                <CardDescription>
+                    For further assistance, please contact our support team.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center gap-4">
+                    <Mail className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                        <p className="font-semibold">Email Support</p>
+                        <a href="mailto:support@studypal.com" className="text-sm text-primary hover:underline">
+                            support@studypal.com
+                        </a>
+                    </div>
+                </div>
+                <div className="flex items-center gap-4">
+                    <Phone className="h-5 w-5 text-muted-foreground" />
+                    <div>
+                        <p className="font-semibold">Phone Support</p>
+                        <p className="text-sm text-muted-foreground">
+                            +1 (800) 555-0123
+                        </p>
+                    </div>
+                </div>
+            </CardContent>
         </Card>
       </div>
     </AppLayout>
