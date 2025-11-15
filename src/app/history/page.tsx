@@ -15,9 +15,17 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useHistory } from '@/hooks/use-history';
-import { History, Wand2, Lightbulb, FileText, Clock } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+  } from "@/components/ui/table";
 
 const iconMap = {
   'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
@@ -38,7 +46,46 @@ export default function HistoryPage() {
   const renderContent = (item: any) => {
     switch (item.type) {
       case 'Study Plan':
-        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        if (typeof item.content === 'string') {
+            return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        }
+        return (
+            <div className="space-y-6">
+                 <div>
+                    <h3 className='text-lg font-semibold mb-2 text-primary'>Key Highlights</h3>
+                    <ul className='space-y-2'>
+                        {item.content.keyHighlights.map((highlight: string, index: number) => (
+                            <li key={index} className='flex items-start gap-2'>
+                                <CheckCircle className="h-4 w-4 mt-1 text-green-500"/>
+                                <span>{highlight}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div>
+                    <h3 className='text-lg font-semibold mb-2 text-primary'>Weekly Schedule</h3>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className='w-[120px]'>Day</TableHead>
+                                <TableHead>Focus Topics</TableHead>
+                                <TableHead className='w-[150px] text-right'>Time</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {item.content.weeklySchedule.map((day: any) => (
+                                <TableRow key={day.day}>
+                                    <TableCell className='font-medium'>{day.day}</TableCell>
+                                    <TableCell>{day.focusTopics.join(', ')}</TableCell>
+                                    <TableCell className='text-right'>{day.estimatedTime}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <p className='text-center text-muted-foreground italic pt-4'>{item.content.finalSummary}</p>
+            </div>
+        );
       case 'Explanation':
         return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
       case 'Practice Test':

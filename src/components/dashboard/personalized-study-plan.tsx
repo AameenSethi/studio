@@ -35,8 +35,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+  } from "@/components/ui/table";
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Wand2, ArrowRight, Download } from 'lucide-react';
+import { Loader2, Wand2, ArrowRight, Download, CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useHistory } from '@/hooks/use-history';
 
@@ -56,6 +64,7 @@ export function PersonalizedStudyPlan() {
   const [isLoading, setIsLoading] = useState(false);
   const [studyPlan, setStudyPlan] =
     useState<PersonalizedStudyPlanOutput | null>(null);
+  const [formValues, setFormValues] = useState<z.infer<typeof formSchema> | null>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -69,13 +78,14 @@ export function PersonalizedStudyPlan() {
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setStudyPlan(null);
+    setFormValues(values);
     try {
       const result = await generatePersonalizedStudyPlan(values);
       setStudyPlan(result);
       addHistoryItem({
         type: 'Study Plan',
         title: `For: ${values.goals}`,
-        content: result.studyPlan,
+        content: result, // Storing the whole object
       });
       toast({
         title: 'Study Plan Generated!',
@@ -96,7 +106,24 @@ export function PersonalizedStudyPlan() {
   
   const handleDownload = () => {
     if (!studyPlan) return;
-    const blob = new Blob([studyPlan.studyPlan], { type: 'text/plain' });
+    
+    let textContent = `Study Plan for: ${formValues?.goals}\n\n`;
+    
+    textContent += "--- KEY HIGHLIGHTS ---\n";
+    studyPlan.keyHighlights.forEach(highlight => {
+        textContent += `- ${highlight}\n`;
+    });
+    textContent += "\n";
+
+    textContent += "--- WEEKLY SCHEDULE ---\n";
+    studyPlan.weeklySchedule.forEach(day => {
+        textContent += `${day.day.toUpperCase()}: ${day.focusTopics.join(', ')} (${day.estimatedTime})\n`;
+    });
+    textContent += "\n";
+
+    textContent += `--- SUMMARY ---\n${studyPlan.finalSummary}\n`;
+
+    const blob = new Blob([textContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -107,20 +134,6 @@ export function PersonalizedStudyPlan() {
     URL.revokeObjectURL(url);
   };
 
-  const PlanDisplay = ({ plan }: { plan: string }) => {
-    // Simple markdown-like parsing
-    const lines = plan.split('\n').map((line, index) => {
-        if (line.startsWith('**') && line.endsWith('**')) {
-            return <h3 key={index} className="text-xl font-semibold mt-4 mb-2 text-primary">{line.replace(/\*\*/g, '')}</h3>
-        }
-        if (line.startsWith('* ')) {
-            return <li key={index} className="ml-4 list-disc">{line.substring(2)}</li>
-        }
-        return <p key={index} className="mb-2">{line}</p>
-    })
-
-    return <>{lines}</>
-  }
 
   return (
     <Card className="w-full bg-gradient-to-br from-pink-300/20 to-secondary/50 border-2 border-white/50">
@@ -225,8 +238,40 @@ export function PersonalizedStudyPlan() {
                 Download
               </Button>
             </CardHeader>
-            <CardContent className="prose prose-sm max-w-none">
-              <PlanDisplay plan={studyPlan.studyPlan} />
+            <CardContent className="space-y-6">
+                <div>
+                    <h3 className='text-lg font-semibold mb-2 text-primary'>Key Highlights</h3>
+                    <ul className='space-y-2'>
+                        {studyPlan.keyHighlights.map((highlight, index) => (
+                            <li key={index} className='flex items-start gap-2'>
+                                <CheckCircle className="h-4 w-4 mt-1 text-green-500"/>
+                                <span>{highlight}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+                <div>
+                    <h3 className='text-lg font-semibold mb-2 text-primary'>Weekly Schedule</h3>
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className='w-[120px]'>Day</TableHead>
+                                <TableHead>Focus Topics</TableHead>
+                                <TableHead className='w-[150px] text-right'>Time</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {studyPlan.weeklySchedule.map((item) => (
+                                <TableRow key={item.day}>
+                                    <TableCell className='font-medium'>{item.day}</TableCell>
+                                    <TableCell>{item.focusTopics.join(', ')}</TableCell>
+                                    <TableCell className='text-right'>{item.estimatedTime}</TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                <p className='text-center text-muted-foreground italic pt-4'>{studyPlan.finalSummary}</p>
             </CardContent>
           </Card>
         </CardFooter>
