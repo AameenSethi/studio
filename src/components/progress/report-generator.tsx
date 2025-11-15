@@ -42,10 +42,12 @@ const formSchema = z.object({
   }),
 });
 
-const generateDynamicReportData = (history: any[], forStudentId?: string): Omit<WeeklyProgressReportInput, 'userId' | 'startDate' | 'endDate'> => {
+const generateDynamicReportData = (history: any[], studentId?: string): Omit<WeeklyProgressReportInput, 'userId' | 'startDate' | 'endDate'> => {
   const today = new Date();
   const lastWeek = subDays(today, 7);
 
+  // In a real application, you would fetch the history for the given studentId.
+  // Here, we'll just use the locally available history as a stand-in for any student.
   const weeklyHistory = history.filter(item => {
     const itemDate = parseISO(item.timestamp);
     return itemDate >= lastWeek && itemDate <= today;
@@ -495,3 +497,5 @@ function ReportDisplayCard({
     </Card>
   );
 }
+
+    
