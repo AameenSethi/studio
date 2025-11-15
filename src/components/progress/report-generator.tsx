@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -39,12 +39,38 @@ const formSchema = z.object({
   }),
 });
 
-const learningData = `
-    - Topics Studied: Calculus (4 hours), Linear Algebra (2.5 hours), Statistics (3 hours)
-    - Practice Test Scores: Calculus Test 1 (78%), Calculus Test 2 (85%), Statistics Quiz (92%)
-    - Time Spent: 9.5 hours total
-    - Areas of struggle: Integration by parts in Calculus, matrix determinants in Linear Algebra.
-    `;
+const learningData = [
+    {
+        subject: "Calculus",
+        topicsStudied: ["Integration by Parts", "Limits and Continuity"],
+        timeSpent: "4 hours",
+        practiceTestScores: [
+            { testName: "Calculus Test 1", score: "78%" },
+            { testName: "Calculus Test 2", score: "85%" },
+        ],
+    },
+    {
+        subject: "Linear Algebra",
+        topicsStudied: ["Vector Spaces", "Matrix Determinants"],
+        timeSpent: "2.5 hours",
+        practiceTestScores: [
+            { testName: "Linear Algebra Quiz", score: "72%" },
+        ],
+    },
+    {
+        subject: "Statistics",
+        topicsStudied: ["Probability Distributions", "Hypothesis Testing"],
+        timeSpent: "3 hours",
+        practiceTestScores: [
+            { testName: "Statistics Quiz", score: "92%" },
+        ],
+    }
+];
+
+const overallSummary = {
+    totalTimeSpent: "9.5 hours",
+    generalObservations: "Student seems to struggle with matrix determinants in Linear Algebra but shows strong performance in Statistics.",
+};
 
 export function ReportGenerator() {
   const { userRole } = useUser();
@@ -73,6 +99,7 @@ function StudentReportViewer() {
                 startDate: format(lastWeek, 'yyyy-MM-dd'),
                 endDate: format(today, 'yyyy-MM-dd'),
                 learningData: learningData,
+                overallSummary: overallSummary,
             });
 
             setReport(result);
@@ -155,6 +182,7 @@ function TeacherParentReportGenerator() {
         startDate: format(lastWeek, 'yyyy-MM-dd'),
         endDate: format(today, 'yyyy-MM-dd'),
         learningData: learningData,
+        overallSummary: overallSummary,
       });
 
       setReport(result);
@@ -238,13 +266,18 @@ function TeacherParentReportGenerator() {
 
 function ReportDisplayCard({ report, studentId }: { report: WeeklyProgressReportOutput, studentId: string }) {
     const ReportDisplay = ({ reportText }: { reportText: string }) => {
-        return (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-            {reportText.split('\n\n').map((paragraph, i) => (
-                <p key={i}>{paragraph}</p>
-            ))}
-            </div>
-        );
+        // Simple markdown-like parsing
+        const lines = reportText.split('\n').map((line, index) => {
+            if (line.startsWith('**') && line.endsWith('**')) {
+                return <h3 key={index} className="text-xl font-semibold mt-4 mb-2 text-primary">{line.replace(/\*\*/g, '')}</h3>
+            }
+            if (line.startsWith('* ')) {
+                return <li key={index} className="ml-4 list-disc">{line.substring(2)}</li>
+            }
+            return <p key={index} className="mb-2">{line}</p>
+        });
+
+        return <div className="prose prose-sm max-w-none dark:prose-invert">{lines}</div>
     };
 
     return (
