@@ -18,8 +18,8 @@ import { useMemo } from 'react';
 import { format, subDays, parseISO } from 'date-fns';
 
 const chartConfig = {
-  minutes: {
-    label: 'Minutes',
+  activities: {
+    label: 'Activities',
     color: 'hsl(var(--primary))',
   },
 } satisfies ChartConfig;
@@ -33,25 +33,18 @@ export function WeeklyProgressChart() {
             return {
                 day: format(date, 'eee'),
                 date: format(date, 'yyyy-MM-dd'),
-                minutes: 0,
+                activities: 0,
             };
         });
 
         history.forEach(item => {
-            if (item.type === 'Practice Test' && item.duration) {
-                const itemDate = parseISO(item.timestamp);
-                const formattedDate = format(itemDate, 'yyyy-MM-dd');
-                const dayEntry = days.find(d => d.date === formattedDate);
-                if (dayEntry) {
-                    dayEntry.minutes += item.duration / 60; // Convert seconds to minutes
-                }
+            const itemDate = parseISO(item.timestamp);
+            const formattedDate = format(itemDate, 'yyyy-MM-dd');
+            const dayEntry = days.find(d => d.date === formattedDate);
+            if (dayEntry) {
+                dayEntry.activities += 1;
             }
         });
-        
-        // Round to one decimal place
-        days.forEach(day => {
-            day.minutes = Number(day.minutes.toFixed(1));
-        })
 
         return days;
     }, [history]);
@@ -75,13 +68,13 @@ export function WeeklyProgressChart() {
             axisLine={false}
             tickMargin={10}
             allowDecimals={false}
-            tickFormatter={(value) => `${value}m`}
+            tickFormatter={(value) => `${value}`}
           />
           <Tooltip
             cursor={{ fill: 'hsl(var(--accent))', opacity: 0.2 }}
             content={<ChartTooltipContent hideIndicator />}
           />
-          <Bar dataKey="minutes" fill="hsl(var(--primary))" radius={4} />
+          <Bar dataKey="activities" fill="hsl(var(--primary))" radius={4} />
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
