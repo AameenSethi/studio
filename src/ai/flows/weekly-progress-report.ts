@@ -40,9 +40,18 @@ const WeeklyProgressReportInputSchema = z.object({
 
 export type WeeklyProgressReportInput = z.infer<typeof WeeklyProgressReportInputSchema>;
 
+const SubjectAnalysisSchema = z.object({
+    subject: z.string(),
+    analysis: z.string().describe("A brief analysis of the student's performance in this subject, including insights on time spent, topics covered, and test scores."),
+});
+
 // Output schema for the weekly progress report flow
 const WeeklyProgressReportOutputSchema = z.object({
-  report: z.string().describe('A comprehensive report summarizing the user\'s weekly learning progress, including insights and areas for improvement.'),
+  overallSummary: z.string().describe("A 2-3 sentence overview of the student's week, including total time spent and general observations."),
+  subjectAnalyses: z.array(SubjectAnalysisSchema).describe("An array of analyses for each subject studied."),
+  keyStrengths: z.array(z.string()).describe("A bulleted list of 2-3 key strengths observed during the week."),
+  focusAreas: z.array(z.string()).describe("A bulleted list of 2-3 actionable areas for improvement for the next week."),
+  finalSummary: z.string().describe("A brief, encouraging concluding sentence to motivate the student."),
 });
 
 export type WeeklyProgressReportOutput = z.infer<typeof WeeklyProgressReportOutputSchema>;
@@ -59,35 +68,29 @@ const weeklyProgressReportPrompt = ai.definePrompt({
   output: {schema: WeeklyProgressReportOutputSchema},
   prompt: `You are an AI learning assistant. Generate a detailed weekly progress report for the user based on their learning data for the week of {{{startDate}}} to {{{endDate}}}.
 
-  The report should be structured, insightful, and encouraging. For each subject, provide a clear analysis.
+  The report must be insightful, encouraging, and structured according to the output schema.
 
-  **Overall Summary:**
-  - Start with a summary of the total time spent: {{{overallSummary.totalTimeSpent}}}.
-  - Mention any general observations if provided: {{{overallSummary.generalObservations}}}
-
-  **Subject-by-Subject Analysis:**
-  For each subject in the learning data, create a section.
+  **User Learning Data:**
+  - **Overall Summary:** Total time spent: {{{overallSummary.totalTimeSpent}}}. General notes: {{{overallSummary.generalObservations}}}
+  - **Subject Data:**
   {{#each learningData}}
-  **Subject: {{subject}}**
-  - **Time Spent:** {{timeSpent}}
-  - **Topics Covered:** {{#each topicsStudied}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
-  - **Practice Test Performance:**
-    {{#each practiceTestScores}}
-    - {{testName}}: {{score}}
-    {{/each}}
-  - **Analysis & Insights:**
-    - Analyze the test scores to identify strengths and potential weaknesses. For example, if scores are improving, mention that. If a score is low, suggest revisiting the topic.
-    - Comment on the time spent in relation to the topics covered.
+  - **Subject: {{subject}}**
+    - Time Spent: {{timeSpent}}
+    - Topics Covered: {{#each topicsStudied}}{{.}}{{#unless @last}}, {{/unless}}{{/each}}
+    - Practice Test Performance:
+      {{#each practiceTestScores}}
+      - {{testName}}: {{score}}
+      {{/each}}
   {{/each}}
 
-  **Strengths & Areas for Improvement:**
-  - Based on all the data, create a "Key Strengths" section highlighting where the student is excelling.
-  - Create a "Focus Areas for Next Week" section with actionable suggestions for topics or subjects that need more attention.
+  **Your Task:**
+  Based on the data above, generate the following JSON output:
 
-  **Concluding Remarks:**
-  - End with an encouraging and supportive message to motivate the student for the upcoming week.
-
-  Generate the report in a clear, well-formatted text.
+  1.  **overallSummary**: A 2-3 sentence overview of the student's week, incorporating the total time spent and any general observations.
+  2.  **subjectAnalyses**: For each subject, provide a brief analysis. Comment on the test scores to identify strengths and weaknesses. For example, if scores are improving, mention that. If a score is low, suggest revisiting the topic. Also comment on the time spent in relation to the topics covered.
+  3.  **keyStrengths**: A bulleted list of 2-3 key strengths based on all the provided data.
+  4.  **focusAreas**: A bulleted list of 2-3 actionable suggestions for the upcoming week, focusing on topics or subjects that need more attention.
+  5.  **finalSummary**: A brief, encouraging concluding sentence to motivate the student for the week ahead.
   `,
 });
 

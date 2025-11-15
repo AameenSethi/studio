@@ -29,11 +29,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, TrendingUp, ArrowRight, Download, KeyRound } from 'lucide-react';
+import { Loader2, TrendingUp, ArrowRight, Download, KeyRound, CheckCircle, Target, Trophy, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, subDays, parseISO } from 'date-fns';
 import { useUser } from '@/hooks/use-user-role';
 import { useHistory } from '@/hooks/use-history';
+import { Separator } from '../ui/separator';
 
 const formSchema = z.object({
   studentId: z.string().min(1, {
@@ -355,7 +356,34 @@ function ReportDisplayCard({
   const handleDownload = () => {
     if (!report) return;
 
-    const blob = new Blob([report.report], { type: 'text/plain;charset=utf-8' });
+    let textContent = `Progress Report for: ${studentId}\n`;
+    textContent += `Date: ${new Date().toLocaleDateString()}\n\n`;
+    
+    textContent += "--- OVERALL SUMMARY ---\n";
+    textContent += `${report.overallSummary}\n\n`;
+
+    textContent += "--- SUBJECT ANALYSIS ---\n";
+    report.subjectAnalyses.forEach(sub => {
+        textContent += `Subject: ${sub.subject}\n`;
+        textContent += `Analysis: ${sub.analysis}\n\n`;
+    });
+
+    textContent += "--- KEY STRENGTHS ---\n";
+    report.keyStrengths.forEach(strength => {
+        textContent += `- ${strength}\n`;
+    });
+    textContent += "\n";
+
+    textContent += "--- FOCUS AREAS FOR NEXT WEEK ---\n";
+    report.focusAreas.forEach(area => {
+        textContent += `- ${area}\n`;
+    });
+    textContent += "\n";
+
+    textContent += `--- FINAL SUMMARY ---\n${report.finalSummary}\n`;
+
+
+    const blob = new Blob([textContent], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -365,43 +393,6 @@ function ReportDisplayCard({
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }
-
-  const ReportDisplay = ({ reportText }: { reportText: string }) => {
-    // Simple markdown-like parsing for headers, lists and bold text
-    const lines = reportText.split('\n').map((line, index) => {
-        let processedLine: React.ReactNode = line;
-  
-        // Bold text
-        processedLine = processedLine.toString().replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-  
-        if (line.startsWith('**') && line.endsWith('**')) {
-          return (
-            <h3
-              key={index}
-              className="text-xl font-semibold mt-4 mb-2 text-primary"
-            >
-              {line.replace(/\*\*/g, '')}
-            </h3>
-          );
-        }
-        if (line.startsWith('- ')) {
-          return (
-            <li key={index} className="ml-4 list-disc">
-              <span dangerouslySetInnerHTML={{ __html: line.substring(2) }} />
-            </li>
-          );
-        }
-        return (
-          <p key={index} className="mb-2" dangerouslySetInnerHTML={{ __html: processedLine as string }} />
-        );
-      });
-  
-      return (
-        <div className="prose prose-sm max-w-none dark:prose-invert">
-          {lines}
-        </div>
-      );
-  };
 
   return (
     <Card className="w-full bg-muted/50">
@@ -417,8 +408,69 @@ function ReportDisplayCard({
           Download
         </Button>
       </CardHeader>
-      <CardContent>
-        <ReportDisplay reportText={report.report} />
+      <CardContent className="space-y-6">
+        <Card className="bg-background/70">
+            <CardHeader className="flex-row items-center gap-2 pb-2">
+                <Info className="h-5 w-5 text-accent"/>
+                <CardTitle className="text-lg">Overall Summary</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <p className="text-muted-foreground">{report.overallSummary}</p>
+            </CardContent>
+        </Card>
+
+        <div>
+            <h3 className="text-lg font-semibold mb-2 text-primary">Subject-by-Subject Analysis</h3>
+            <div className="space-y-4">
+                {report.subjectAnalyses.map((sub, index) => (
+                    <Card key={index} className="bg-background/70">
+                        <CardHeader className="pb-2">
+                            <CardTitle className="text-md">{sub.subject}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-muted-foreground">{sub.analysis}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+
+        <Separator />
+
+        <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+                <h3 className='text-lg font-semibold flex items-center gap-2 text-green-600 dark:text-green-400'>
+                    <Trophy className="h-5 w-5" />
+                    Key Strengths
+                </h3>
+                <ul className='space-y-2'>
+                    {report.keyStrengths.map((highlight, index) => (
+                        <li key={index} className='flex items-start gap-2'>
+                            <CheckCircle className="h-4 w-4 mt-1 text-green-500"/>
+                            <span className="text-sm text-muted-foreground">{highlight}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div className="space-y-2">
+                <h3 className='text-lg font-semibold flex items-center gap-2 text-amber-600 dark:text-amber-400'>
+                    <Target className="h-5 w-5" />
+                    Focus Areas
+                </h3>
+                <ul className='space-y-2'>
+                    {report.focusAreas.map((area, index) => (
+                        <li key={index} className='flex items-start gap-2'>
+                            <ArrowRight className="h-4 w-4 mt-1 text-amber-500"/>
+                            <span className="text-sm text-muted-foreground">{area}</span>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+
+        <Separator />
+        
+        <p className='text-center text-muted-foreground italic pt-4'>{report.finalSummary}</p>
       </CardContent>
     </Card>
   );
