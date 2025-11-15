@@ -17,7 +17,12 @@ import {
 import { usePathname } from 'next/navigation';
 
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+  SheetHeader,
+} from '@/components/ui/sheet';
 import {
   Tooltip,
   TooltipContent,
@@ -143,29 +148,38 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-transparent px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:justify-end">
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button size="icon" variant="outline" className="sm:hidden">
-                <PanelLeft className="h-5 w-5" />
-                <span className="sr-only">Toggle Menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="sm:max-w-xs">
-              <nav className="grid gap-6 text-lg font-medium">
-                <Link
-                  href="/dashboard"
-                  className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
-                >
-                  <BookOpen className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">StudyPal</span>
-                </Link>
-                {navItems.map((item) => (
-                  <NavLink key={item.href} {...item} isMobile />
-                ))}
-              </nav>
-            </SheetContent>
-          </Sheet>
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-transparent px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:justify-between">
+          <div className="flex items-center gap-2">
+             <Sheet>
+                <SheetTrigger asChild>
+                <Button size="icon" variant="outline" className="sm:hidden">
+                    <PanelLeft className="h-5 w-5" />
+                    <span className="sr-only">Toggle Menu</span>
+                </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="sm:max-w-xs">
+                <nav className="grid gap-6 text-lg font-medium">
+                    <Link
+                    href="/dashboard"
+                    className="group flex h-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
+                    >
+                    <BookOpen className="h-5 w-5 transition-all group-hover:scale-110" />
+                    <span>StudyPal</span>
+                    </Link>
+                    {navItems.map((item) => (
+                    <NavLink key={item.href} {...item} isMobile />
+                    ))}
+                </nav>
+                </SheetContent>
+            </Sheet>
+            <Link
+                href="/dashboard"
+                className="hidden items-center gap-2 text-lg font-semibold sm:flex"
+            >
+                <BookOpen className="h-6 w-6 text-primary" />
+                <span className="font-headline text-xl">StudyPal</span>
+            </Link>
+          </div>
           <div className="flex items-center gap-4">
              <div className="hidden sm:flex">
                 <ModeToggle />
