@@ -46,18 +46,35 @@ export default function HistoryPage() {
   const ExplanationDisplay = ({ text }: { text: string }) => {
     return (
       <div className="prose prose-sm max-w-none dark:prose-invert">
-        {text.split('\n\n').map((paragraph, i) => {
-            const lines = paragraph.split('\n').map((line, j) => {
-                 if (line.startsWith('**') && line.endsWith('**')) {
-                    return <h3 key={j} className="text-xl font-semibold mt-4 mb-2 text-primary">{line.replace(/\*\*/g, '')}</h3>
-                }
-                if (line.startsWith('* ')) {
-                    return <li key={j} className="ml-4 list-disc">{line.substring(2)}</li>
-                }
-                return <span key={j}>{line}<br /></span>
-            })
-            return <p key={i}>{lines}</p>
-        })}
+        {text.split('\n\n').map((paragraph, i) => (
+          <p key={i}>
+            {paragraph.split('\n').map((line, j) => {
+              if (line.startsWith('**') && line.endsWith('**')) {
+                return (
+                  <h3
+                    key={j}
+                    className="text-xl font-semibold mt-4 mb-2 text-primary"
+                  >
+                    {line.replace(/\*\*/g, '')}
+                  </h3>
+                );
+              }
+              if (line.startsWith('* ')) {
+                return (
+                  <ul key={j} className="list-disc pl-5">
+                    <li>{line.substring(2)}</li>
+                  </ul>
+                );
+              }
+              return (
+                <span key={j}>
+                  {line}
+                  <br />
+                </span>
+              );
+            })}
+          </p>
+        ))}
       </div>
     );
   };
