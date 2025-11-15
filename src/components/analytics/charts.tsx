@@ -23,13 +23,18 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { useState } from 'react';
+import { Input } from '../ui/input';
+import { Button } from '../ui/button';
+import { Plus } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../ui/card';
 
 const studyTimeData = Array.from({ length: 30 }, (_, i) => ({
   date: `Day ${i + 1}`,
   hours: Number((Math.random() * 3 + 0.5).toFixed(1)),
 }));
 
-const topicMasteryData = [
+const initialTopicMasteryData = [
   { topic: 'Calculus', mastery: Math.floor(Math.random() * 60) + 40 },
   { topic: 'Algebra', mastery: Math.floor(Math.random() * 60) + 40 },
   { topic: 'Statistics', mastery: Math.floor(Math.random() * 60) + 40 },
@@ -76,18 +81,55 @@ export function StudyTimeChart() {
 }
 
 export function TopicMasteryChart() {
+  const [topicMasteryData, setTopicMasteryData] = useState(initialTopicMasteryData);
+  const [newSubject, setNewSubject] = useState('');
+
+  const handleAddSubject = () => {
+    if (newSubject.trim() !== '') {
+      const newTopic = {
+        topic: newSubject.trim(),
+        mastery: Math.floor(Math.random() * 60) + 40,
+      };
+      setTopicMasteryData([...topicMasteryData, newTopic]);
+      setNewSubject('');
+    }
+  };
+
+
   return (
-    <ChartContainer config={topicMasteryConfig} className="h-[250px] w-full">
-      <ResponsiveContainer>
-        <RadarChart data={topicMasteryData}>
-            <PolarGrid />
-            <PolarAngleAxis dataKey="topic" stroke="hsl(var(--muted-foreground))" fontSize={12}/>
-            <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <Tooltip content={<ChartTooltipContent />} />
-            <Radar name="Mastery" dataKey="mastery" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
-        </RadarChart>
-      </ResponsiveContainer>
-    </ChartContainer>
+    <Card>
+      <CardHeader>
+        <CardTitle>Topic Mastery</CardTitle>
+        <CardDescription>
+          Your estimated mastery level for each topic.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ChartContainer config={topicMasteryConfig} className="h-[250px] w-full">
+          <ResponsiveContainer>
+            <RadarChart data={topicMasteryData}>
+                <PolarGrid />
+                <PolarAngleAxis dataKey="topic" stroke="hsl(var(--muted-foreground))" fontSize={12}/>
+                <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                <Tooltip content={<ChartTooltipContent />} />
+                <Radar name="Mastery" dataKey="mastery" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
+            </RadarChart>
+          </ResponsiveContainer>
+        </ChartContainer>
+         <div className="mt-4 flex gap-2">
+            <Input
+                type="text"
+                value={newSubject}
+                onChange={(e) => setNewSubject(e.target.value)}
+                placeholder="Add a new subject"
+                className="flex-grow"
+            />
+            <Button onClick={handleAddSubject} size="icon">
+                <Plus className="h-4 w-4" />
+            </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

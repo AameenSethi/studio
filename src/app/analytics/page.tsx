@@ -33,17 +33,7 @@ export default function AnalyticsPage() {
             <StudyTimeChart />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Topic Mastery</CardTitle>
-            <CardDescription>
-              Your estimated mastery level for each topic.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <TopicMasteryChart />
-          </CardContent>
-        </Card>
+        <TopicMasteryChart />
         <Card>
           <CardHeader>
             <CardTitle>Practice Test Scores</CardTitle>
