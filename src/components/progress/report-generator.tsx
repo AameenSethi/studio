@@ -427,7 +427,7 @@ function TeacherParentReportGenerator() {
   );
 }
 
-function ReportDisplayCard({
+export function ReportDisplayCard({
   report,
   studentId,
   title,
