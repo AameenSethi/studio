@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -37,9 +38,9 @@ import { ModeToggle } from './mode-toggle';
 import { Separator } from '@/components/ui/separator';
 
 const allNavItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher'] },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher', 'Parent'] },
   { href: '/explanations', icon: Lightbulb, label: 'Explanations', roles: ['Student', 'Teacher'] },
-  { href: '/practice', icon: FileText, label: 'Practice Tests', roles: ['Student', 'Teacher', 'Parent'] },
+  { href: '/practice', icon: FileText, label: 'Practice Tests', studentLabel: 'Practice', teacherParentLabel: 'Assign Tests', roles: ['Student', 'Teacher', 'Parent'] },
   { href: '/analytics', icon: BarChart2, label: 'Analytics', roles: ['Student', 'Teacher'] },
   { href: '/progress', icon: TrendingUp, label: 'Progress Reports', roles: ['Student', 'Teacher', 'Parent'] },
   { href: '/students', icon: Users, label: 'Students', roles: ['Teacher'] },
@@ -99,6 +100,16 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     });
   };
 
+  const getNavItemLabel = (item: any) => {
+    if (item.href === '/practice') {
+      if (userRole === 'Teacher' || userRole === 'Parent') {
+        return item.teacherParentLabel;
+      }
+      return item.studentLabel;
+    }
+    return item.label;
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col">
        <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
@@ -121,7 +132,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                       )}
                   >
                       <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-xs">{item.label}</span>
+                      <span className="text-xs">{getNavItemLabel(item)}</span>
                   </Link>
                 </Fragment>
             ))}

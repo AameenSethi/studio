@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -117,7 +118,7 @@ const subjectMap: Record<string, string[]> = {
 
 export function TestGenerator() {
   const { userRole } = useUser();
-  if (userRole === 'Parent') {
+  if (userRole === 'Parent' || userRole === 'Teacher') {
     return <ParentTestGenerator />;
   }
   return <StudentTestGenerator />;
@@ -632,7 +633,7 @@ function ParentTestGenerator() {
       });
       toast({
         title: 'Practice Test Generated!',
-        description: `A test on ${values.topic} has been created for your child.`,
+        description: `A test on ${values.topic} has been created for the student.`,
       });
     } catch (error) {
       toast({
@@ -651,11 +652,11 @@ function ParentTestGenerator() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileText className="h-6 w-6 text-accent" />
-          Generate a Practice Test for Your Child
+          Generate a Practice Test for a Student
         </CardTitle>
         <CardDescription>
-          Create a timed test with an answer key on a specific topic for your
-          child.
+          Create a timed test with an answer key on a specific topic for a
+          student.
         </CardDescription>
       </CardHeader>
       <CardContent>
