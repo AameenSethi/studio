@@ -78,7 +78,16 @@ export function ProfileEditor() {
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
-    // We will use useEffect to set the default values asynchronously
+    defaultValues: {
+      name: '',
+      email: '',
+      institutionName: '',
+      class: '',
+      field: '',
+      customField: '',
+      engineeringField: '',
+      customEngineeringField: '',
+    },
   });
 
   const watchClass = form.watch('class');
@@ -433,5 +442,7 @@ export function ProfileEditor() {
     </>
   );
 }
+
+    
 
     
