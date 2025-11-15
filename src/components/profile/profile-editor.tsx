@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, User, Save, Camera, School, KeyRound, BookCopy } from 'lucide-react';
+import { Loader2, User, Save, Camera, School, KeyRound, BookCopy, AtSign } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user-role';
@@ -39,6 +39,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 const profileSchema = z
   .object({
     name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+    email: z.string().email({ message: 'Please enter a valid email.' }),
     institutionName: z.string().optional(),
     class: z.string().optional(),
   });
@@ -47,25 +48,32 @@ export function ProfileEditor() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userName, setUserName, userAvatar, setUserAvatar } = useUser();
+  const { userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId } = useUser();
   const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: userName,
+      email: userEmail,
       institutionName: 'State University',
       class: '10th Grade',
     },
   });
 
   useEffect(() => {
-    form.setValue('name', userName);
-  }, [userName, form]);
+    form.reset({
+      name: userName,
+      email: userEmail,
+      institutionName: form.getValues('institutionName') || 'State University',
+      class: form.getValues('class') || '10th Grade'
+    });
+  }, [userName, userEmail, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
     setUserName(values.name);
+    setUserEmail(values.email);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
@@ -153,7 +161,7 @@ export function ProfileEditor() {
                     <div className="relative">
                       <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                       <Input
-                        value="student-007"
+                        value={userId}
                         disabled
                         className="pl-10"
                       />
@@ -173,6 +181,22 @@ export function ProfileEditor() {
                     </FormItem>
                   )}
                 />
+                 <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                       <FormControl>
+                        <div className="relative">
+                          <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                          <Input type="email" placeholder="your@email.com" {...field} className="pl-10" />
+                        </div>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
                 <div className="space-y-6">
                     <FormField
                         control={form.control}
@@ -182,7 +206,7 @@ export function ProfileEditor() {
                                 <FormLabel>Class</FormLabel>
                                 <Select
                                 onValueChange={field.onChange}
-                                defaultValue={field.value}
+                                value={field.value}
                                 >
                                 <FormControl>
                                     <div className="relative">
