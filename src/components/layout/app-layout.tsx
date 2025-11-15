@@ -132,15 +132,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base"
           >
             <BookOpen className="h-4 w-4 transition-all group-hover:scale-110" />
-            <span className="sr-only">Study Journey</span>
+            <span className="sr-only">StudyPal</span>
           </Link>
           {navItems.map((item) => (
             <NavLink key={item.href} {...item} />
           ))}
         </nav>
+        <nav className="mt-auto flex flex-col items-center gap-4 px-2 sm:py-5">
+            <ModeToggle />
+        </nav>
       </aside>
       <div className="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-card/80 backdrop-blur-sm px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:justify-end">
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-4 border-b bg-transparent px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 sm:justify-end">
           <Sheet>
             <SheetTrigger asChild>
               <Button size="icon" variant="outline" className="sm:hidden">
@@ -155,7 +158,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base"
                 >
                   <BookOpen className="h-5 w-5 transition-all group-hover:scale-110" />
-                  <span className="sr-only">Study Journey</span>
+                  <span className="sr-only">StudyPal</span>
                 </Link>
                 {navItems.map((item) => (
                   <NavLink key={item.href} {...item} isMobile />
@@ -164,7 +167,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </SheetContent>
           </Sheet>
           <div className="flex items-center gap-4">
-            <ModeToggle />
+             <div className="hidden sm:flex">
+                <ModeToggle />
+            </div>
             <UserNav />
           </div>
         </header>

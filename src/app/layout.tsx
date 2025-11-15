@@ -7,7 +7,7 @@ import { HistoryProvider } from '@/hooks/use-history';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
-  title: 'Study Journey',
+  title: 'StudyPal',
   description: 'Your personalized path to academic excellence.',
 };
 

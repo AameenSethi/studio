@@ -15,7 +15,7 @@ export default function LoginPage() {
             <div className="flex items-center justify-center gap-2">
               <BookOpen className="h-8 w-8 text-primary" />
               <h1 className="text-3xl font-bold text-primary font-headline">
-                Study Journey
+                StudyPal
               </h1>
             </div>
             <p className="text-balance text-muted-foreground">
