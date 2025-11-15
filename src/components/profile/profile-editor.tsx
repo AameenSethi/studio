@@ -30,7 +30,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Loader2, User, Save, Camera, School } from 'lucide-react';
+import { Loader2, User, Save, Camera, School, KeyRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { cn } from '@/lib/utils';
@@ -138,6 +138,19 @@ export function ProfileEditor() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormItem>
+                <FormLabel>User ID</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      value="user-123"
+                      disabled
+                      className="pl-10"
+                    />
+                  </div>
+                </FormControl>
+              </FormItem>
               <FormField
                 control={form.control}
                 name="name"
