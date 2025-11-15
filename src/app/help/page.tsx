@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/accordion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Mail, Phone } from 'lucide-react';
+import { AskQuestion } from '@/components/help/ask-question';
 
 const faqs = [
     {
@@ -51,6 +52,9 @@ export default function HelpPage() {
             </p>
           </div>
         </div>
+
+        <AskQuestion />
+
         <Card>
           <CardHeader>
             <CardTitle>Frequently Asked Questions</CardTitle>
