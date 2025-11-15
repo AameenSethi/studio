@@ -98,6 +98,19 @@ export function TopicMasteryChart() {
   const { history } = useHistory();
 
   const { topicMasteryData, overallPerformance } = useMemo(() => {
+    const allTopics = new Set<string>();
+    history.forEach(item => {
+        let topic;
+        if (item.type === 'Practice Test') {
+            const topicMatch = item.title.match(/Test on: (.*)/);
+            topic = topicMatch ? topicMatch[1] : null;
+        } else if (item.type === 'Explanation') {
+            const topicMatch = item.title.match(/Explanation of: (.*)/);
+            topic = topicMatch ? topicMatch[1] : null;
+        }
+        if (topic) allTopics.add(topic);
+    });
+
     const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
 
     const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
@@ -114,11 +127,18 @@ export function TopicMasteryChart() {
       topicScores[topic].count++;
     });
 
-    const calculatedMasteryData = Object.entries(topicScores).map(([topic, data]) => {
-      const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
+    const calculatedMasteryData = Array.from(allTopics).map(topic => {
+      if (topicScores[topic]) {
+          const data = topicScores[topic];
+          const averageScore = data.scores.reduce((acc, score) => acc + score, 0) / data.count;
+          return {
+              topic: topic,
+              mastery: Math.round(averageScore),
+          };
+      }
       return {
-        topic: topic,
-        mastery: Math.round(averageScore),
+          topic: topic,
+          mastery: 0,
       };
     });
 
@@ -292,6 +312,8 @@ export function PerformanceByTopic() {
         </Card>
     );
 }
+
+    
 
     
 
