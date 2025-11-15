@@ -170,7 +170,7 @@ export function TopicMasteryChart() {
               <RadarChart data={topicMasteryData}>
                   <PolarGrid />
                   <PolarAngleAxis dataKey="topic" stroke="hsl(var(--muted-foreground))" fontSize={12}/>
-                  <PolarRadiusAxis angle={30} domain={[0, 100]} stroke="hsl(var(--muted-foreground))" fontSize={12} />
+                  <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                   <Tooltip content={<ChartTooltipContent />} />
                   <Radar name="Mastery" dataKey="mastery" stroke="hsl(var(--accent))" fill="hsl(var(--accent))" fillOpacity={0.6} />
               </RadarChart>
