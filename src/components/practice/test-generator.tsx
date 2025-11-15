@@ -64,47 +64,56 @@ import { useUser } from '@/hooks/use-user-role';
 
 const studentFormSchema = z
   .object({
-    subject: z
+    stream: z
       .string()
-      .min(1, { message: 'Please select or enter a subject.' }),
-    customSubject: z.string().optional(),
+      .min(1, { message: 'Please select or enter a stream.' }),
+    customStream: z.string().optional(),
+    subject: z.string().min(1, { message: 'Please select a subject.' }),
     topic: z.string().min(2, { message: 'Topic must be at least 2 characters.' }),
     numberOfQuestions: z.number().min(1).max(20),
   })
   .refine(
     (data) => {
-      if (data.subject === 'other') {
-        return data.customSubject && data.customSubject.length > 0;
+      if (data.stream === 'other') {
+        return data.customStream && data.customStream.length > 0;
       }
       return true;
     },
     {
-      message: 'Please specify the subject.',
-      path: ['customSubject'],
+      message: 'Please specify the stream.',
+      path: ['customStream'],
     }
   );
 
 type StudentAnswers = { [key: number]: string };
 type AnswerCorrectness = { [key: number]: boolean };
 
-const subjectMap: Record<string, Record<string, string>> = {
-    '6th Grade': { 'Mathematics': 'Fractions', 'Science': 'Ecosystems', 'English': 'Grammar', 'History': 'Ancient Civilizations', 'Geography': 'Map Skills' },
-    '7th Grade': { 'Mathematics': 'Algebraic Expressions', 'Science': 'Cell Biology', 'English': 'Sentence Structure', 'History': 'The Middle Ages', 'Geography': 'World Climates' },
-    '8th Grade': { 'Mathematics': 'Linear Equations', 'Physics': 'Newtons Laws', 'Chemistry': 'The Periodic Table', 'Biology': 'Human Anatomy', 'English': 'Essay Writing', 'History': 'The Renaissance', 'Geography': 'Tectonic Plates' },
-    '9th Grade': { 'Mathematics': 'Quadratic Equations', 'Physics': 'Kinematics', 'Chemistry': 'Chemical Reactions', 'Biology': 'Genetics', 'English': 'Literary Devices', 'History': 'Industrial Revolution', 'Economics': 'Supply and Demand' },
-    '10th Grade': { 'Mathematics': 'Trigonometry', 'Physics': 'Optics', 'Chemistry': 'Stoichiometry', 'Biology': 'Evolution', 'English': 'Shakespeare', 'History': 'World War I', 'Computer Science': 'Basic Programming' },
-    '11th Grade': { 'Physics': 'Electromagnetism', 'Chemistry': 'Organic Chemistry', 'Mathematics': 'Calculus', 'Biology': 'Biotechnology', 'Computer Science': 'Data Structures', 'English': 'Modern Literature', 'Accountancy': 'Journal Entries', 'Business Studies': 'Principles of Management', 'Economics': 'Macroeconomics' },
-    '12th Grade': { 'Physics': 'Modern Physics', 'Chemistry': 'Polymers', 'Mathematics': 'Differential Equations', 'Biology': 'Ecology', 'Computer Science': 'Algorithms', 'English': 'Critical Analysis', 'Accountancy': 'Financial Statements', 'Business Studies': 'Marketing', 'Economics': 'International Trade' },
-    'Undergraduate': {
-        'Computer Science': 'Data Structures',
-        'Engineering: Computer Engg': 'Digital Logic',
-        'Engineering: Civil': 'Structural Analysis',
-        'Engineering: Mechanical': 'Thermodynamics',
-        'Medicine': 'Anatomy',
-        'Business': 'Marketing',
-        'Arts': 'Philosophy',
-        'Law': 'Constitutional Law',
+const streamAndSubjectMap: Record<string, Record<string, Record<string, string>>> = {
+    '6th Grade': { 'General': { 'Mathematics': 'Fractions', 'Science': 'Ecosystems', 'English': 'Grammar', 'History': 'Ancient Civilizations', 'Geography': 'Map Skills' } },
+    '7th Grade': { 'General': { 'Mathematics': 'Algebraic Expressions', 'Science': 'Cell Biology', 'English': 'Sentence Structure', 'History': 'The Middle Ages', 'Geography': 'World Climates' } },
+    '8th Grade': { 'General': { 'Mathematics': 'Linear Equations', 'Physics': 'Newtons Laws', 'Chemistry': 'The Periodic Table', 'Biology': 'Human Anatomy', 'English': 'Essay Writing', 'History': 'The Renaissance', 'Geography': 'Tectonic Plates' } },
+    '9th Grade': { 'General': { 'Mathematics': 'Quadratic Equations', 'Physics': 'Kinematics', 'Chemistry': 'Chemical Reactions', 'Biology': 'Genetics', 'English': 'Literary Devices', 'History': 'Industrial Revolution', 'Economics': 'Supply and Demand' } },
+    '10th Grade': { 'General': { 'Mathematics': 'Trigonometry', 'Physics': 'Optics', 'Chemistry': 'Stoichiometry', 'Biology': 'Evolution', 'English': 'Shakespeare', 'History': 'World War I', 'Computer Science': 'Basic Programming' } },
+    '11th Grade': {
+        'Science': { 'Physics': 'Electromagnetism', 'Chemistry': 'Organic Chemistry', 'Mathematics': 'Calculus', 'Biology': 'Biotechnology', 'Computer Science': 'Data Structures', 'English': 'Modern Literature' },
+        'Commerce': { 'Accountancy': 'Journal Entries', 'Business Studies': 'Principles of Management', 'Economics': 'Macroeconomics', 'Mathematics': 'Statistics', 'English': 'Business Communication' },
+        'Arts': { 'History': 'Modern History', 'Political Science': 'Constitutional Framework', 'Sociology': 'Social Structures', 'Psychology': 'Introduction to Psychology', 'English': 'Poetry Analysis' }
     },
+    '12th Grade': {
+        'Science': { 'Physics': 'Modern Physics', 'Chemistry': 'Polymers', 'Mathematics': 'Differential Equations', 'Biology': 'Ecology', 'Computer Science': 'Algorithms', 'English': 'Critical Analysis' },
+        'Commerce': { 'Accountancy': 'Financial Statements', 'Business Studies': 'Marketing', 'Economics': 'International Trade', 'Mathematics': 'Linear Programming', 'English': 'Advanced Writing' },
+        'Arts': { 'History': 'Contemporary World Politics', 'Political Science': 'International Relations', 'Sociology': 'Social Change', 'Psychology': 'Clinical Psychology', 'English': 'Literary Criticism' }
+    },
+    'Undergraduate': {
+        'Computer Science': { 'Data Structures': 'Linked Lists', 'Algorithms': 'Sorting Algorithms', 'Operating Systems': 'Process Management' },
+        'Engineering: Computer Engg': { 'Digital Logic': 'Boolean Algebra', 'Computer Architecture': 'CPU Design' },
+        'Engineering: Civil': { 'Structural Analysis': 'Truss Analysis', 'Fluid Mechanics': 'Bernoulli\'s Principle' },
+        'Engineering: Mechanical': { 'Thermodynamics': 'First Law', 'Machine Design': 'Gear Systems' },
+        'Medicine': { 'Anatomy': 'Musculoskeletal System', 'Physiology': 'Cardiovascular System' },
+        'Business': { 'Marketing': 'SWOT Analysis', 'Finance': 'Time Value of Money' },
+        'Arts': { 'Philosophy': 'Existentialism', 'Literature': 'Postmodernism' },
+        'Law': { 'Constitutional Law': 'Fundamental Rights', 'Criminal Law': 'Mens Rea' }
+    }
 };
 
 interface StudentTestGeneratorProps {
@@ -145,56 +154,86 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const form = useForm<z.infer<typeof studentFormSchema>>({
     resolver: zodResolver(studentFormSchema),
     defaultValues: {
+      stream: '',
+      customStream: '',
       subject: '',
-      customSubject: '',
       topic: '',
       numberOfQuestions: 5,
     },
   });
 
+  const watchStream = form.watch('stream');
   const watchSubject = form.watch('subject');
-  const [availableSubjects, setAvailableSubjects] = useState<Record<string, string>>({});
+  
+  const [availableStreams, setAvailableStreams] = useState<string[]>([]);
+  const [availableSubjects, setAvailableSubjects] = useState<string[]>([]);
 
   useEffect(() => {
-    let subjects: Record<string, string> = {};
-    if (userClass === 'Undergraduate') {
-        const undergraduateSubjects = subjectMap['Undergraduate'] || {};
-        // Filter subjects based on the user's field
-        subjects = Object.keys(undergraduateSubjects)
-          .filter(key => userField && key.startsWith(userField.split(':')[0]))
-          .reduce((obj, key) => {
-            obj[key] = undergraduateSubjects[key];
-            return obj;
-          }, {} as Record<string, string>);
-        
-        // If no subjects match (e.g. custom field), allow all undergraduate subjects
-        if (Object.keys(subjects).length === 0) {
-            subjects = undergraduateSubjects;
+    let streams: string[] = [];
+    if (userClass) {
+        let fieldStreams: Record<string, any> = {};
+
+        if (userClass === 'Undergraduate') {
+            const undergraduateStreams = streamAndSubjectMap['Undergraduate'] || {};
+            if (userField) {
+                 const mainField = userField.split(':')[0];
+                 fieldStreams = Object.keys(undergraduateStreams)
+                    .filter(key => key.startsWith(mainField))
+                    .reduce((obj, key) => {
+                        obj[key] = undergraduateStreams[key];
+                        return obj;
+                    }, {} as Record<string, any>);
+            }
+            // If no specific field matches, use all undergraduate streams
+            if (Object.keys(fieldStreams).length === 0) {
+                fieldStreams = undergraduateStreams;
+            }
+        } else {
+            fieldStreams = streamAndSubjectMap[userClass] || {};
         }
-
-    } else if (userClass) {
-        subjects = subjectMap[userClass] || {};
+        streams = Object.keys(fieldStreams);
     }
-    setAvailableSubjects(subjects);
+    setAvailableStreams(streams);
 
-    // Set initial subject and topic from the derived list
-    const firstSubject = Object.keys(subjects)[0];
-    if (firstSubject) {
-        form.setValue('subject', firstSubject);
-        form.setValue('topic', subjects[firstSubject] || '');
+    // Set initial stream if available
+    const firstStream = streams[0];
+    if (firstStream) {
+        form.setValue('stream', firstStream);
     }
 }, [userClass, userField, form]);
 
   useEffect(() => {
-    if (watchSubject && watchSubject !== 'other') {
-      const suggestedTopic = availableSubjects[watchSubject];
-      if (suggestedTopic) {
-        form.setValue('topic', suggestedTopic);
-      }
-    } else if (watchSubject === 'other') {
+    let subjects: string[] = [];
+    if (userClass && watchStream && watchStream !== 'other') {
+        const classStreams = streamAndSubjectMap[userClass] || {};
+        const streamSubjects = classStreams[watchStream] || {};
+        subjects = Object.keys(streamSubjects);
+    }
+    setAvailableSubjects(subjects);
+
+    const firstSubject = subjects[0];
+    if(firstSubject) {
+        form.setValue('subject', firstSubject);
+    } else {
+        form.setValue('subject', '');
+    }
+
+  }, [watchStream, userClass, form]);
+
+  useEffect(() => {
+    if (userClass && watchStream && watchStream !== 'other' && watchSubject) {
+        const classStreams = streamAndSubjectMap[userClass] || {};
+        const streamSubjects = classStreams[watchStream] || {};
+        const suggestedTopic = streamSubjects[watchSubject];
+        if (suggestedTopic) {
+            form.setValue('topic', suggestedTopic);
+        } else {
+            form.setValue('topic', '');
+        }
+    } else {
         form.setValue('topic', '');
     }
-  }, [watchSubject, availableSubjects, form]);
+}, [watchStream, watchSubject, userClass, form]);
 
 
   async function onSubmit(values: z.infer<typeof studentFormSchema>) {
@@ -208,14 +247,14 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     setEndTime(null);
     setElapsedTime(0);
     
-    const finalSubject = values.subject === 'other' ? values.customSubject! : values.subject;
-    setFormValues({...values, subject: finalSubject});
+    const finalStream = values.stream === 'other' ? values.customStream! : values.stream;
+    setFormValues({...values, stream: finalStream});
 
 
     try {
       const result = await generatePracticeTest({
         class: userClass === 'Undergraduate' ? `${userClass} (${userField})` : userClass,
-        subject: finalSubject,
+        subject: values.subject,
         topic: values.topic,
         numberOfQuestions: values.numberOfQuestions,
       });
@@ -345,7 +384,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                 Generate a Practice Test
                 </CardTitle>
                 <CardDescription>
-                Select your subject and topic to generate a custom
+                Select your stream and subject to generate a custom
                 test. Your class is automatically set from your profile.
                 </CardDescription>
             </CardHeader>
@@ -353,48 +392,75 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                 <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                        control={form.control}
-                        name="subject"
-                        render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Subject</FormLabel>
-                            <Select
-                            onValueChange={field.onChange}
-                            value={field.value}
-                            >
-                            <FormControl>
-                                <SelectTrigger>
-                                <SelectValue placeholder="Select a subject" />
-                                </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                                {Object.keys(availableSubjects).map((subject) => (
-                                    <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                                ))}
-                                <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                        )}
-                    />
-
-                    {watchSubject === 'other' && (
                         <FormField
-                        control={form.control}
-                        name="customSubject"
-                        render={({ field }) => (
+                            control={form.control}
+                            name="stream"
+                            render={({ field }) => (
                             <FormItem>
-                            <FormLabel>Custom Subject</FormLabel>
-                            <FormControl>
-                                <Input placeholder="Enter a subject" {...field} />
-                            </FormControl>
-                            <FormMessage />
+                                <FormLabel>Stream</FormLabel>
+                                <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                >
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select a stream" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {availableStreams.map((stream) => (
+                                        <SelectItem key={stream} value={stream}>{stream}</SelectItem>
+                                    ))}
+                                    <SelectItem value="other">Other</SelectItem>
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
                             </FormItem>
-                        )}
+                            )}
                         />
-                    )}
+
+                        {watchStream === 'other' && (
+                            <FormField
+                            control={form.control}
+                            name="customStream"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Custom Stream</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="Enter a stream" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                        )}
+
+                        <FormField
+                            control={form.control}
+                            name="subject"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Subject</FormLabel>
+                                <Select
+                                onValueChange={field.onChange}
+                                value={field.value}
+                                disabled={availableSubjects.length === 0}
+                                >
+                                <FormControl>
+                                    <SelectTrigger>
+                                    <SelectValue placeholder="Select a subject" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    {availableSubjects.map((subject) => (
+                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                     </div>
 
                     <FormField
