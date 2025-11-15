@@ -26,7 +26,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useHistory } from '@/hooks/use-history';
 import { useMemo, useState } from 'react';
-import { ChevronRight, Trash2, UserPlus } from 'lucide-react';
+import { ChevronRight, Trash2, UserPlus, KeyRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useStudents, type Student } from '@/hooks/use-students';
 import { useToast } from '@/hooks/use-toast';
@@ -56,6 +56,7 @@ import {
 
 
 const addStudentSchema = z.object({
+    id: z.string().min(1, 'UID is required.'),
     name: z.string().min(2, 'Name is required.'),
     class: z.string().min(1, 'Class is required.'),
 });
@@ -69,6 +70,7 @@ export function StudentRoster() {
   const form = useForm<z.infer<typeof addStudentSchema>>({
     resolver: zodResolver(addStudentSchema),
     defaultValues: {
+        id: '',
         name: '',
         class: '',
     },
@@ -76,16 +78,14 @@ export function StudentRoster() {
 
   const onSubmit = (values: z.infer<typeof addStudentSchema>) => {
     try {
-        const newId = `user-${Date.now()}`;
         const newStudent: Student = {
             ...values,
-            id: newId,
-            avatarUrl: `https://i.pravatar.cc/150?u=${newId}`,
+            avatarUrl: `https://i.pravatar.cc/150?u=${values.id}`,
         };
         addStudent(newStudent);
         toast({
             title: 'Student Added',
-            description: `${values.name} has been added to the roster with UID: ${newId}.`,
+            description: `${values.name} has been added to the roster with UID: ${values.id}.`,
         });
         form.reset();
     } catch (error: any) {
@@ -143,12 +143,28 @@ export function StudentRoster() {
             Add New Student
         </CardTitle>
         <CardDescription>
-          Enter the student's details to add them to the roster. A unique UID will be generated automatically.
+          Enter the student's details to add them to the roster.
         </CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-3 gap-4 items-start">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="grid md:grid-cols-4 gap-4 items-start">
+                 <FormField
+                    control={form.control}
+                    name="id"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Student UID</FormLabel>
+                            <FormControl>
+                                <div className="relative">
+                                    <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input placeholder="e.g., user-123" {...field} className="pl-10" />
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
                  <FormField
                     control={form.control}
                     name="name"
