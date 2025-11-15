@@ -70,8 +70,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const initialState = getInitialState();
 
   const [userRole] = useState<Role>(initialState.role);
-  const [userName, setUserName] = useState<string>(initialState.name);
-  const [userAvatar, setUserAvatar] = useState<string | undefined>(initialState.avatar);
+  const [userName, setUserNameState] = useState<string>(initialState.name);
+  const [userAvatar, setUserAvatarState] = useState<string | undefined>(initialState.avatar);
   const [userId] = useState<string>(initialState.id);
   const [userEmail, setUserEmailState] = useState<string>(initialState.email);
   const [userClass, setUserClassState] = useState<string>(initialState.userClass);
@@ -81,6 +81,14 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const setUserEmail = (email: string) => {
     setUserEmailState(email);
   };
+  
+  const setUserName = (name: string) => {
+    setUserNameState(name);
+  }
+
+  const setUserAvatar = (avatar: string) => {
+    setUserAvatarState(avatar);
+  }
 
   const setUserClass = (userClass: string) => {
     setUserClassState(userClass);
@@ -98,8 +106,8 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     setIsMounted(true);
     const state = getInitialState();
     setUserEmailState(state.email);
-    setUserName(state.name);
-    setUserAvatar(state.avatar);
+    setUserNameState(state.name);
+    setUserAvatarState(state.avatar);
     setUserClassState(state.userClass);
     setUserFieldState(state.userField);
     setUserInstitutionState(state.userInstitution);

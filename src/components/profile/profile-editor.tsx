@@ -44,6 +44,8 @@ const profileSchema = z
     class: z.string().optional(),
     field: z.string().optional(),
     customField: z.string().optional(),
+    engineeringField: z.string().optional(),
+    customEngineeringField: z.string().optional(),
   })
   .refine(
     (data) => {
@@ -56,7 +58,15 @@ const profileSchema = z
         message: 'Please specify your field of study.',
         path: ['customField'],
     }
-  );
+  ).refine(data => {
+    if (data.field === 'Engineering' && data.engineeringField === 'Other') {
+        return data.customEngineeringField && data.customEngineeringField.trim().length > 0;
+    }
+    return true;
+  }, {
+    message: 'Please specify your engineering field.',
+    path: ['customEngineeringField'],
+  });
 
 export function ProfileEditor() {
   const { toast } = useToast();
@@ -72,33 +82,67 @@ export function ProfileEditor() {
       email: userEmail,
       institutionName: userInstitution,
       class: userClass,
-      field: userField,
+      field: '',
       customField: '',
+      engineeringField: '',
+      customEngineeringField: '',
     },
   });
 
   const watchClass = form.watch('class');
   const watchField = form.watch('field');
+  const watchEngineeringField = form.watch('engineeringField');
 
   useEffect(() => {
-    // Check if the current userField is one of the predefined options
     const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
-    const isCustom = userField && !predefinedFields.includes(userField);
+    const engineeringFields = ['Computer Engg', 'Civil', 'Mechanical'];
+    
+    let isCustom = false;
+    let mainField = userField || '';
+    let engField = '';
+    let customEngField = '';
+    let customMainField = '';
+
+    if (userField?.includes('Engineering: ')) {
+        mainField = 'Engineering';
+        const specificEngField = userField.replace('Engineering: ', '');
+        if (engineeringFields.includes(specificEngField)) {
+            engField = specificEngField;
+        } else {
+            engField = 'Other';
+            customEngField = specificEngField;
+        }
+    } else if (userField && !predefinedFields.includes(userField)) {
+        mainField = 'Other';
+        customMainField = userField;
+    }
 
     form.reset({
       name: userName,
       email: userEmail,
       institutionName: userInstitution,
       class: userClass,
-      field: isCustom ? 'Other' : userField,
-      customField: isCustom ? userField : '',
+      field: mainField,
+      customField: customMainField,
+      engineeringField: engField,
+      customEngineeringField: customEngField,
     });
   }, [userName, userEmail, userClass, userField, userInstitution, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
 
-    const finalField = values.field === 'Other' ? values.customField : values.field;
+    let finalField = values.field;
+    if (values.field === 'Other') {
+        finalField = values.customField;
+    } else if (values.field === 'Engineering') {
+        if (values.engineeringField === 'Other') {
+            finalField = `Engineering: ${values.customEngineeringField}`;
+        } else {
+            finalField = `Engineering: ${values.engineeringField}`;
+        }
+    }
+
 
     setUserName(values.name);
     setUserEmail(values.email);
@@ -269,7 +313,7 @@ export function ProfileEditor() {
                         )}
                         />
                     {watchClass === 'Undergraduate' && (
-                        <div className='space-y-6'>
+                        <div className='space-y-6 pl-4 border-l-2'>
                             <FormField
                                 control={form.control}
                                 name="field"
@@ -313,6 +357,51 @@ export function ProfileEditor() {
                                         </FormItem>
                                     )}
                                 />
+                            )}
+                            {watchField === 'Engineering' && (
+                                <div className='space-y-6 pl-4 border-l-2'>
+                                <FormField
+                                    control={form.control}
+                                    name="engineeringField"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                        <FormLabel>Engineering Field</FormLabel>
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <FormControl>
+                                                <div className='relative'>
+                                                    <Briefcase className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                                    <SelectTrigger className='pl-10'>
+                                                        <SelectValue placeholder="Select your engineering field" />
+                                                    </SelectTrigger>
+                                                </div>
+                                            </FormControl>
+                                            <SelectContent>
+                                                <SelectItem value="Computer Engg">Computer Engg</SelectItem>
+                                                <SelectItem value="Civil">Civil</SelectItem>
+                                                <SelectItem value="Mechanical">Mechanical</SelectItem>
+                                                <SelectItem value="Other">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                {watchEngineeringField === 'Other' && (
+                                    <FormField
+                                        control={form.control}
+                                        name="customEngineeringField"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <FormLabel>Custom Engineering Field</FormLabel>
+                                                <FormControl>
+                                                    <Input placeholder="e.g., 'Aerospace'" {...field} />
+                                                </FormControl>
+                                                <FormMessage />
+                                            </FormItem>
+                                        )}
+                                    />
+                                )}
+                                </div>
                             )}
                         </div>
                     )}
