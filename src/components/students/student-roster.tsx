@@ -15,6 +15,13 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+  } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { useHistory } from '@/hooks/use-history';
@@ -181,9 +188,28 @@ export function StudentRoster() {
                     render={({ field }) => (
                         <FormItem>
                             <FormLabel>Class</FormLabel>
-                            <FormControl>
-                                <Input placeholder="e.g., 10th Grade" {...field} />
-                            </FormControl>
+                            <Select
+                                onValueChange={field.onChange}
+                                defaultValue={field.value}
+                                >
+                                <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select a class" />
+                                    </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                    <SelectItem value="6th Grade">6th Grade</SelectItem>
+                                    <SelectItem value="7th Grade">7th Grade</SelectItem>
+                                    <SelectItem value="8th Grade">8th Grade</SelectItem>
+                                    <SelectItem value="9th Grade">9th Grade</SelectItem>
+                                    <SelectItem value="10th Grade">10th Grade</SelectItem>
+                                    <SelectItem value="11th Grade">11th Grade</SelectItem>
+                                    <SelectItem value="12th Grade">12th Grade</SelectItem>
+                                    <SelectItem value="Undergraduate">
+                                    Undergraduate
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
                             <FormMessage />
                         </FormItem>
                     )}
