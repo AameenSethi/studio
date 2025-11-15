@@ -57,6 +57,60 @@ const formSchema = z.object({
   explanationLevel: z.enum(['Simple', 'Detailed', 'Expert']),
 });
 
+const ExplanationDisplay = ({ text }: { text: string }) => {
+    const elements = [];
+    const lines = text.split('\n');
+    let currentList: string[] = [];
+  
+    const renderList = () => {
+      if (currentList.length > 0) {
+        elements.push(
+          <ul key={`ul-${elements.length}`} className="list-disc pl-6 my-2 space-y-1">
+            {currentList.map((item, index) => (
+              <li key={index}>{item}</li>
+            ))}
+          </ul>
+        );
+        currentList = [];
+      }
+    };
+  
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+  
+      if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        renderList();
+        elements.push(
+          <h3
+            key={`h3-${index}`}
+            className="text-lg font-semibold mt-4 mb-2 text-primary"
+          >
+            {trimmedLine.replace(/\*\*/g, '')}
+          </h3>
+        );
+      } else if (trimmedLine.startsWith('* ')) {
+        currentList.push(trimmedLine.substring(2));
+      } else if (trimmedLine === '') {
+        renderList();
+        // This creates a space between paragraphs, effectively a <br>
+        if (elements.length > 0 && lines[index-1]?.trim() !== '') {
+            elements.push(<div key={`br-${index}`} className="h-4" />);
+        }
+      } else {
+        renderList();
+        elements.push(
+          <p key={`p-${index}`} className="leading-relaxed">
+            {trimmedLine}
+          </p>
+        );
+      }
+    });
+  
+    renderList(); // Render any remaining list items
+  
+    return <div className="prose prose-sm max-w-none dark:prose-invert">{elements}</div>;
+  };
+
 export function ExplanationGenerator() {
   const { toast } = useToast();
   const { addHistoryItem } = useHistory();
@@ -144,42 +198,6 @@ export function ExplanationGenerator() {
     URL.revokeObjectURL(url);
   };
 
-
-  const ExplanationDisplay = ({ text }: { text: string }) => {
-    return (
-      <div className="prose prose-sm max-w-none dark:prose-invert">
-        {text.split('\n\n').map((paragraph, i) => (
-          <p key={i}>
-            {paragraph.split('\n').map((line, j) => {
-              if (line.startsWith('**') && line.endsWith('**')) {
-                return (
-                  <h3
-                    key={j}
-                    className="text-xl font-semibold mt-4 mb-2 text-primary"
-                  >
-                    {line.replace(/\*\*/g, '')}
-                  </h3>
-                );
-              }
-              if (line.startsWith('* ')) {
-                return (
-                  <ul key={j} className="list-disc pl-5">
-                    <li>{line.substring(2)}</li>
-                  </ul>
-                );
-              }
-              return (
-                <span key={j}>
-                  {line}
-                  <br />
-                </span>
-              );
-            })}
-          </p>
-        ))}
-      </div>
-    );
-  };
 
   return (
     <Card className="w-full">
