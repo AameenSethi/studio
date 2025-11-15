@@ -34,6 +34,7 @@ import { Loader2, User, Save, Camera, School, KeyRound } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { useUser } from '@/hooks/use-user-role';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const profileSchema = z
   .object({
@@ -59,6 +60,7 @@ export function ProfileEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { userRole, setUserRole, userName, setUserName, userAvatar, setUserAvatar } = useUser();
+  const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
@@ -119,32 +121,45 @@ export function ProfileEditor() {
   return (
     <>
       <div className="grid md:grid-cols-3 gap-8">
-        <Card className="md:col-span-1">
-          <CardHeader>
-            <CardTitle>Profile Picture</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center gap-4">
-            <Avatar className="h-32 w-32">
-              <AvatarImage src={userAvatar} alt="User avatar" />
-              <AvatarFallback>
-                <User className="h-16 w-16" />
-              </AvatarFallback>
-            </Avatar>
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleAvatarChange}
-              className="hidden"
-              accept="image/*"
+        <Card className="md:col-span-1 relative overflow-hidden">
+          {profileBgImage && (
+            <Image
+                src={profileBgImage.imageUrl}
+                alt={profileBgImage.description}
+                layout="fill"
+                objectFit="cover"
+                className="opacity-20"
+                data-ai-hint={profileBgImage.imageHint}
             />
-            <Button
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-            >
-              <Camera className="mr-2 h-4 w-4" />
-              Change Picture
-            </Button>
-          </CardContent>
+          )}
+          <div className="absolute inset-0 bg-background/50 dark:bg-background/70" />
+          <div className="relative z-10 h-full flex flex-col">
+            <CardHeader>
+                <CardTitle>Profile Picture</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col items-center justify-center gap-4 flex-grow">
+                <Avatar className="h-32 w-32 border-4 border-background/50 shadow-lg">
+                <AvatarImage src={userAvatar} alt="User avatar" />
+                <AvatarFallback>
+                    <User className="h-16 w-16" />
+                </AvatarFallback>
+                </Avatar>
+                <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarChange}
+                className="hidden"
+                accept="image/*"
+                />
+                <Button
+                variant="secondary"
+                onClick={() => fileInputRef.current?.click()}
+                >
+                <Camera className="mr-2 h-4 w-4" />
+                Change Picture
+                </Button>
+            </CardContent>
+          </div>
         </Card>
         <Card className="md:col-span-2">
           <CardHeader>
