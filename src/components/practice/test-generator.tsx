@@ -42,6 +42,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { useUserRole } from '@/hooks/use-user-role';
 
 const studentFormSchema = z.object({
   studyPlan: z.string().min(10, {
@@ -62,12 +63,12 @@ const parentFormSchema = z.object({
 
 type TestOutput = (GeneratePracticeTestOutput | GeneratePracticeTestForChildOutput) & { answerKey?: { question: string, answer: string }[] };
 
-
-// Mock user role. In a real app, this would come from an auth context.
-const USER_ROLE = 'Parent';
-
 export function TestGenerator() {
-    return USER_ROLE === 'Parent' ? <ParentTestGenerator /> : <StudentTestGenerator />;
+    const { userRole } = useUserRole();
+    if (userRole === 'Parent') {
+        return <ParentTestGenerator />;
+    }
+    return <StudentTestGenerator />;
 }
 
 function StudentTestGenerator() {

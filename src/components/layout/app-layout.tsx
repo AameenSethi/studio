@@ -24,6 +24,7 @@ import {
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
+import { useUserRole } from '@/hooks/use-user-role';
 
 const allNavItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard', roles: ['Student', 'Teacher'] },
@@ -36,13 +37,10 @@ const allNavItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [userRole, setUserRole] = useState('Parent'); // Default to Parent for this feature
+  const { userRole } = useUserRole();
   const [navItems, setNavItems] = useState(allNavItems);
 
   useEffect(() => {
-    // In a real app, you would fetch the user's role.
-    // For now, we allow switching for demonstration.
-    // We are hardcoding to 'Parent' to fulfill the request.
     const filteredNavItems = allNavItems.filter(item => item.roles.includes(userRole));
     setNavItems(filteredNavItems);
   }, [userRole]);
