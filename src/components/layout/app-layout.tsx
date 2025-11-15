@@ -14,6 +14,7 @@ import {
   History,
   ArrowDown,
   ArrowUp,
+  LifeBuoy,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -43,6 +44,7 @@ const navItems = [
   { href: '/progress', icon: TrendingUp, label: 'Progress' },
   { href: '/history', icon: History, label: 'History' },
   { href: '/profile', icon: User, label: 'Profile' },
+  { href: '/help', icon: LifeBuoy, label: 'Help' },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -93,7 +95,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen w-full flex-col">
        <header className="sticky top-0 z-30 flex h-20 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
-            <div className="hidden md:flex">
+            <div className="flex items-center">
                 <Link
                     href="/dashboard"
                     className="flex items-center gap-2 text-lg font-semibold md:text-base mr-2"
@@ -102,24 +104,26 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <span className="font-headline text-xl">StudyPal</span>
                 </Link>
             </div>
-          <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative w-full justify-center">
-            {navItems.map((item, index) => (
-                <Fragment key={item.href}>
-                  {index > 0 && <Separator orientation="vertical" className="h-10" />}
-                  <Link
-                      href={item.href}
-                      className={cn(
-                          "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
-                          pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
-                      )}
-                  >
-                      <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
-                      <span className="text-xs">{item.label}</span>
-                  </Link>
-                </Fragment>
-            ))}
-            <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
-          </nav>
+            <div className='flex-1 flex justify-center'>
+              <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
+                {navItems.map((item, index) => (
+                    <Fragment key={item.href}>
+                      {index > 0 && <Separator orientation="vertical" className="h-10" />}
+                      <Link
+                          href={item.href}
+                          className={cn(
+                              "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
+                              pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                          )}
+                      >
+                          <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+                          <span className="text-xs">{item.label}</span>
+                      </Link>
+                    </Fragment>
+                ))}
+                <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
+              </nav>
+            </div>
           <Sheet>
             <SheetTrigger asChild>
               <Button
@@ -156,7 +160,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </nav>
             </SheetContent>
           </Sheet>
-          <div className="flex w-full items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4 md:w-auto">
+          <div className="flex items-center justify-end gap-4 md:ml-auto md:gap-2 lg:gap-4">
             <ModeToggle />
             <UserNav />
           </div>
