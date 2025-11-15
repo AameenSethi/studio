@@ -48,7 +48,7 @@ export function ProfileEditor() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId } = useUser();
+  const { userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId, userClass, setUserClass, userInstitution, setUserInstitution } = useUser();
   const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -56,8 +56,8 @@ export function ProfileEditor() {
     defaultValues: {
       name: userName,
       email: userEmail,
-      institutionName: 'State University',
-      class: '10th Grade',
+      institutionName: userInstitution,
+      class: userClass,
     },
   });
 
@@ -65,15 +65,17 @@ export function ProfileEditor() {
     form.reset({
       name: userName,
       email: userEmail,
-      institutionName: form.getValues('institutionName') || 'State University',
-      class: form.getValues('class') || '10th Grade'
+      institutionName: userInstitution,
+      class: userClass
     });
-  }, [userName, userEmail, form]);
+  }, [userName, userEmail, userClass, userInstitution, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
     setUserName(values.name);
     setUserEmail(values.email);
+    if(values.class) setUserClass(values.class);
+    if(values.institutionName) setUserInstitution(values.institutionName);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
     setIsLoading(false);
