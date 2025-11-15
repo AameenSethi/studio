@@ -49,7 +49,6 @@ import {
   XCircle,
   Clock,
   BarChart3,
-  BarChart,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -62,8 +61,6 @@ import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useHistory, type HistoryItem } from '@/hooks/use-history';
 import { useUser } from '@/hooks/use-user-role';
-import { Switch } from '../ui/switch';
-import { Label } from '../ui/label';
 import { useTrackedTopics } from '@/hooks/use-tracked-topics';
 
 const studentFormSchema = z
@@ -250,8 +247,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
           form.setValue('topic', '');
         }
       }
-      // When 'other' is selected for subject, we don't clear the topic
-      // allowing the user to type a custom one.
     } else if (watchSubject !== 'other') {
         form.setValue('topic', '');
     }
@@ -348,12 +343,10 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     setAnswersSubmitted(true);
     setIsSubmitting(false);
 
-    // Automatically add the topic to tracked topics
     try {
-        addTrackedTopic({ topic: testTopic, subject: testSubject });
+      addTrackedTopic({ topic: testTopic, subject: testSubject });
     } catch (e) {
-        // Topic might already be tracked, fail silently.
-        console.log("Did not add topic, it might already be tracked:", e);
+      console.log("Did not add topic, it might already be tracked:", e);
     }
 
 
@@ -610,19 +603,21 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                   </div>
                 </div>
               ))}
-              <Button onClick={handleSubmitAnswers} disabled={answersSubmitted || isSubmitting}>
-                {isSubmitting ? (
-                    <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Evaluating...
-                    </>
-                ) : (
-                    <>
-                        <Upload className="mr-2 h-4 w-4" />
-                        Submit Your Answers
-                    </>
-                )}
-              </Button>
+              {!answersSubmitted && (
+                <Button onClick={handleSubmitAnswers} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                      <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Evaluating...
+                      </>
+                  ) : (
+                      <>
+                          <Upload className="mr-2 h-4 w-4" />
+                          Submit Test
+                      </>
+                  )}
+                </Button>
+              )}
             </CardContent>
             {answersSubmitted && (
               <CardFooter className="flex-col items-start gap-4">
