@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import AppLayout from '@/components/layout/app-layout';
 import {
   Card,
@@ -15,8 +16,28 @@ import { PersonalizedStudyPlan } from '@/components/dashboard/personalized-study
 import { WeeklyProgressChart } from '@/components/dashboard/overview-cards';
 import { useUser } from '@/hooks/use-user-role';
 
+const motivationalQuotes = [
+  "The secret to getting ahead is getting started.",
+  "Believe you can and you're halfway there.",
+  "Don't watch the clock; do what it does. Keep going.",
+  "The expert in anything was once a beginner.",
+  "The beautiful thing about learning is that no one can take it away from you.",
+  "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+  "The future belongs to those who believe in the beauty of their dreams.",
+  "The only way to learn mathematics is to do mathematics.",
+  "Strive for progress, not perfection.",
+  "Your only limit is your mind."
+];
+
 export default function DashboardPage() {
   const { userName } = useUser();
+  const [quote, setQuote] = useState('');
+
+  useEffect(() => {
+    // Select a random quote on the client-side to avoid hydration mismatch
+    const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+    setQuote(randomQuote);
+  }, []);
 
   return (
     <AppLayout>
@@ -28,6 +49,11 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">
             Here&apos;s your learning snapshot for today.
           </p>
+          {quote && (
+            <p className="text-sm text-muted-foreground italic mt-2">
+              &quot;{quote}&quot;
+            </p>
+          )}
         </div>
       </div>
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
