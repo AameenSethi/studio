@@ -73,7 +73,7 @@ export function ProfileEditor() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { userName, setUserName, userEmail, setUserEmail, userAvatar, setUserAvatar, userId, userClass, setUserClass, userField, setUserField, userInstitution, setUserInstitution } = useUser();
+  const { user, updateUser, userAvatar, setUserAvatar, userId } = useUser();
   const profileBgImage = PlaceHolderImages.find(img => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof profileSchema>>({
@@ -95,39 +95,41 @@ export function ProfileEditor() {
   const watchEngineeringField = form.watch('engineeringField');
 
   useEffect(() => {
-    const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
-    const engineeringFields = ['Computer Engg', 'Civil', 'Mechanical'];
-    
-    let mainField = userField || '';
-    let engField = '';
-    let customEngField = '';
-    let customMainField = '';
+    if (user) {
+        const predefinedFields = ['Computer Science', 'Engineering', 'Medicine', 'Business', 'Arts', 'Law'];
+        const engineeringFields = ['Computer Engg', 'Civil', 'Mechanical'];
+        
+        let mainField = user.field || '';
+        let engField = '';
+        let customEngField = '';
+        let customMainField = '';
 
-    if (userField?.includes('Engineering: ')) {
-        mainField = 'Engineering';
-        const specificEngField = userField.replace('Engineering: ', '');
-        if (engineeringFields.includes(specificEngField)) {
-            engField = specificEngField;
-        } else {
-            engField = 'Other';
-            customEngField = specificEngField;
+        if (user.field?.includes('Engineering: ')) {
+            mainField = 'Engineering';
+            const specificEngField = user.field.replace('Engineering: ', '');
+            if (engineeringFields.includes(specificEngField)) {
+                engField = specificEngField;
+            } else {
+                engField = 'Other';
+                customEngField = specificEngField;
+            }
+        } else if (user.field && !predefinedFields.includes(user.field)) {
+            mainField = 'Other';
+            customMainField = user.field;
         }
-    } else if (userField && !predefinedFields.includes(userField)) {
-        mainField = 'Other';
-        customMainField = userField;
-    }
 
-    form.reset({
-      name: userName || '',
-      email: userEmail || '',
-      institutionName: userInstitution || '',
-      class: userClass || '',
-      field: mainField || '',
-      customField: customMainField || '',
-      engineeringField: engField || '',
-      customEngineeringField: customEngField || '',
-    });
-  }, [userName, userEmail, userClass, userField, userInstitution, form]);
+        form.reset({
+          name: user.name || '',
+          email: user.email || '',
+          institutionName: user.institution || '',
+          class: user.class || '',
+          field: mainField || '',
+          customField: customMainField || '',
+          engineeringField: engField || '',
+          customEngineeringField: customEngField || '',
+        });
+    }
+  }, [user, form]);
 
   async function onSubmit(values: z.infer<typeof profileSchema>) {
     setIsLoading(true);
@@ -142,18 +144,22 @@ export function ProfileEditor() {
             finalField = `Engineering: ${values.engineeringField}`;
         }
     }
-
-
-    setUserName(values.name);
-    setUserEmail(values.email);
-    if(values.class) setUserClass(values.class);
-    if(finalField) setUserField(finalField);
-    if(values.institutionName) setUserInstitution(values.institutionName);
     
-    // If class is not undergraduate, clear the field
-    if (values.class !== 'Undergraduate') {
-        setUserField('');
-    }
+    const updates: Partial<z.infer<typeof profileSchema>> = {
+      name: values.name,
+      email: values.email,
+      class: values.class,
+      field: values.class === 'Undergraduate' ? finalField : '',
+      institutionName: values.institutionName,
+    };
+    
+    updateUser({
+      name: updates.name,
+      email: updates.email,
+      class: updates.class,
+      field: updates.field,
+      institution: updates.institutionName,
+    });
 
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -442,7 +448,3 @@ export function ProfileEditor() {
     </>
   );
 }
-
-    
-
-    

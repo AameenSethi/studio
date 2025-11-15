@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,15 +27,13 @@ import { useUser } from '@/hooks/use-user-role';
 export function UserNav() {
   const router = useRouter();
   const { userName, userEmail, userAvatar } = useUser();
-  const userAvatarImage = PlaceHolderImages.find(
-    (img) => img.id === 'user-avatar'
-  );
 
   const handleLogout = () => {
     router.push('/');
   };
 
   const getInitials = (name: string) => {
+    if (!name) return '';
     const names = name.split(' ');
     if (names.length > 1) {
       return names[0][0] + names[names.length - 1][0];
