@@ -228,7 +228,7 @@ export default function HistoryPage() {
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>
-                      <Card className="bg-background/50">
+                      <Card className="bg-muted/50">
                           <CardHeader>
                               <CardTitle className="text-lg">{item.type}</CardTitle>
                               <CardDescription>{item.title}</CardDescription>
