@@ -109,18 +109,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className='flex-1 flex justify-center'>
               <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
-                  {navItems.map((item) => (
-                      <Link
-                          key={item.href}
-                          href={item.href}
-                          className={cn(
-                              "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
-                              pathname.startsWith(item.href) ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
-                          )}
-                      >
-                          <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
-                          <span className="text-xs">{item.label}</span>
-                      </Link>
+                  {navItems.map((item, index) => (
+                      <React.Fragment key={item.href}>
+                        <Link
+                            href={item.href}
+                            className={cn(
+                                "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
+                                pathname.startsWith(item.href) ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
+                            <span className="text-xs">{item.label}</span>
+                        </Link>
+                        {index < navItems.length - 1 && (
+                            <div className="h-8 w-px bg-border" />
+                        )}
+                      </React.Fragment>
                   ))}
                   <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
               </nav>
