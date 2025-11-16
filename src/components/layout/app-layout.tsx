@@ -13,8 +13,6 @@ import {
   PanelLeft,
   User,
   History,
-  ArrowDown,
-  ArrowUp,
   HelpCircle,
   Wand2,
   BrainCircuit,
@@ -53,21 +51,9 @@ const navItems = [
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const [isAtBottom, setIsAtBottom] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({});
   const navRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = React.useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      const atBottom = window.innerHeight + window.scrollY >= document.body.offsetHeight - 50; // 50px buffer
-      setIsAtBottom(atBottom);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     if (navRef.current) {
@@ -81,21 +67,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         }
     }
 }, [pathname]);
-
-
-  const scrollToBottom = () => {
-    window.scrollTo({
-      top: document.body.scrollHeight,
-      behavior: 'smooth',
-    });
-  };
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    });
-  };
 
   return (
     <div className="flex min-h-screen w-full flex-col">
@@ -125,7 +96,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 ))}
             </div>
              <div
-                className="absolute bottom-[-21px] h-1 bg-primary/50 rounded-full blur-md transition-all duration-300"
+                className="absolute bottom-[-21px] h-1 bg-primary/70 rounded-full blur-lg transition-all duration-300"
                 style={underlineStyle}
              />
           </div>
@@ -183,27 +154,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
        <main className="flex-1 p-4 sm:px-6 sm:py-4 md:gap-8 md:p-8 space-y-8">
           {children}
        </main>
-        <TooltipProvider>
-            <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button
-                        variant="default"
-                        size="icon"
-                        className="fixed bottom-6 right-6 h-12 w-12 rounded-full shadow-lg z-50"
-                        onClick={isAtBottom ? scrollToTop : scrollToBottom}
-                    >
-                        {isAtBottom ? (
-                            <ArrowUp className="h-6 w-6" />
-                        ) : (
-                            <ArrowDown className="h-6 w-6" />
-                        )}
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent side="left">
-                    {isAtBottom ? 'Scroll to Top' : 'Scroll to Bottom'}
-                </TooltipContent>
-            </Tooltip>
-        </TooltipProvider>
     </div>
   );
 }
