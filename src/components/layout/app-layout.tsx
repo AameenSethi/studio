@@ -41,8 +41,8 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/study-plan', icon: Wand2, label: 'Study Plan' },
   { href: '/explanations', icon: Lightbulb, label: 'Explanations' },
-  { href: '/practice', icon: FileText, label: 'Practice' },
   { href: '/doubt-solver', icon: BrainCircuit, label: 'Doubt Solver' },
+  { href: '/practice', icon: FileText, label: 'Practice' },
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/progress', icon: TrendingUp, label: 'Progress' },
   { href: '/history', icon: History, label: 'History' },
@@ -99,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 ))}
             </div>
              <div
-                className="absolute bottom-[-21px] h-1 bg-primary/80 blur transition-all duration-300"
+                className="absolute bottom-[-21px] h-1 bg-primary blur transition-all duration-300"
                 style={underlineStyle}
              />
           </div>
