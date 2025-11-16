@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CheckCircle, Lightbulb, Camera } from 'lucide-react';
+import { CheckCircle, Lightbulb, FileUp } from 'lucide-react';
 
 export default function DoubtSolverPage() {
   return (
@@ -43,7 +43,7 @@ export default function DoubtSolverPage() {
                             <ul className='list-disc list-inside text-muted-foreground space-y-1'>
                                 <li>&quot;Explain the Pythagorean theorem like I'm 10.&quot;</li>
                                 <li>&quot;What are the main causes of World War I?&quot;</li>
-                                <li>&quot;Help me solve this algebra problem (with image).&quot;</li>
+                                <li>&quot;Help me solve this algebra problem (with file).&quot;</li>
                             </ul>
                         </div>
                          <div className='space-y-2'>
@@ -59,16 +59,16 @@ export default function DoubtSolverPage() {
                  <Card className='bg-muted/30'>
                     <CardHeader>
                         <CardTitle className='flex items-center gap-2'>
-                           <Camera className='text-accent' />
-                            Image Analysis
+                           <FileUp className='text-accent' />
+                            File Analysis
                         </CardTitle>
                     </CardHeader>
                     <CardContent className='space-y-2 text-sm text-muted-foreground'>
                         <p>
-                           Don't want to type out a long problem? Just click the image icon, upload a photo, and let the AI solve it for you.
+                           Don't want to type out a long problem? Just click the attachment icon, upload any file, and let the AI solve it for you.
                         </p>
                          <p>
-                           Works great for math equations, diagrams, and more.
+                           Works great for math equations, diagrams, documents, and more.
                         </p>
                     </CardContent>
                 </Card>

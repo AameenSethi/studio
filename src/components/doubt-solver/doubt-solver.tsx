@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BrainCircuit, Send, User, Bot, ImagePlus, X } from 'lucide-react';
+import { Loader2, BrainCircuit, Send, User, Bot, Paperclip, X, File as FileIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/use-user-role';
@@ -80,6 +80,7 @@ type Message = {
     sender: 'user' | 'ai';
     text: string;
     image?: string;
+    fileName?: string;
 };
 
 export function DoubtSolver() {
@@ -87,7 +88,7 @@ export function DoubtSolver() {
   const { userName } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [filePreview, setFilePreview] = useState<{ data: string; name: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -101,7 +102,7 @@ export function DoubtSolver() {
   useEffect(() => {
     if (userName && messages.length === 0) {
         setMessages([
-            { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. Ask a question or upload an image of a problem.` }
+            { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. Ask a question or upload a file.` }
         ]);
     }
   }, [userName, messages.length]);
@@ -112,44 +113,50 @@ export function DoubtSolver() {
     }
   }, [messages]);
 
-  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files[0]) {
       const file = event.target.files[0];
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        setFilePreview({
+          data: reader.result as string,
+          name: file.name,
+        });
       };
       reader.readAsDataURL(file);
     }
   };
 
-  const removeImage = () => {
-    setImagePreview(null);
+  const removeFile = () => {
+    setFilePreview(null);
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   }
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    if (!values.doubt && !imagePreview) {
-        form.setError('doubt', { message: 'Please enter a question or upload an image.'});
+    if (!values.doubt && !filePreview) {
+        form.setError('doubt', { message: 'Please enter a question or upload a file.'});
         return;
     }
     setIsLoading(true);
     
     const userMessage: Message = { 
         sender: 'user', 
-        text: values.doubt || "Please solve the problem in the image.",
-        image: imagePreview || undefined,
+        text: values.doubt || `Please analyze the file: ${filePreview?.name}`,
+        image: filePreview?.data.startsWith('data:image') ? filePreview.data : undefined,
+        fileName: !filePreview?.data.startsWith('data:image') ? filePreview?.name : undefined,
     };
     setMessages(prev => [...prev, userMessage]);
     form.reset();
-    removeImage();
+
+    const fileDataUri = filePreview?.data;
+    removeFile();
 
     try {
       const response = await solveDoubt({ 
           doubt: values.doubt,
-          photoDataUri: imagePreview || undefined,
+          fileDataUri: fileDataUri,
         });
       const aiMessage: Message = { sender: 'ai', text: response.answer };
       setMessages(prev => [...prev, aiMessage]);
@@ -164,7 +171,7 @@ export function DoubtSolver() {
       setMessages(prev => {
         const newMessages = [...prev];
         const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage.sender === 'user' && (lastMessage.text === values.doubt || lastMessage.text === "Please solve the problem in the image.")) {
+        if (lastMessage.sender === 'user' && (lastMessage.text === values.doubt || lastMessage.text.includes("Please analyze the file"))) {
             newMessages.pop();
         }
         return newMessages;
@@ -202,6 +209,12 @@ export function DoubtSolver() {
                                         className="rounded-md mb-2 max-w-full h-auto"
                                     />
                                 )}
+                                {message.fileName && (
+                                    <div className="flex items-center gap-2 p-2 rounded-md bg-black/10 dark:bg-white/10 mb-2">
+                                        <FileIcon className="h-5 w-5" />
+                                        <span className="text-sm font-medium truncate">{message.fileName}</span>
+                                    </div>
+                                )}
                                 <AnswerDisplay text={message.text} />
                             </div>
                             {message.sender === 'user' && (
@@ -224,14 +237,15 @@ export function DoubtSolver() {
                 </div>
             </ScrollArea>
             <div className="mt-auto pt-4 border-t">
-                {imagePreview && (
-                    <div className="relative w-24 h-24 mb-2 border rounded-md p-1">
-                        <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
+                {filePreview && (
+                    <div className="relative w-full mb-2 border rounded-md p-2 flex items-center gap-2 bg-muted/50">
+                        <FileIcon className="h-5 w-5 text-muted-foreground" />
+                        <span className="text-sm text-muted-foreground truncate flex-1">{filePreview.name}</span>
                         <Button
-                            variant="destructive"
+                            variant="ghost"
                             size="icon"
-                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
-                            onClick={removeImage}
+                            className="h-6 w-6 rounded-full"
+                            onClick={removeFile}
                         >
                             <X className="h-4 w-4" />
                         </Button>
@@ -242,9 +256,8 @@ export function DoubtSolver() {
                         <input
                             type="file"
                             ref={fileInputRef}
-                            onChange={handleImageChange}
+                            onChange={handleFileChange}
                             className="hidden"
-                            accept="image/*"
                         />
                         <Button
                             type="button"
@@ -253,7 +266,7 @@ export function DoubtSolver() {
                             onClick={() => fileInputRef.current?.click()}
                             disabled={isLoading}
                         >
-                            <ImagePlus className="h-5 w-5" />
+                            <Paperclip className="h-5 w-5" />
                         </Button>
                         <FormField
                         control={form.control}
@@ -263,7 +276,7 @@ export function DoubtSolver() {
                             <FormLabel className="sr-only">Your Doubt</FormLabel>
                             <FormControl>
                                 <Input
-                                placeholder="Explain the problem in the image or ask a question..."
+                                placeholder="Explain the problem in the file or ask a question..."
                                 {...field}
                                 disabled={isLoading}
                                 />
