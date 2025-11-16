@@ -16,7 +16,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useHistory } from '@/hooks/use-history';
-import { History, Wand2, Lightbulb, FileText, Clock } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock, BrainCircuit } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,6 +24,7 @@ const iconMap = {
   'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
   'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
   'Practice Test': <FileText className="h-5 w-5 text-accent" />,
+  'Doubt Solver': <BrainCircuit className="h-5 w-5 text-accent" />,
 };
 
 const formatDuration = (seconds?: number) => {
@@ -40,6 +41,9 @@ export default function HistoryPage() {
     switch (item.type) {
       case 'Study Plan':
         // For Study Plan, content is an object with keyHighlights, weeklySchedule, finalSummary
+        if (!item.content || !item.content.keyHighlights || !item.content.weeklySchedule) {
+            return <p>This study plan content is unavailable.</p>;
+        }
         return (
           <div className="prose prose-sm max-w-none dark:prose-invert">
             <h4>Key Highlights</h4>
@@ -57,28 +61,40 @@ export default function HistoryPage() {
                 </li>
               ))}
             </ul>
-            <p><em>{item.content.finalSummary}</em></p>
+            {item.content.finalSummary && <p><em>{item.content.finalSummary}</em></p>}
           </div>
         );
       case 'Explanation':
         // For Explanation, content is an object with summary, detailedExplanation, analogy
+        if (!item.content) {
+            return <p>This explanation content is unavailable.</p>;
+        }
         return (
           <div className="prose prose-sm max-w-none dark:prose-invert space-y-4">
-            <div>
-              <h4 className="font-semibold">Summary</h4>
-              <p>{item.content.summary}</p>
-            </div>
-            <div>
-              <h4 className="font-semibold">Detailed Explanation</h4>
-              <div dangerouslySetInnerHTML={{ __html: item.content.detailedExplanation.replace(/\n/g, '<br />') }} />
-            </div>
-            <div>
-              <h4 className="font-semibold">Analogy</h4>
-              <p>{item.content.analogy}</p>
-            </div>
+            {item.content.summary && (
+                <div>
+                    <h4 className="font-semibold">Summary</h4>
+                    <p>{item.content.summary}</p>
+                </div>
+            )}
+            {item.content.detailedExplanation && (
+                <div>
+                    <h4 className="font-semibold">Detailed Explanation</h4>
+                    <div dangerouslySetInnerHTML={{ __html: item.content.detailedExplanation.replace(/\n/g, '<br />') }} />
+                </div>
+            )}
+            {item.content.analogy && (
+                <div>
+                    <h4 className="font-semibold">Analogy</h4>
+                    <p>{item.content.analogy}</p>
+                </div>
+            )}
           </div>
         );
       case 'Practice Test':
+        if (!item.content) {
+            return <p>This practice test content is unavailable.</p>;
+        }
         return (
           <div>
             {item.score !== undefined && (
@@ -139,7 +155,7 @@ export default function HistoryPage() {
                   <AccordionItem value={item.id} key={item.id}>
                     <AccordionTrigger>
                       <div className="flex items-center gap-4">
-                        {iconMap[item.type as keyof typeof iconMap]}
+                        {iconMap[item.type as keyof typeof iconMap] || <FileText className="h-5 w-5 text-accent" />}
                         <div className="flex flex-col items-start">
                           <span className="font-semibold">{item.title}</span>
                           <span className="text-xs text-muted-foreground">
