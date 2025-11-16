@@ -220,8 +220,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     // Select a random quote on the client-side to avoid hydration mismatch
-    const randomQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
-    setQuote(randomQuote);
+    setQuote(motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
   }, []);
 
   useEffect(() => {
