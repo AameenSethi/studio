@@ -36,7 +36,7 @@ const formSchema = z.object({
     lastName: z.string().min(1, { message: "Last name is required." }),
     email: z.string().email({ message: "Please enter a valid email." }),
     password: z.string().min(6, { message: "Password must be at least 6 characters." }),
-    verification: z.string().min(1, { message: "Please solve the verification problem." }),
+    captcha: z.string().min(1, { message: "Please enter the text from the image." }),
 });
 
 const getMockUserDatabase = () => {
@@ -60,19 +60,30 @@ const saveMockUserDatabase = (db: { [email: string]: UserProfile }) => {
     }
 };
 
+const generateCaptchaText = (length = 6) => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+}
+
 export default function SignupPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const { loadUserByEmail } = useUser();
-    const [num1, setNum1] = useState(0);
-    const [num2, setNum2] = useState(0);
+    const [captchaText, setCaptchaText] = useState('');
 
     useEffect(() => {
-        // Generate random numbers on mount for the verification
-        setNum1(Math.floor(Math.random() * 10) + 1);
-        setNum2(Math.floor(Math.random() * 10) + 1);
+        // Generate captcha text on the client-side to avoid hydration mismatch
+        setCaptchaText(generateCaptchaText());
     }, []);
+
+    const regenerateCaptcha = () => {
+        setCaptchaText(generateCaptchaText());
+    }
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -81,20 +92,18 @@ export default function SignupPage() {
             lastName: "",
             email: "",
             password: "",
-            verification: "",
+            captcha: "",
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         // Human verification check
-        if (parseInt(values.verification) !== num1 + num2) {
-            form.setError("verification", {
+        if (values.captcha.toLowerCase() !== captchaText.toLowerCase()) {
+            form.setError("captcha", {
                 type: "manual",
-                message: "Incorrect answer. Please try again.",
+                message: "Incorrect CAPTCHA. Please try again.",
             });
-            // Generate new numbers to prevent simple retries
-            setNum1(Math.floor(Math.random() * 10) + 1);
-            setNum2(Math.floor(Math.random() * 10) + 1);
+            regenerateCaptcha();
             return;
         }
 
@@ -108,6 +117,7 @@ export default function SignupPage() {
                 description: 'An account with this email already exists. Please sign in.',
             });
             setIsLoading(false);
+            regenerateCaptcha();
             return;
         }
 
@@ -212,19 +222,38 @@ export default function SignupPage() {
                         </FormItem>
                     )}
                 />
-                <FormField
-                    control={form.control}
-                    name="verification"
-                    render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Human Verification</FormLabel>
-                            <FormControl>
-                                <Input placeholder={`What is ${num1} + ${num2}?`} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                        </FormItem>
-                    )}
-                />
+                 <div className="space-y-2">
+                    <FormLabel htmlFor="captcha">Human Verification</FormLabel>
+                    <div className="flex items-center justify-between gap-2 p-2 rounded-md border bg-muted select-none">
+                        <div className="font-mono text-2xl tracking-widest flex-grow text-center" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'40\' viewBox=\'0 0 100 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 10 Q 50 30 90 10\' stroke=\'rgba(0,0,0,0.1)\' fill=\'none\' stroke-width=\'1\'/%3E%3Cpath d=\'M10 30 Q 50 10 90 30\' stroke=\'rgba(0,0,0,0.1)\' fill=\'none\' stroke-width=\'1\'/%3E%3C/svg%3E")' }}>
+                            {captchaText.split('').map((char, index) => {
+                                const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbF24', '#c084fc'];
+                                const rotation = Math.random() * 20 - 10;
+                                const color = colors[Math.floor(Math.random() * colors.length)];
+                                return (
+                                    <span key={index} style={{ transform: `rotate(${rotation}deg)`, color, display: 'inline-block' }}>
+                                        {char}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                        <Button type="button" variant="ghost" size="sm" onClick={regenerateCaptcha}>
+                            &#x21bb;
+                        </Button>
+                    </div>
+                    <FormField
+                        control={form.control}
+                        name="captcha"
+                        render={({ field }) => (
+                            <FormItem>
+                                <FormControl>
+                                    <Input placeholder="Enter the text above" {...field} id="captcha" autoComplete="off" />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create an account
