@@ -26,7 +26,7 @@ import {
   } from '@/components/ui/form';
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useUser, type UserProfile } from "@/hooks/use-user-role"
 
@@ -36,6 +36,7 @@ const formSchema = z.object({
     lastName: z.string().min(1, { message: "Last name is required." }),
     email: z.string().email({ message: "Please enter a valid email." }),
     password: z.string().min(6, { message: "Password must be at least 6 characters." }),
+    verification: z.string().min(1, { message: "Please solve the verification problem." }),
 });
 
 const getMockUserDatabase = () => {
@@ -64,6 +65,14 @@ export default function SignupPage() {
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
     const { loadUserByEmail } = useUser();
+    const [num1, setNum1] = useState(0);
+    const [num2, setNum2] = useState(0);
+
+    useEffect(() => {
+        // Generate random numbers on mount for the verification
+        setNum1(Math.floor(Math.random() * 10) + 1);
+        setNum2(Math.floor(Math.random() * 10) + 1);
+    }, []);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -72,10 +81,23 @@ export default function SignupPage() {
             lastName: "",
             email: "",
             password: "",
+            verification: "",
         },
     });
 
     function onSubmit(values: z.infer<typeof formSchema>) {
+        // Human verification check
+        if (parseInt(values.verification) !== num1 + num2) {
+            form.setError("verification", {
+                type: "manual",
+                message: "Incorrect answer. Please try again.",
+            });
+            // Generate new numbers to prevent simple retries
+            setNum1(Math.floor(Math.random() * 10) + 1);
+            setNum2(Math.floor(Math.random() * 10) + 1);
+            return;
+        }
+
         setIsLoading(true);
         
         const db = getMockUserDatabase();
@@ -185,6 +207,19 @@ export default function SignupPage() {
                             <FormLabel>Password</FormLabel>
                             <FormControl>
                                 <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="verification"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Human Verification</FormLabel>
+                            <FormControl>
+                                <Input placeholder={`What is ${num1} + ${num2}?`} {...field} />
                             </FormControl>
                             <FormMessage />
                         </FormItem>
