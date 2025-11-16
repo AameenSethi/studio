@@ -39,9 +39,45 @@ export default function HistoryPage() {
   const renderContent = (item: any) => {
     switch (item.type) {
       case 'Study Plan':
-        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        // For Study Plan, content is an object with keyHighlights, weeklySchedule, finalSummary
+        return (
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <h4>Key Highlights</h4>
+            <ul>
+              {item.content.keyHighlights.map((highlight: string, index: number) => (
+                <li key={index}>{highlight}</li>
+              ))}
+            </ul>
+            <h4>Weekly Schedule</h4>
+            {/* A simple representation for history view */}
+            <ul>
+              {item.content.weeklySchedule.map((day: any, index: number) => (
+                <li key={index}>
+                  <strong>{day.day}:</strong> {day.focusTopics.join(', ')} ({day.estimatedTime})
+                </li>
+              ))}
+            </ul>
+            <p><em>{item.content.finalSummary}</em></p>
+          </div>
+        );
       case 'Explanation':
-        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
+        // For Explanation, content is an object with summary, detailedExplanation, analogy
+        return (
+          <div className="prose prose-sm max-w-none dark:prose-invert space-y-4">
+            <div>
+              <h4 className="font-semibold">Summary</h4>
+              <p>{item.content.summary}</p>
+            </div>
+            <div>
+              <h4 className="font-semibold">Detailed Explanation</h4>
+              <div dangerouslySetInnerHTML={{ __html: item.content.detailedExplanation.replace(/\n/g, '<br />') }} />
+            </div>
+            <div>
+              <h4 className="font-semibold">Analogy</h4>
+              <p>{item.content.analogy}</p>
+            </div>
+          </div>
+        );
       case 'Practice Test':
         return (
           <div>
@@ -65,7 +101,11 @@ export default function HistoryPage() {
           </div>
         );
       default:
-        return <p>{item.content}</p>;
+        // Fallback for other types or if content is a simple string
+        if (typeof item.content === 'string') {
+          return <p>{item.content}</p>;
+        }
+        return <p>This item cannot be displayed.</p>;
     }
   };
 

@@ -34,26 +34,48 @@ const motivationalQuotes = [
 ];
 
 const renderContent = (item: any) => {
-  switch (item.type) {
-    case 'Study Plan':
-      return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
-    case 'Explanation':
-        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
-    case 'Practice Test':
-      return (
-        <ul className="space-y-4">
-          {item.content.map((qa: any, index: number) => (
-            <li key={index}>
-              <p className="font-semibold">{index + 1}. {qa.question}</p>
-              <p className="text-sm text-emerald-600 dark:text-emerald-400 pl-2">Answer: {qa.answer}</p>
-            </li>
-          ))}
-        </ul>
-      );
-    default:
-      return <p>{item.content}</p>;
-  }
-};
+    switch (item.type) {
+      case 'Study Plan':
+        // For Study Plan, content is an object with keyHighlights, weeklySchedule, finalSummary
+        return (
+          <div className="prose prose-sm max-w-none dark:prose-invert">
+            <h4>Key Highlights</h4>
+            <ul>
+              {item.content.keyHighlights.map((highlight: string, index: number) => (
+                <li key={index}>{highlight}</li>
+              ))}
+            </ul>
+            <p><em>{item.content.finalSummary}</em></p>
+          </div>
+        );
+      case 'Explanation':
+        // For Explanation, content is an object with summary, detailedExplanation, analogy
+        return (
+            <div className="prose prose-sm max-w-none dark:prose-invert space-y-2">
+                <p className="font-semibold italic">{item.content.summary}</p>
+                <p>{item.content.detailedExplanation.substring(0, 200)}...</p>
+                <p className="text-xs">Analogy: {item.content.analogy}</p>
+            </div>
+        );
+      case 'Practice Test':
+        return (
+          <ul className="space-y-4">
+            {item.content.map((qa: any, index: number) => (
+              <li key={index}>
+                <p className="font-semibold">{index + 1}. {qa.question}</p>
+                <p className="text-sm text-emerald-600 dark:text-emerald-400 pl-2">Answer: {qa.answer}</p>
+              </li>
+            ))}
+          </ul>
+        );
+      default:
+        // Fallback for other types or if content is a simple string
+        if (typeof item.content === 'string') {
+            return <p>{item.content}</p>;
+        }
+        return <p>This item cannot be displayed in preview.</p>;
+    }
+  };
 
 
 export default function DashboardPage() {
