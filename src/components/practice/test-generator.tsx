@@ -59,7 +59,7 @@ import {
 } from '@/components/ui/accordion';
 import { Textarea } from '../ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { useHistory, type HistoryItem } from '@/hooks/use-history';
+import { useHistory } from '@/hooks/use-history';
 import { useUser } from '@/hooks/use-user-role';
 import { useTrackedTopics } from '@/hooks/use-tracked-topics';
 import { Checkbox } from '../ui/checkbox';
@@ -130,29 +130,23 @@ const streamAndSubjectMap: Record<string, Record<string, Record<string, string>>
     }
 };
 
-interface StudentTestGeneratorProps {
-    assignedTest?: HistoryItem;
-}
-
-export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
+export function TestGenerator() {
   const { toast } = useToast();
-  const { addHistoryItem, updateHistoryItem } = useHistory();
+  const { addHistoryItem } = useHistory();
   const { userClass, userField } = useUser();
   const { addTrackedTopic } = useTrackedTopics();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [test, setTest] = useState<GeneratePracticeTestOutput | null>(assignedTest ? { answerKey: assignedTest.content } : null);
+  const [test, setTest] = useState<GeneratePracticeTestOutput | null>(null);
   const [studentAnswers, setStudentAnswers] = useState<StudentAnswers>({});
   const [answersSubmitted, setAnswersSubmitted] = useState(false);
   const [answerCorrectness, setAnswerCorrectness] = useState<AnswerCorrectness>({});
   const [score, setScore] = useState(0);
-  const [startTime, setStartTime] = useState<Date | null>(assignedTest ? new Date() : null);
+  const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [formValues, setFormValues] = useState<z.infer<typeof studentFormSchema> | null>(null);
-  const [currentTestId, setCurrentTestId] = useState<string | null>(assignedTest?.id || null);
-
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -304,8 +298,6 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
 
   const handleSubmitAnswers = async () => {
     if (!test?.answerKey) return;
-    const testTopic = formValues?.topic || assignedTest?.topic || 'Unknown Topic';
-    const testSubject = formValues?.subject || assignedTest?.subject || 'Unknown Subject';
 
     setIsSubmitting(true);
     const submissionTime = new Date();
@@ -346,41 +338,23 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     setAnswersSubmitted(true);
     setIsSubmitting(false);
 
-    const includeInAnalytics = formValues?.includeInAnalytics ?? true;
-
-    if (includeInAnalytics) {
+    if (formValues?.includeInAnalytics) {
         try {
-          addTrackedTopic({ topic: testTopic, subject: testSubject });
+          addTrackedTopic({topic: formValues.topic, subject: formValues.subject});
         } catch (e) {
           console.log("Did not add topic, it might already be tracked:", e);
         }
     }
 
-
-    if (assignedTest) {
-        updateHistoryItem(assignedTest.id, {
-            score: correctAnswers,
-            duration: finalElapsedTime,
-            isComplete: true,
-            includeInAnalytics,
-        });
-        setCurrentTestId(assignedTest.id);
-    } else {
-        const newHistoryItem = {
-            type: 'Practice Test' as const,
-            title: `Test on: ${testTopic}`,
-            content: test.answerKey,
-            score: correctAnswers,
-            duration: finalElapsedTime,
-            subject: testSubject,
-            topic: testTopic,
-            isComplete: true,
-            includeInAnalytics,
-        };
-        const newId = addHistoryItem(newHistoryItem);
-        setCurrentTestId(newId);
-    }
-
+    addHistoryItem({
+      type: 'Practice Test',
+      title: `Test on: ${formValues?.topic}`,
+      content: test.answerKey,
+      score: correctAnswers,
+      duration: finalElapsedTime,
+      subject: formValues?.subject,
+      topic: formValues?.topic,
+    });
 
     toast({
       title: 'Answers Submitted!',
@@ -398,204 +372,187 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     return answerCorrectness[index] === true;
   }
 
-  if (assignedTest && !test) {
-    return (
-        <Card className="w-full">
-            <CardHeader>
-                <CardTitle>Error</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <p>Could not load the assigned test.</p>
-            </CardContent>
-        </Card>
-    )
-  }
-
   return (
     <Card className="w-full">
-      {!assignedTest && (
-        <>
-            <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                <FileText className="h-6 w-6 text-accent" />
-                Generate a Practice Test
-                </CardTitle>
-                <CardDescription>
-                Select your stream and subject to generate a custom
-                test. Your class is automatically set from your profile.
-                </CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                            control={form.control}
-                            name="stream"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Stream</FormLabel>
-                                <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                >
-                                <FormControl>
-                                    <SelectTrigger>
-                                    <SelectValue placeholder="Select a stream" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {availableStreams.map((stream) => (
-                                        <SelectItem key={stream} value={stream}>{stream}</SelectItem>
-                                    ))}
-                                    <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <FileText className="h-6 w-6 text-accent" />
+          Generate a Practice Test
+        </CardTitle>
+        <CardDescription>
+          Select your stream and subject to generate a custom
+          test. Your class is automatically set from your profile.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <FormField
+                    control={form.control}
+                    name="stream"
+                    render={({ field }) => (
+                    <FormItem>
+                        <FormLabel>Stream</FormLabel>
+                        <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        >
+                        <FormControl>
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a stream" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            {availableStreams.map((stream) => (
+                                <SelectItem key={stream} value={stream}>{stream}</SelectItem>
+                            ))}
+                            <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <FormMessage />
+                    </FormItem>
+                    )}
+                />
 
-                        {watchStream === 'other' && (
-                            <FormField
-                            control={form.control}
-                            name="customStream"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Custom Stream</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="Enter a stream" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                            />
-                        )}
-
-                        <FormField
-                            control={form.control}
-                            name="subject"
-                            render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Subject</FormLabel>
-                                <Select
-                                onValueChange={field.onChange}
-                                value={field.value}
-                                disabled={availableSubjects.length === 0 && watchStream !== 'other'}
-                                >
-                                <FormControl>
-                                    <SelectTrigger>
-                                    <SelectValue placeholder="Select a subject" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    {availableSubjects.map((subject) => (
-                                        <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                                    ))}
-                                    <SelectItem value="other">Other</SelectItem>
-                                </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                            )}
-                        />
-
-                        {watchSubject === 'other' && (
-                            <FormField
-                                control={form.control}
-                                name="customSubject"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Custom Subject</FormLabel>
-                                        <FormControl>
-                                            <Input placeholder="Enter a subject" {...field} />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        )}
-                    </div>
-
+                {watchStream === 'other' && (
                     <FormField
                     control={form.control}
-                    name="topic"
+                    name="customStream"
                     render={({ field }) => (
                         <FormItem>
-                        <FormLabel>Topic</FormLabel>
+                        <FormLabel>Custom Stream</FormLabel>
                         <FormControl>
-                            <Input
-                            placeholder="e.g., 'Algebra', 'Thermodynamics', or 'The Cold War'"
-                            {...field}
-                            />
+                            <Input placeholder="Enter a stream" {...field} />
                         </FormControl>
                         <FormMessage />
                         </FormItem>
                     )}
                     />
+                )}
 
-                    <FormField
+                <FormField
                     control={form.control}
-                    name="numberOfQuestions"
+                    name="subject"
                     render={({ field }) => (
-                        <FormItem>
-                        <FormLabel>Number of Questions: {field.value}</FormLabel>
+                    <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <Select
+                        onValueChange={field.onChange}
+                        value={field.value}
+                        disabled={availableSubjects.length === 0 && watchStream !== 'other'}
+                        >
                         <FormControl>
-                            <Slider
-                            min={1}
-                            max={20}
-                            step={1}
-                            defaultValue={[field.value]}
-                            onValueChange={(values) => field.onChange(values[0])}
-                            />
+                            <SelectTrigger>
+                            <SelectValue placeholder="Select a subject" />
+                            </SelectTrigger>
                         </FormControl>
+                        <SelectContent>
+                            {availableSubjects.map((subject) => (
+                                <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                            ))}
+                            <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                        </Select>
                         <FormMessage />
-                        </FormItem>
+                    </FormItem>
                     )}
-                    />
+                />
 
+                 {watchSubject === 'other' && (
                     <FormField
                         control={form.control}
-                        name="includeInAnalytics"
+                        name="customSubject"
                         render={({ field }) => (
-                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormItem>
+                                <FormLabel>Custom Subject</FormLabel>
                                 <FormControl>
-                                    <Checkbox
-                                    checked={field.value}
-                                    onCheckedChange={field.onChange}
-                                    />
+                                    <Input placeholder="Enter a subject" {...field} />
                                 </FormControl>
-                                <div className="space-y-1 leading-none">
-                                    <FormLabel>
-                                    Include in Analytics
-                                    </FormLabel>
-                                    <FormMessage />
-                                    <p className="text-sm text-muted-foreground">
-                                        Allow this test's score to be included in your analytics and topic mastery charts.
-                                    </p>
-                                </div>
+                                <FormMessage />
                             </FormItem>
                         )}
-                        />
+                    />
+                )}
+            </div>
 
-                    <Button type="submit" disabled={isLoading}>
-                    {isLoading ? (
-                        <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Generating...
-                        </>
-                    ) : (
-                        <>
-                        Generate Test
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                        </>
-                    )}
-                    </Button>
-                </form>
-                </Form>
-            </CardContent>
-        </>
-      )}
+            <FormField
+              control={form.control}
+              name="topic"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Topic</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="e.g., 'Algebra', 'Thermodynamics', or 'The Cold War'"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="numberOfQuestions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Number of Questions: {field.value}</FormLabel>
+                  <FormControl>
+                    <Slider
+                      min={1}
+                      max={20}
+                      step={1}
+                      defaultValue={[field.value]}
+                      onValueChange={(values) => field.onChange(values[0])}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+                control={form.control}
+                name="includeInAnalytics"
+                render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                            <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                            <FormLabel>
+                            Include in Analytics
+                            </FormLabel>
+                            <FormMessage />
+                            <p className="text-sm text-muted-foreground">
+                                Allow this test's score to be included in your analytics and topic mastery charts.
+                            </p>
+                        </div>
+                    </FormItem>
+                )}
+                />
+
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  Generate Test
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
       {test && test.answerKey && (
         <CardFooter
           className={cn(
@@ -607,7 +564,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             <CardHeader>
                 <div className='flex justify-between items-start'>
                     <div>
-                        <CardTitle>{assignedTest ? `Assigned Test: ${assignedTest.topic}`: "Your Practice Test"}</CardTitle>
+                        <CardTitle>Your Practice Test</CardTitle>
                         <CardDescription>
                             Enter your answers below and submit to see the answer key.
                         </CardDescription>

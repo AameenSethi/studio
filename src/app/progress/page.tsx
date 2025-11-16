@@ -11,7 +11,7 @@ export default function ProgressPage() {
               Student Progress Report
             </h2>
             <p className="text-muted-foreground">
-              Generate an AI-powered summary of a student&apos;s weekly learning by entering their UID.
+              Generate an AI-powered summary of your weekly learning by entering your UID.
             </p>
           </div>
         </div>

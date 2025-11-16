@@ -13,15 +13,11 @@ export type HistoryItem = {
   duration?: number; // Add duration for practice tests in seconds
   subject?: string;
   topic?: string;
-  studentId?: string; // For tests assigned by teachers/parents
-  isComplete?: boolean; // For assigned tests
-  includeInAnalytics?: boolean;
 };
 
 interface HistoryContextType {
   history: HistoryItem[];
-  addHistoryItem: (item: Omit<HistoryItem, 'id' | 'timestamp'>) => string;
-  updateHistoryItem: (id: string, updates: Partial<HistoryItem>) => void;
+  addHistoryItem: (item: Omit<HistoryItem, 'id' | 'timestamp'>) => void;
   clearHistory: () => void;
 }
 
@@ -54,35 +50,25 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [history, isMounted]);
 
-  const addHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>): string => {
-    const newItem: HistoryItem = {
+  const addHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
+    const newItem = {
       ...item,
       id: new Date().toISOString() + Math.random().toString(),
       timestamp: new Date().toISOString(),
     };
     setHistory(prevHistory => [newItem, ...prevHistory]);
-    return newItem.id;
-  };
-
-  const updateHistoryItem = (id: string, updates: Partial<HistoryItem>) => {
-    setHistory(prevHistory =>
-      prevHistory.map(item =>
-        item.id === id ? { ...item, ...updates } : item
-      )
-    );
   };
 
   const clearHistory = () => {
     setHistory([]);
   };
 
-  const value = { history, addHistoryItem, updateHistoryItem, clearHistory };
+  const value = { history, addHistoryItem, clearHistory };
 
   if (!isMounted) {
     const defaultContext: HistoryContextType = {
         history: [],
-        addHistoryItem: () => '',
-        updateHistoryItem: () => {},
+        addHistoryItem: () => {},
         clearHistory: () => {},
     }
     return (

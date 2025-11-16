@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -48,16 +49,10 @@ const generateDynamicReportData = (history: HistoryItem[], studentId: string): O
 
   const studentHistory = history.filter(item => {
     const itemDate = parseISO(item.timestamp);
-    const isWithinDate = itemDate >= lastWeek && itemDate <= today;
-    
-    // If a studentId is provided, filter for their specific items
-    if (studentId) {
-        return (item.studentId === studentId || item.id === studentId) && isWithinDate;
-    }
-    // Otherwise (for personal reports), just filter by date
-    return isWithinDate;
-});
-
+    // For this version, we assume the history belongs to the current user.
+    // In a multi-user app, we would also filter by `item.userId === studentId`
+    return itemDate >= lastWeek && itemDate <= today;
+  });
 
   const subjectData: { [key: string]: any } = {};
 
@@ -66,7 +61,7 @@ const generateDynamicReportData = (history: HistoryItem[], studentId: string): O
     let topic: string | undefined;
     let timeSpentSeconds = 0;
 
-    if (item.type === 'Practice Test' && item.isComplete) {
+    if (item.type === 'Practice Test') {
       subject = item.subject || 'General Knowledge';
       topic = item.topic || item.title;
       timeSpentSeconds = item.duration || 0;
@@ -138,61 +133,46 @@ const generateDynamicReportData = (history: HistoryItem[], studentId: string): O
 
   const overallSummary = {
     totalTimeSpent: `${totalTimeSpentMinutes} minutes`,
-    generalObservations: studentHistory.length > 0 ? `The student engaged in ${studentHistory.length} activities this week, spending a total of ${totalTimeSpentMinutes} minutes.` : "No activity was recorded in the last 7 days.",
+    generalObservations: `The student engaged in ${studentHistory.length} activities this week, spending a total of ${totalTimeSpentMinutes} minutes.`,
   };
 
   return { learningData, overallSummary };
 }
 
-interface ReportGeneratorProps {
-    studentId?: string;
-}
 
-export function ReportGenerator({ studentId }: ReportGeneratorProps) {
+export function ReportGenerator() {
   const { toast } = useToast();
-  const { history, addHistoryItem } = useHistory();
   const { userId } = useUser();
+  const { history, addHistoryItem } = useHistory();
   const [isLoading, setIsLoading] = useState(false);
   const [report, setReport] = useState<WeeklyProgressReportOutput | null>(null);
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
-    defaultValues: { studentId: studentId || '' },
+    defaultValues: { studentId: userId || '' },
   });
 
-  useEffect(() => {
-    // If this is for a specific student, find their last report
-    const reportHistory = history.filter(item => item.type === 'Progress Report');
-    const lastReport = studentId 
-      ? reportHistory.find(item => item.title.includes(studentId)) 
-      : reportHistory.find(item => item.title.includes(userId));
-
-    if (lastReport) {
-        setReport(lastReport.content);
-    }
-  }, [history, studentId, userId]);
-
-  async function handleGenerateReport(uid: string) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     setReport(null);
     try {
       const today = new Date();
       const lastWeek = subDays(today, 7);
 
-      const { learningData, overallSummary } = generateDynamicReportData(history, uid);
+      const { learningData, overallSummary } = generateDynamicReportData(history, values.studentId);
 
       if (learningData.length === 0) {
         toast({
             variant: 'destructive',
             title: 'No Data Available',
-            description: `Student ${uid} has no learning activity in the last 7 days.`,
+            description: `You have no learning activity in the last 7 days.`,
         });
         setIsLoading(false);
         return;
       }
 
       const result = await generateWeeklyProgressReport({
-        userId: uid,
+        userId: values.studentId,
         startDate: format(lastWeek, 'yyyy-MM-dd'),
         endDate: format(today, 'yyyy-MM-dd'),
         learningData: learningData,
@@ -202,12 +182,12 @@ export function ReportGenerator({ studentId }: ReportGeneratorProps) {
       setReport(result);
       addHistoryItem({
         type: 'Progress Report',
-        title: `Weekly Report for ${uid}`,
+        title: `Weekly Report for ${values.studentId}`,
         content: result,
       });
       toast({
         title: 'Report Generated!',
-        description: `Weekly progress report for ${uid} is ready.`,
+        description: `Your weekly progress report is ready.`,
       });
     } catch (error) {
       toast({
@@ -221,72 +201,60 @@ export function ReportGenerator({ studentId }: ReportGeneratorProps) {
     }
   }
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    handleGenerateReport(values.studentId);
-  }
-  
-  const cardTitle = studentId ? `Generate Report for ${studentId}` : "My Weekly Progress Report";
-  const cardDescription = studentId ? "Generate an AI-powered analysis of this student's learning progress." : "Click the button to generate an analysis of your learning progress from the past week.";
-
-
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-accent" />
-          {cardTitle}
+          Weekly Progress Report Generator
         </CardTitle>
-        <CardDescription>{cardDescription}</CardDescription>
+        <CardDescription>
+          Generate an AI-powered analysis of your learning progress over the last 7 days.
+        </CardDescription>
       </CardHeader>
       <CardContent>
-       {studentId ? (
-            <Button onClick={() => handleGenerateReport(studentId)} disabled={isLoading}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><ArrowRight className="mr-2 h-4 w-4" />Generate Student Report</>}
-            </Button>
-       ) : (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-end gap-4">
-                <FormField
-                control={form.control}
-                name="studentId"
-                render={({ field }) => (
-                    <FormItem className='flex-1'>
-                    <FormLabel>Student UID</FormLabel>
-                    <FormControl>
-                        <div className="relative">
-                            <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Enter student's unique ID" {...field} className="pl-10"/>
-                        </div>
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <Button type="submit" disabled={isLoading}>
-                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Generating...</> : <><ArrowRight className="mr-2 h-4 w-4" />Generate Report</>}
-                </Button>
-            </form>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-end gap-4">
+            <FormField
+              control={form.control}
+              name="studentId"
+              render={({ field }) => (
+                <FormItem className='flex-1'>
+                  <FormLabel>Your UID</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                        <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Enter your unique ID" {...field} className="pl-10" disabled/>
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                <>
+                  Generate Report
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </>
+              )}
+            </Button>
+          </form>
         </Form>
-       )}
       </CardContent>
-      {isLoading && (
-          <CardFooter>
-              <div className="w-full text-center p-8 text-muted-foreground">
-                  <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                  Generating report...
-              </div>
-          </CardFooter>
-      )}
-      {!isLoading && report && (
-        <CardFooter>
-          <ReportDisplayCard report={report} studentId={studentId || form.getValues('studentId') || userId} title={"Last Generated Report"} />
-        </CardFooter>
-      )}
-      {!isLoading && !report && (
-        <CardFooter>
-            <div className="w-full text-center p-8 border-2 border-dashed rounded-lg text-muted-foreground">
-                No report available. Generate one to see the results.
-            </div>
+      {report && (
+        <CardFooter
+          className={cn(
+            'transition-all duration-500 ease-in-out',
+            report ? 'opacity-100' : 'opacity-0'
+          )}
+        >
+          <ReportDisplayCard report={report} studentId={form.getValues('studentId')} />
         </CardFooter>
       )}
     </Card>
@@ -297,11 +265,9 @@ export function ReportGenerator({ studentId }: ReportGeneratorProps) {
 export function ReportDisplayCard({
   report,
   studentId,
-  title,
 }: {
   report: WeeklyProgressReportOutput;
   studentId: string;
-  title?: string;
 }) {
   const handleDownload = () => {
     if (!report) return;
@@ -348,9 +314,9 @@ export function ReportDisplayCard({
     <Card className="w-full bg-muted/50">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle>{title || `Weekly Report for Student: ${studentId}`}</CardTitle>
+          <CardTitle>Your Weekly Report</CardTitle>
           <CardDescription>
-            Summary of activities and performance for the last 7 days.
+            Summary of your activities and performance for the last 7 days.
           </CardDescription>
         </div>
         <Button onClick={handleDownload} variant="outline" size="sm">

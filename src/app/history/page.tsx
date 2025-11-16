@@ -16,24 +16,14 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { useHistory } from '@/hooks/use-history';
-import { History, Wand2, Lightbulb, FileText, Clock, CheckCircle, Quote, TrendingUp } from 'lucide-react';
+import { History, Wand2, Lightbulb, FileText, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-  } from "@/components/ui/table";
-import { ReportDisplayCard } from '@/components/progress/report-generator';
 
 const iconMap = {
   'Study Plan': <Wand2 className="h-5 w-5 text-accent" />,
   'Explanation': <Lightbulb className="h-5 w-5 text-accent" />,
   'Practice Test': <FileText className="h-5 w-5 text-accent" />,
-  'Progress Report': <TrendingUp className="h-5 w-5 text-accent" />,
 };
 
 const formatDuration = (seconds?: number) => {
@@ -46,144 +36,25 @@ const formatDuration = (seconds?: number) => {
 export default function HistoryPage() {
   const { history } = useHistory();
 
-  const ExplanationDisplay = ({ text }: { text: string }) => {
-    const elements = [];
-    const lines = text.split('\n');
-    let currentList: string[] = [];
-
-    const renderList = () => {
-        if (currentList.length > 0) {
-        elements.push(
-            <ul key={`ul-${elements.length}`} className="list-disc pl-6 my-2 space-y-1">
-            {currentList.map((item, index) => (
-                <li key={index}>{item}</li>
-            ))}
-            </ul>
-        );
-        currentList = [];
-        }
-    };
-
-    lines.forEach((line, index) => {
-        const trimmedLine = line.trim();
-
-        if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
-        renderList();
-        elements.push(
-            <h3
-            key={`h3-${index}`}
-            className="text-lg font-semibold mt-4 mb-2 text-primary"
-            >
-            {trimmedLine.replace(/\*\*/g, '')}
-            </h3>
-        );
-        } else if (trimmedLine.startsWith('* ')) {
-        currentList.push(trimmedLine.substring(2));
-        } else if (trimmedLine === '') {
-        renderList();
-        if (elements.length > 0 && lines[index-1]?.trim() !== '') {
-            elements.push(<div key={`br-${index}`} className="h-4" />);
-        }
-        } else {
-        renderList();
-        elements.push(
-            <p key={`p-${index}`} className="leading-relaxed">
-            {trimmedLine}
-            </p>
-        );
-        }
-    });
-
-    renderList();
-
-    return <div className="prose prose-sm max-w-none dark:prose-invert">{elements}</div>;
-    };
-
-
   const renderContent = (item: any) => {
     switch (item.type) {
       case 'Study Plan':
-        if (typeof item.content === 'string' || !item.content.weeklySchedule) {
-            return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: (item.content.toString()).replace(/\n/g, '<br />') }} />;
-        }
-        return (
-            <div className="space-y-6">
-                 <div>
-                    <h3 className='text-lg font-semibold mb-2 text-primary'>Key Highlights</h3>
-                    <ul className='space-y-2'>
-                        {item.content.keyHighlights.map((highlight: string, index: number) => (
-                            <li key={index} className='flex items-start gap-2'>
-                                <CheckCircle className="h-4 w-4 mt-1 text-green-500"/>
-                                <span>{highlight}</span>
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-                <div>
-                    <h3 className='text-lg font-semibold mb-2 text-primary'>Weekly Schedule</h3>
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className='w-[120px]'>Day</TableHead>
-                                <TableHead>Focus Topics</TableHead>
-                                <TableHead className='w-[150px] text-right'>Time</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {item.content.weeklySchedule.map((day: any) => (
-                                <TableRow key={day.day}>
-                                    <TableCell className='font-medium'>{day.day}</TableCell>
-                                    <TableCell>{day.focusTopics.join(', ')}</TableCell>
-                                    <TableCell className='text-right'>{day.estimatedTime}</TableCell>
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </div>
-                <p className='text-center text-muted-foreground italic pt-4'>{item.content.finalSummary}</p>
-            </div>
-        );
+        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
       case 'Explanation':
-        if (typeof item.content === 'string') {
-            return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
-        }
-        return (
-            <div className="space-y-4">
-                <div className="p-4 rounded-lg bg-background/50 border italic">
-                    <p>{item.content.summary}</p>
-                </div>
-                <div className='p-4 rounded-lg bg-background/50 border'>
-                    <ExplanationDisplay text={item.content.detailedExplanation} />
-                </div>
-                <Card className="bg-background/50">
-                    <CardHeader className="flex-row items-center gap-2 pb-2">
-                        <Quote className="h-5 w-5 text-accent"/>
-                        <CardTitle className="text-lg">Analogy</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{item.content.analogy}</p>
-                    </CardContent>
-                </Card>
-            </div>
-        );
+        return <div className="prose prose-sm max-w-none dark:prose-invert" dangerouslySetInnerHTML={{ __html: item.content.replace(/\n/g, '<br />') }} />;
       case 'Practice Test':
         return (
           <div>
-            <div className="flex gap-4 mb-4">
-                {item.isComplete && item.score !== undefined && (
-                    <Badge>Score: {item.score} / {item.content.length}</Badge>
-                )}
-                {item.isComplete && item.duration !== undefined && (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                        <Clock className="h-3 w-3"/>
-                        {formatDuration(item.duration)}
-                    </Badge>
-                )}
-                {!item.isComplete && item.studentId && (
-                     <Badge variant="secondary">Assigned to: {item.studentId}</Badge>
-                )}
-            </div>
-          <ul className="space-y-4">
+            {item.score !== undefined && (
+                <Badge>Score: {item.score} / {item.content.length}</Badge>
+            )}
+             {item.duration !== undefined && (
+                <Badge variant="outline" className="ml-2 flex items-center gap-1 w-fit">
+                    <Clock className="h-3 w-3"/>
+                    {formatDuration(item.duration)}
+                </Badge>
+            )}
+          <ul className="space-y-4 mt-4">
             {item.content.map((qa: any, index: number) => (
               <li key={index}>
                 <p className="font-semibold">{index + 1}. {qa.question}</p>
@@ -193,10 +64,8 @@ export default function HistoryPage() {
           </ul>
           </div>
         );
-    case 'Progress Report':
-        return <ReportDisplayCard report={item.content} studentId={item.title.split(' ').pop() || 'user'} />
-    default:
-        return <p>{JSON.stringify(item.content)}</p>;
+      default:
+        return <p>{item.content}</p>;
     }
   };
 
@@ -229,34 +98,14 @@ export default function HistoryPage() {
                 {history.map((item) => (
                   <AccordionItem value={item.id} key={item.id}>
                     <AccordionTrigger>
-                      <div className="flex items-center gap-4 w-full">
+                      <div className="flex items-center gap-4">
                         {iconMap[item.type as keyof typeof iconMap]}
-                        <div className="flex flex-col items-start text-left">
+                        <div className="flex flex-col items-start">
                           <span className="font-semibold">{item.title}</span>
                           <span className="text-xs text-muted-foreground">
                             {format(new Date(item.timestamp), "PPP p")}
                           </span>
                         </div>
-                         {item.type === 'Practice Test' && (
-                          <div className="ml-auto pr-4 flex items-center gap-4">
-                              {item.isComplete && item.duration !== undefined && (
-                                  <Badge variant="outline" className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3"/>
-                                      {formatDuration(item.duration)}
-                                  </Badge>
-                              )}
-                              {item.isComplete && item.score !== undefined && (
-                                  <Badge variant="outline">
-                                      {((item.score / item.content.length) * 100).toFixed(0)}%
-                                  </Badge>
-                              )}
-                              {!item.isComplete ? (
-                                <Badge variant="destructive">Pending</Badge>
-                              ) : (
-                                <Badge variant="secondary" className='bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'>Completed</Badge>
-                              )}
-                          </div>
-                      )}
                       </div>
                     </AccordionTrigger>
                     <AccordionContent>

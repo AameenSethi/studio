@@ -6,7 +6,6 @@ import { UserProvider } from '@/hooks/use-user-role';
 import { HistoryProvider } from '@/hooks/use-history';
 import { ThemeProvider } from '@/components/theme-provider';
 import { TrackedTopicsProvider } from '@/hooks/use-tracked-topics';
-import { StudentsProvider } from '@/hooks/use-students';
 
 export const metadata: Metadata = {
   title: 'StudyPal',
@@ -36,11 +35,9 @@ export default function RootLayout({
         >
           <UserProvider>
             <HistoryProvider>
-              <StudentsProvider>
                 <TrackedTopicsProvider>
                   {children}
                 </TrackedTopicsProvider>
-              </StudentsProvider>
             </HistoryProvider>
           </UserProvider>
           <Toaster />

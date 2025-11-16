@@ -16,7 +16,6 @@ import {
   ArrowUp,
   HelpCircle,
   Wand2,
-  Users,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -34,9 +33,8 @@ import {
 } from '@/components/ui/tooltip';
 import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, Fragment, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ModeToggle } from './mode-toggle';
-import { Separator } from '@/components/ui/separator';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -46,7 +44,6 @@ const navItems = [
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/progress', icon: TrendingUp, label: 'Progress' },
   { href: '/history', icon: History, label: 'History' },
-  { href: '/students', icon: Users, label: 'Students' },
   { href: '/profile', icon: User, label: 'Profile' },
   { href: '/help', icon: HelpCircle, label: 'Help' },
 ];
@@ -102,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center">
                 <Link
                     href="/dashboard"
-                    className="flex items-center gap-2 text-lg font-semibold md:text-base mr-2"
+                    className="flex items-center gap-2 text-lg font-semibold md:text-base mr-6"
                 >
                     <BookOpen className="h-6 w-6 text-primary" />
                     <span className="font-headline text-xl">StudyPal</span>
@@ -110,10 +107,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </div>
             <div className='flex-1 flex justify-center'>
               <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
-                {navItems.map((item, index) => (
-                    <Fragment key={item.href}>
-                      {index > 0 && item.label === 'Students' && <Separator orientation="vertical" className="h-10 mx-2" />}
+                  {navItems.map((item) => (
                       <Link
+                          key={item.href}
                           href={item.href}
                           className={cn(
                               "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
@@ -123,9 +119,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                           <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
                           <span className="text-xs">{item.label}</span>
                       </Link>
-                    </Fragment>
-                ))}
-                <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
+                  ))}
+                  <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
               </nav>
             </div>
           <Sheet>
