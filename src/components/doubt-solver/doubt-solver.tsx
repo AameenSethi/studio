@@ -168,19 +168,15 @@ export function DoubtSolver() {
   }
 
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <BrainCircuit className="h-6 w-6 text-accent" />
-          AI Tutor
-        </CardTitle>
-        <CardDescription>
-          Ask a question about any academic subject to get a clear explanation.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="border rounded-lg p-4 h-96 flex flex-col">
-            <ScrollArea className="flex-1 pr-4" ref={scrollAreaRef}>
+    <Card className="w-full h-[75vh] flex flex-col">
+        <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+            <BrainCircuit className="h-6 w-6 text-accent" />
+            AI Tutor Chat
+            </CardTitle>
+        </CardHeader>
+        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
+            <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
                 <div className="space-y-4">
                     {messages.map((message, index) => (
                         <div key={index} className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : ''}`}>
@@ -220,7 +216,7 @@ export function DoubtSolver() {
                     )}
                 </div>
             </ScrollArea>
-            <div className="mt-4">
+            <div className="mt-auto pt-4 border-t">
                 {imagePreview && (
                     <div className="relative w-24 h-24 mb-2 border rounded-md p-1">
                         <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
@@ -276,8 +272,7 @@ export function DoubtSolver() {
                     </form>
                 </Form>
             </div>
-        </div>
-      </CardContent>
+        </CardContent>
     </Card>
   );
 }
