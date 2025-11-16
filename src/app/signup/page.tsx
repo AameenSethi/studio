@@ -29,6 +29,7 @@ import { useState, useEffect, useMemo } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useUser, type UserProfile } from "@/hooks/use-user-role"
 import { ModeToggle } from "@/components/layout/mode-toggle"
+import { Skeleton } from "@/components/ui/skeleton"
 
 
 const formSchema = z.object({
@@ -90,6 +91,7 @@ export default function SignupPage() {
     const [isLoading, setIsLoading] = useState(false);
     const { loadUserByEmail } = useUser();
     const [captchaText, setCaptchaText] = useState('');
+    const [isClient, setIsClient] = useState(false);
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -103,6 +105,7 @@ export default function SignupPage() {
     });
 
     useEffect(() => {
+        setIsClient(true);
         setCaptchaText(generateCaptchaText());
     }, []);
 
@@ -111,10 +114,10 @@ export default function SignupPage() {
     }
 
     const captchaNoiseSvg = useMemo(() => {
-        if (typeof window === 'undefined') return '';
+        if (!isClient) return '';
         const noise = generateNoise(180, 40);
         return `data:image/svg+xml;base64,${btoa(noise)}`;
-    }, [captchaText]); // Re-generate noise with text
+    }, [captchaText, isClient]);
 
     function onSubmit(values: z.infer<typeof formSchema>) {
         if (values.captcha.toLowerCase() !== captchaText.toLowerCase()) {
@@ -246,32 +249,38 @@ export default function SignupPage() {
                  <div className="space-y-2">
                     <FormLabel htmlFor="captcha">Human Verification</FormLabel>
                     <div className="flex items-center justify-between gap-2 p-2 rounded-md border bg-muted select-none">
-                        <div className="relative font-mono text-2xl tracking-widest flex-grow text-center" style={{ height: '40px' }}>
-                            <img src={captchaNoiseSvg} alt="CAPTCHA background noise" className="absolute inset-0 w-full h-full" />
-                            <div className="absolute inset-0 flex items-center justify-center w-full h-full">
-                                {captchaText.split('').map((char, index) => {
-                                    const colors = ['hsl(var(--primary))', 'hsl(var(--foreground))', 'hsl(var(--accent-foreground))'];
-                                    const rotation = Math.random() * 30 - 15;
-                                    const yOffset = Math.random() * 8 - 4;
-                                    const skew = Math.random() * 20 - 10;
-                                    const color = colors[Math.floor(Math.random() * colors.length)];
-                                    return (
-                                        <span key={index} style={{
-                                            transform: `rotate(${rotation}deg) translateY(${yOffset}px) skewX(${skew}deg)`,
-                                            color,
-                                            display: 'inline-block',
-                                            fontWeight: Math.random() > 0.5 ? 'bold' : 'normal'
-                                        }}>
-                                            {char}
-                                        </span>
-                                    );
-                                })}
+                        {!isClient ? (
+                            <Skeleton className="h-10 w-full" />
+                        ) : (
+                            <>
+                            <div className="relative font-mono text-2xl tracking-widest flex-grow text-center" style={{ height: '40px' }}>
+                                <img src={captchaNoiseSvg} alt="CAPTCHA background noise" className="absolute inset-0 w-full h-full" />
+                                <div className="absolute inset-0 flex items-center justify-center w-full h-full">
+                                    {captchaText.split('').map((char, index) => {
+                                        const colors = ['hsl(var(--primary))', 'hsl(var(--foreground))', 'hsl(var(--accent-foreground))'];
+                                        const rotation = Math.random() * 30 - 15;
+                                        const yOffset = Math.random() * 8 - 4;
+                                        const skew = Math.random() * 20 - 10;
+                                        const color = colors[Math.floor(Math.random() * colors.length)];
+                                        return (
+                                            <span key={index} style={{
+                                                transform: `rotate(${rotation}deg) translateY(${yOffset}px) skewX(${skew}deg)`,
+                                                color,
+                                                display: 'inline-block',
+                                                fontWeight: Math.random() > 0.5 ? 'bold' : 'normal'
+                                            }}>
+                                                {char}
+                                            </span>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                        </div>
-                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={regenerateCaptcha}>
-                            <RefreshCw className="w-4 h-4" />
-                            <span className="sr-only">Refresh CAPTCHA</span>
-                        </Button>
+                            <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={regenerateCaptcha}>
+                                <RefreshCw className="w-4 h-4" />
+                                <span className="sr-only">Refresh CAPTCHA</span>
+                            </Button>
+                            </>
+                        )}
                     </div>
                     <FormField
                         control={form.control}
@@ -303,3 +312,5 @@ export default function SignupPage() {
     </div>
   )
 }
+
+    
