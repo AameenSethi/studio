@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
@@ -13,26 +14,21 @@ interface StudentsContextType {
 
 const StudentsContext = createContext<StudentsContextType | undefined>(undefined);
 
-const getInitialStudents = (): Student[] => {
-  if (typeof window === 'undefined') {
-    return defaultStudentData;
-  }
-  try {
-    const item = window.localStorage.getItem('studentRoster');
-    return item ? JSON.parse(item) : defaultStudentData;
-  } catch (error) {
-    console.error('Error reading students from localStorage', error);
-    return defaultStudentData;
-  }
-};
-
 export const StudentsProvider = ({ children }: { children: ReactNode }) => {
+  const [students, setStudents] = useState<Student[]>(defaultStudentData);
   const [isMounted, setIsMounted] = useState(false);
-  const [students, setStudents] = useState<Student[]>(getInitialStudents);
 
   useEffect(() => {
     setIsMounted(true);
-    setStudents(getInitialStudents());
+    try {
+      const item = window.localStorage.getItem('studentRoster');
+      if (item) {
+        setStudents(JSON.parse(item));
+      }
+    } catch (error) {
+      console.error('Error reading students from localStorage', error);
+      setStudents(defaultStudentData);
+    }
   }, []);
 
   useEffect(() => {
@@ -55,13 +51,24 @@ export const StudentsProvider = ({ children }: { children: ReactNode }) => {
   const removeStudent = (studentId: string) => {
     setStudents(prevStudents => prevStudents.filter(s => s.id !== studentId));
   };
+  
+  const value = { students, addStudent, removeStudent };
 
   if (!isMounted) {
-    return null;
+    const defaultContext: StudentsContextType = {
+        students: defaultStudentData,
+        addStudent: () => {},
+        removeStudent: () => {},
+    }
+    return (
+        <StudentsContext.Provider value={defaultContext}>
+            {children}
+        </StudentsContext.Provider>
+    )
   }
 
   return (
-    <StudentsContext.Provider value={{ students, addStudent, removeStudent }}>
+    <StudentsContext.Provider value={value}>
       {children}
     </StudentsContext.Provider>
   );

@@ -15,6 +15,7 @@ export type HistoryItem = {
   topic?: string;
   studentId?: string; // For tests assigned by teachers/parents
   isComplete?: boolean; // For assigned tests
+  includeInAnalytics?: boolean;
 };
 
 interface HistoryContextType {
@@ -26,26 +27,21 @@ interface HistoryContextType {
 
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
 
-const getInitialHistory = (): HistoryItem[] => {
-  if (typeof window === 'undefined') {
-    return [];
-  }
-  try {
-    const item = window.localStorage.getItem('actionHistory');
-    return item ? JSON.parse(item) : [];
-  } catch (error) {
-    console.error('Error reading history from localStorage', error);
-    return [];
-  }
-};
-
 export const HistoryProvider = ({ children }: { children: ReactNode }) => {
+  const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
-  const [history, setHistory] = useState<HistoryItem[]>(getInitialHistory);
 
   useEffect(() => {
     setIsMounted(true);
-    setHistory(getInitialHistory());
+    try {
+      const item = window.localStorage.getItem('actionHistory');
+      if (item) {
+        setHistory(JSON.parse(item));
+      }
+    } catch (error) {
+      console.error('Error reading history from localStorage', error);
+      setHistory([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -80,12 +76,24 @@ export const HistoryProvider = ({ children }: { children: ReactNode }) => {
     setHistory([]);
   };
 
+  const value = { history, addHistoryItem, updateHistoryItem, clearHistory };
+
   if (!isMounted) {
-    return null;
+    const defaultContext: HistoryContextType = {
+        history: [],
+        addHistoryItem: () => '',
+        updateHistoryItem: () => {},
+        clearHistory: () => {},
+    }
+    return (
+        <HistoryContext.Provider value={defaultContext}>
+            {children}
+        </HistoryContext.Provider>
+    )
   }
 
   return (
-    <HistoryContext.Provider value={{ history, addHistoryItem, updateHistoryItem, clearHistory }}>
+    <HistoryContext.Provider value={value}>
       {children}
     </HistoryContext.Provider>
   );

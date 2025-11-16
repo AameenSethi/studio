@@ -68,7 +68,6 @@ export function StudyTimeChart() {
         if (dayEntry) {
             let timeInSeconds = 0;
             if (item.type === 'Practice Test') {
-                if (item.includeInAnalytics === false) return;
                 timeInSeconds = item.duration || 0;
             } else if (item.type === 'Explanation') {
                 timeInSeconds = 600; // 10 minutes
@@ -101,7 +100,7 @@ export function TopicMasteryChart() {
   const { trackedTopics } = useTrackedTopics();
 
   const { topicMasteryData, overallPerformance } = useMemo(() => {
-    const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined && item.includeInAnalytics !== false);
+    const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
     const trackedTopicNames = trackedTopics.map(t => t.topic);
 
     const topicScores: { [topic: string]: { scores: number[], count: number } } = {};
@@ -137,7 +136,7 @@ export function TopicMasteryChart() {
     });
 
     const relevantTestHistory = history.filter(item => {
-        if (item.type !== 'Practice Test' || item.score === undefined || item.includeInAnalytics === false) return false;
+        if (item.type !== 'Practice Test' || item.score === undefined) return false;
         const name = item.topic || 'General';
         return trackedTopicNames.includes(name);
     });
@@ -238,7 +237,7 @@ export function PerformanceByTopic() {
     const { trackedTopics } = useTrackedTopics();
 
     const topicPerformanceData = useMemo(() => {
-        const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined && item.includeInAnalytics !== false);
+        const testHistory = history.filter(item => item.type === 'Practice Test' && item.score !== undefined);
         const topicData: { [topic: string]: { scores: { score: number, attempt: number }[], count: number, subject: string } } = {};
         const trackedTopicNames = trackedTopics.map(t => t.topic);
 
@@ -331,5 +330,3 @@ export function PerformanceByTopic() {
         </div>
     );
 }
-
-    

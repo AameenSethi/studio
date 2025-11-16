@@ -62,6 +62,7 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
       }
     } catch (error) {
       console.error("Failed to parse from localStorage", error);
+      setUser(defaultUser);
     }
   }, []);
 
@@ -106,8 +107,6 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   };
   
   if (!isMounted) {
-    // On the server, or before the client has mounted, return a default state
-    // to avoid hydration mismatches, but don't provide update functions.
     const defaultContext: UserContextType = {
         user: defaultUser,
         updateUser: () => {},

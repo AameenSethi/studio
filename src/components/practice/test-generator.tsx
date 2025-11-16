@@ -62,6 +62,7 @@ import { Badge } from '@/components/ui/badge';
 import { useHistory, type HistoryItem } from '@/hooks/use-history';
 import { useUser } from '@/hooks/use-user-role';
 import { useTrackedTopics } from '@/hooks/use-tracked-topics';
+import { Checkbox } from '../ui/checkbox';
 
 const studentFormSchema = z
   .object({
@@ -71,6 +72,7 @@ const studentFormSchema = z
     customSubject: z.string().optional(),
     topic: z.string().min(2, { message: 'Topic must be at least 2 characters.' }),
     numberOfQuestions: z.number().min(1).max(20),
+    includeInAnalytics: z.boolean().default(true),
   })
   .refine(
     (data) => {
@@ -148,7 +150,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
   const [startTime, setStartTime] = useState<Date | null>(assignedTest ? new Date() : null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [formValues, setFormValues] = useState<Omit<z.infer<typeof studentFormSchema>, 'includeInAnalytics'> | null>(null);
+  const [formValues, setFormValues] = useState<z.infer<typeof studentFormSchema> | null>(null);
   const [currentTestId, setCurrentTestId] = useState<string | null>(assignedTest?.id || null);
 
 
@@ -174,6 +176,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
       customSubject: '',
       topic: '',
       numberOfQuestions: 5,
+      includeInAnalytics: true,
     },
   });
 
@@ -343,10 +346,14 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
     setAnswersSubmitted(true);
     setIsSubmitting(false);
 
-    try {
-      addTrackedTopic({ topic: testTopic, subject: testSubject });
-    } catch (e) {
-      console.log("Did not add topic, it might already be tracked:", e);
+    const includeInAnalytics = formValues?.includeInAnalytics ?? true;
+
+    if (includeInAnalytics) {
+        try {
+          addTrackedTopic({ topic: testTopic, subject: testSubject });
+        } catch (e) {
+          console.log("Did not add topic, it might already be tracked:", e);
+        }
     }
 
 
@@ -355,6 +362,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             score: correctAnswers,
             duration: finalElapsedTime,
             isComplete: true,
+            includeInAnalytics,
         });
         setCurrentTestId(assignedTest.id);
     } else {
@@ -367,6 +375,7 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
             subject: testSubject,
             topic: testTopic,
             isComplete: true,
+            includeInAnalytics,
         };
         const newId = addHistoryItem(newHistoryItem);
         setCurrentTestId(newId);
@@ -544,6 +553,31 @@ export function TestGenerator({ assignedTest }: StudentTestGeneratorProps) {
                         </FormItem>
                     )}
                     />
+
+                    <FormField
+                        control={form.control}
+                        name="includeInAnalytics"
+                        render={({ field }) => (
+                            <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                                <FormControl>
+                                    <Checkbox
+                                    checked={field.value}
+                                    onCheckedChange={field.onChange}
+                                    />
+                                </FormControl>
+                                <div className="space-y-1 leading-none">
+                                    <FormLabel>
+                                    Include in Analytics
+                                    </FormLabel>
+                                    <FormMessage />
+                                    <p className="text-sm text-muted-foreground">
+                                        Allow this test's score to be included in your analytics and topic mastery charts.
+                                    </p>
+                                </div>
+                            </FormItem>
+                        )}
+                        />
+
                     <Button type="submit" disabled={isLoading}>
                     {isLoading ? (
                         <>
