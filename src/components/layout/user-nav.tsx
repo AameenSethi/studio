@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -28,6 +29,17 @@ import {
   DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
 import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+  } from '@/components/ui/alert-dialog';
+import {
     Dialog,
     DialogContent,
     DialogDescription,
@@ -39,14 +51,16 @@ import {
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user-role';
 import { useHistory } from '@/hooks/use-history';
+import { useTrackedTopics } from '@/hooks/use-tracked-topics';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
 
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
-  const { userName, userEmail, userAvatar } = useUser();
+  const { userName, userEmail, userAvatar, resetUser } = useUser();
   const { history, clearHistory } = useHistory();
+  const { clearTrackedTopics } = useTrackedTopics();
   const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
 
   const handleLogout = () => {
@@ -55,7 +69,9 @@ export function UserNav() {
 
   const handleClearAllData = () => {
     try {
-        localStorage.clear();
+        clearHistory();
+        clearTrackedTopics();
+        resetUser(); // Resets user profile in local storage
         toast({
             title: "Local Data Cleared",
             description: "All your local history and settings have been reset. The app will now reload."
@@ -77,7 +93,7 @@ export function UserNav() {
         clearHistory();
         toast({
             title: "History Cleared",
-            description: "Your action history has been cleared."
+            description: "Your action history has been cleared for this user."
         });
     } catch (e) {
         toast({
@@ -90,6 +106,14 @@ export function UserNav() {
 
   const handleExportHistory = () => {
     try {
+        if (history.length === 0) {
+            toast({
+                variant: 'destructive',
+                title: "Nothing to Export",
+                description: "Your history is empty."
+            });
+            return;
+        }
         const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
             JSON.stringify(history, null, 2)
         )}`;
@@ -169,14 +193,46 @@ export function UserNav() {
                   <span>Export History</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleClearHistory}>
-                  <History className="mr-2 h-4 w-4" />
-                  <span>Clear History</span>
-                </DropdownMenuItem>
-                 <DropdownMenuItem onClick={handleClearAllData} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Clear All Data</span>
-                </DropdownMenuItem>
+                 <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                      <History className="mr-2 h-4 w-4" />
+                      <span>Clear History</span>
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently delete your action history for this user. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleClearHistory} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Clear History</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+                <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            <span>Clear All Data</span>
+                        </DropdownMenuItem>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                                This will permanently delete ALL your local data, including your profile, history, and tracked topics. This action cannot be undone and will log you out.
+                            </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleClearAllData} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">Yes, delete everything</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
           </DropdownMenuSub>

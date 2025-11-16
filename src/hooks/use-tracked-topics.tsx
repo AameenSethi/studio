@@ -2,6 +2,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useUser } from './use-user-role';
 
 export type TrackedTopic = {
   topic: string;
@@ -18,36 +19,50 @@ interface TrackedTopicsContextType {
   trackedTopics: TrackedTopic[];
   addTrackedTopic: (topic: TrackedTopic) => void;
   removeTrackedTopic: (topic: string) => void;
+  clearTrackedTopics: () => void;
 }
 
 const TrackedTopicsContext = createContext<TrackedTopicsContextType | undefined>(undefined);
 
 export const TrackedTopicsProvider = ({ children }: { children: ReactNode }) => {
+  const { userId } = useUser();
   const [trackedTopics, setTrackedTopics] = useState<TrackedTopic[]>(defaultTopics);
   const [isMounted, setIsMounted] = useState(false);
+  const topicsKey = `trackedTopics_${userId}`;
 
   useEffect(() => {
     setIsMounted(true);
-    try {
-      const item = window.localStorage.getItem('trackedTopics');
-      if (item) {
-          setTrackedTopics(JSON.parse(item));
-      }
-    } catch (error) {
-      console.error('Error reading topics from localStorage', error);
-      setTrackedTopics(defaultTopics);
+    if (userId) {
+        try {
+            const item = window.localStorage.getItem(topicsKey);
+            if (item) {
+                const parsedTopics = JSON.parse(item);
+                // Ensure it's an array, handle potential corruption
+                if(Array.isArray(parsedTopics)) {
+                    setTrackedTopics(parsedTopics);
+                } else {
+                    setTrackedTopics(defaultTopics);
+                }
+            } else {
+                // If no topics are stored for the user, set the default ones.
+                setTrackedTopics(defaultTopics);
+            }
+        } catch (error) {
+            console.error('Error reading topics from localStorage', error);
+            setTrackedTopics(defaultTopics);
+        }
     }
-  }, []);
+  }, [userId, topicsKey]);
 
   useEffect(() => {
-    if (isMounted) {
+    if (isMounted && userId) {
       try {
-        window.localStorage.setItem('trackedTopics', JSON.stringify(trackedTopics));
+        window.localStorage.setItem(topicsKey, JSON.stringify(trackedTopics));
       } catch (error) {
         console.error('Error saving topics to localStorage', error);
       }
     }
-  }, [trackedTopics, isMounted]);
+  }, [trackedTopics, isMounted, userId, topicsKey]);
 
   const addTrackedTopic = (topic: TrackedTopic) => {
     setTrackedTopics(prevTopics => {
@@ -61,14 +76,19 @@ export const TrackedTopicsProvider = ({ children }: { children: ReactNode }) => 
   const removeTrackedTopic = (topicToRemove: string) => {
     setTrackedTopics(prevTopics => prevTopics.filter(t => t.topic !== topicToRemove));
   };
+
+  const clearTrackedTopics = () => {
+    setTrackedTopics([]);
+  };
   
-  const value = { trackedTopics, addTrackedTopic, removeTrackedTopic };
+  const value = { trackedTopics, addTrackedTopic, removeTrackedTopic, clearTrackedTopics };
 
   if (!isMounted) {
     const defaultContext: TrackedTopicsContextType = {
         trackedTopics: defaultTopics,
         addTrackedTopic: () => {},
         removeTrackedTopic: () => {},
+        clearTrackedTopics: () => {},
     };
     return (
         <TrackedTopicsContext.Provider value={defaultContext}>

@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useUser } from '@/hooks/use-user-role';
+import { useUser, type UserProfile } from '@/hooks/use-user-role';
 
 const formSchema = z.object({
   email: z.string().email({
@@ -31,8 +31,20 @@ const formSchema = z.object({
   }),
 });
 
-// A mock list of genuine users. In a real application, this would be a database check.
-const genuineUsers = ['student@example.com', 'alex@example.com'];
+const getMockUserDatabase = (): { [email: string]: UserProfile } => {
+    if (typeof window === 'undefined') {
+        return {};
+    }
+    const storedDb = localStorage.getItem('mockUserDatabase');
+    if (storedDb) {
+        try {
+            return JSON.parse(storedDb);
+        } catch (e) {
+            return {};
+        }
+    }
+    return {};
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -52,23 +64,9 @@ export function LoginForm() {
     setIsLoading(true);
     
     // In a real app, this would be an API call to your backend to check credentials.
-    // For this demo, we'll check against our mock "database" (the genuineUsers array).
-    // We also check local storage which is populated on sign up.
-    const storedUser = localStorage.getItem('userProfile');
-    const allUsers = [...genuineUsers];
-    if (storedUser) {
-        try {
-            const parsed = JSON.parse(storedUser);
-            if(parsed.email && !allUsers.includes(parsed.email)) {
-                allUsers.push(parsed.email);
-            }
-        } catch (e) {
-            console.error("Failed to parse user from storage", e);
-        }
-    }
+    const mockUserDatabase = getMockUserDatabase();
 
-
-    if (!allUsers.includes(values.email.toLowerCase())) {
+    if (!mockUserDatabase[values.email.toLowerCase()]) {
         setTimeout(() => {
             toast({
                 variant: 'destructive',
@@ -82,7 +80,6 @@ export function LoginForm() {
 
     // Simulate API call for genuine users
     setTimeout(() => {
-      // In a real app, you'd handle success/error from an API
       loadUserByEmail(values.email);
       toast({
         title: 'Login Successful',

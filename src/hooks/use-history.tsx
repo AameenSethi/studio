@@ -2,10 +2,11 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { useUser } from './use-user-role';
 
 export type HistoryItem = {
   id: string;
-  type: 'Study Plan' | 'Explanation' | 'Practice Test' | 'Progress Report';
+  type: 'Study Plan' | 'Explanation' | 'Practice Test' | 'Progress Report' | 'Doubt Solver';
   title: string;
   content: any; // Can be string or object with questions/answers
   timestamp: string;
@@ -24,31 +25,39 @@ interface HistoryContextType {
 const HistoryContext = createContext<HistoryContextType | undefined>(undefined);
 
 export const HistoryProvider = ({ children }: { children: ReactNode }) => {
+  const { userId } = useUser();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [isMounted, setIsMounted] = useState(false);
+  const historyKey = `actionHistory_${userId}`;
 
   useEffect(() => {
     setIsMounted(true);
-    try {
-      const item = window.localStorage.getItem('actionHistory');
-      if (item) {
-        setHistory(JSON.parse(item));
+    // Only load from storage if userId is available
+    if (userId) {
+      try {
+        const item = window.localStorage.getItem(historyKey);
+        if (item) {
+          setHistory(JSON.parse(item));
+        } else {
+          setHistory([]); // Reset if no history for this user
+        }
+      } catch (error) {
+        console.error('Error reading history from localStorage', error);
+        setHistory([]);
       }
-    } catch (error) {
-      console.error('Error reading history from localStorage', error);
-      setHistory([]);
     }
-  }, []);
+  }, [userId, historyKey]);
 
   useEffect(() => {
-    if (isMounted) {
+    // Only save to storage if userId is available and component is mounted
+    if (isMounted && userId) {
       try {
-        window.localStorage.setItem('actionHistory', JSON.stringify(history));
+        window.localStorage.setItem(historyKey, JSON.stringify(history));
       } catch (error) {
         console.error('Error saving history to localStorage', error);
       }
     }
-  }, [history, isMounted]);
+  }, [history, isMounted, userId, historyKey]);
 
   const addHistoryItem = (item: Omit<HistoryItem, 'id' | 'timestamp'>) => {
     const newItem = {

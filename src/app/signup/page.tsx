@@ -28,7 +28,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useState } from "react"
 import { useToast } from "@/hooks/use-toast"
-import { useUser } from "@/hooks/use-user-role"
+import { useUser, type UserProfile } from "@/hooks/use-user-role"
 
 
 const formSchema = z.object({
@@ -38,11 +38,32 @@ const formSchema = z.object({
     password: z.string().min(6, { message: "Password must be at least 6 characters." }),
 });
 
+const getMockUserDatabase = () => {
+    if (typeof window === 'undefined') {
+      return {};
+    }
+    const storedDb = localStorage.getItem('mockUserDatabase');
+    if (storedDb) {
+      try {
+        return JSON.parse(storedDb);
+      } catch (e) {
+        return {};
+      }
+    }
+    return {};
+};
+
+const saveMockUserDatabase = (db: { [email: string]: UserProfile }) => {
+    if (typeof window !== 'undefined') {
+        localStorage.setItem('mockUserDatabase', JSON.stringify(db));
+    }
+};
+
 export default function SignupPage() {
     const router = useRouter();
     const { toast } = useToast();
     const [isLoading, setIsLoading] = useState(false);
-    const { updateUser } = useUser();
+    const { loadUserByEmail } = useUser();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -57,19 +78,35 @@ export default function SignupPage() {
     function onSubmit(values: z.infer<typeof formSchema>) {
         setIsLoading(true);
         
-        // Simulate API call for account creation
+        const db = getMockUserDatabase();
+        if (db[values.email.toLowerCase()]) {
+            toast({
+                variant: 'destructive',
+                title: 'User Already Exists',
+                description: 'An account with this email already exists. Please sign in.',
+            });
+            setIsLoading(false);
+            return;
+        }
+
         setTimeout(() => {
-            const userId = values.email.split('@')[0];
-            updateUser({
+            const userId = values.email.toLowerCase().replace(/[^a-z0-9]/g, '-');
+            const newUser: UserProfile = {
                 name: `${values.firstName} ${values.lastName}`,
-                email: values.email,
+                email: values.email.toLowerCase(),
                 id: userId,
                 avatar: `https://i.pravatar.cc/150?u=${userId}`,
-                 // Reset other fields to default for a new user
+                role: 'Student',
                 class: '10th Grade',
                 field: '',
-                institution: 'Your School',
-            });
+                institution: '',
+            };
+
+            db[newUser.email] = newUser;
+            saveMockUserDatabase(db);
+            
+            // Load the newly created user into the context
+            loadUserByEmail(newUser.email);
 
             toast({
                 title: "Account Created!",
