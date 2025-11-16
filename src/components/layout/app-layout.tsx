@@ -99,7 +99,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 ))}
             </div>
              <div
-                className="absolute bottom-[-1px] h-1 bg-primary/80 blur-lg transition-all duration-300"
+                className="absolute bottom-[-1px] h-0.5 bg-primary transition-all duration-300"
                 style={underlineStyle}
              />
           </div>
