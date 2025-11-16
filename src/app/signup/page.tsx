@@ -28,6 +28,7 @@ import { Input } from "@/components/ui/input"
 import { useState, useEffect, useMemo } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useUser, type UserProfile } from "@/hooks/use-user-role"
+import { ModeToggle } from "@/components/layout/mode-toggle"
 
 
 const formSchema = z.object({
@@ -168,7 +169,10 @@ export default function SignupPage() {
     }
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex items-center justify-center min-h-screen bg-background relative">
+        <div className="absolute top-4 right-4">
+            <ModeToggle />
+        </div>
       <Card className="mx-auto max-w-sm">
         <CardHeader>
            <div className="flex items-center justify-center gap-2 mb-4">
