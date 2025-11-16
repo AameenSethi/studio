@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import Image from 'next/image';
 import {
   solveDoubt,
 } from '@/ai/flows/doubt-solver';
@@ -26,16 +27,14 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BrainCircuit, Send, User, Bot } from 'lucide-react';
+import { Loader2, BrainCircuit, Send, User, Bot, ImagePlus, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/use-user-role';
 
 
 const formSchema = z.object({
-  doubt: z.string().min(1, {
-    message: 'Please enter a message.',
-  }),
+  doubt: z.string(), // Now optional, but we'll enforce at least one field is present in onSubmit
 });
 
 const AnswerDisplay = ({ text }: { text: string }) => {
@@ -79,6 +78,7 @@ const AnswerDisplay = ({ text }: { text: string }) => {
 type Message = {
     sender: 'user' | 'ai';
     text: string;
+    image?: string;
 };
 
 export function DoubtSolver() {
@@ -86,9 +86,11 @@ export function DoubtSolver() {
   const { userName } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. What concept can I help you understand today?` }
+    { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. Ask a question or upload an image of a problem.` }
   ]);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -103,15 +105,45 @@ export function DoubtSolver() {
     }
   }, [messages]);
 
+  const handleImageChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      const file = event.target.files[0];
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeImage = () => {
+    setImagePreview(null);
+    if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+    }
+  }
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!values.doubt && !imagePreview) {
+        form.setError('doubt', { message: 'Please enter a question or upload an image.'});
+        return;
+    }
     setIsLoading(true);
     
-    const userMessage: Message = { sender: 'user', text: values.doubt };
+    const userMessage: Message = { 
+        sender: 'user', 
+        text: values.doubt || "Please solve the problem in the image.",
+        image: imagePreview || undefined,
+    };
     setMessages(prev => [...prev, userMessage]);
     form.reset();
+    removeImage();
 
     try {
-      const response = await solveDoubt({ doubt: values.doubt });
+      const response = await solveDoubt({ 
+          doubt: values.doubt,
+          photoDataUri: imagePreview || undefined,
+        });
       const aiMessage: Message = { sender: 'ai', text: response.answer };
       setMessages(prev => [...prev, aiMessage]);
 
@@ -125,7 +157,7 @@ export function DoubtSolver() {
       setMessages(prev => {
         const newMessages = [...prev];
         const lastMessage = newMessages[newMessages.length - 1];
-        if (lastMessage.sender === 'user' && lastMessage.text === values.doubt) {
+        if (lastMessage.sender === 'user' && (lastMessage.text === values.doubt || lastMessage.text === "Please solve the problem in the image.")) {
             newMessages.pop();
         }
         return newMessages;
@@ -158,6 +190,15 @@ export function DoubtSolver() {
                                 </Avatar>
                             )}
                             <div className={`rounded-lg p-3 max-w-lg ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                {message.image && (
+                                    <Image
+                                        src={message.image}
+                                        alt="User upload"
+                                        width={200}
+                                        height={200}
+                                        className="rounded-md mb-2 max-w-full h-auto"
+                                    />
+                                )}
                                 <AnswerDisplay text={message.text} />
                             </div>
                             {message.sender === 'user' && (
@@ -180,8 +221,37 @@ export function DoubtSolver() {
                 </div>
             </ScrollArea>
             <div className="mt-4">
+                {imagePreview && (
+                    <div className="relative w-24 h-24 mb-2 border rounded-md p-1">
+                        <Image src={imagePreview} alt="Image preview" layout="fill" objectFit="cover" className="rounded-md" />
+                        <Button
+                            variant="destructive"
+                            size="icon"
+                            className="absolute -top-2 -right-2 h-6 w-6 rounded-full"
+                            onClick={removeImage}
+                        >
+                            <X className="h-4 w-4" />
+                        </Button>
+                    </div>
+                )}
                  <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
+                        <input
+                            type="file"
+                            ref={fileInputRef}
+                            onChange={handleImageChange}
+                            className="hidden"
+                            accept="image/*"
+                        />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            onClick={() => fileInputRef.current?.click()}
+                            disabled={isLoading}
+                        >
+                            <ImagePlus className="h-5 w-5" />
+                        </Button>
                         <FormField
                         control={form.control}
                         name="doubt"
@@ -190,7 +260,7 @@ export function DoubtSolver() {
                             <FormLabel className="sr-only">Your Doubt</FormLabel>
                             <FormControl>
                                 <Input
-                                placeholder="e.g., 'Explain the Pythagorean theorem'"
+                                placeholder="Explain the problem in the image or ask a question..."
                                 {...field}
                                 disabled={isLoading}
                                 />
