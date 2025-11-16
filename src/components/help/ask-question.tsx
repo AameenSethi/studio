@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { useRouter } from 'next/navigation';
 import {
   askQuestion,
   type AskQuestionOutput,
@@ -14,7 +15,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -28,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, HelpCircle, Send, User, Bot } from 'lucide-react';
+import { Loader2, HelpCircle, Send, User, Bot, Navigation } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/use-user-role';
@@ -85,10 +85,11 @@ type Message = {
 
 export function AskQuestion() {
   const { toast } = useToast();
+  const router = useRouter();
   const { userName } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
-    { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! How can I help you today?` }
+    { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! How can I help you today? Ask a question or tell me where you'd like to go.` }
   ]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -116,6 +117,17 @@ export function AskQuestion() {
       const response = await askQuestion({ question: values.question });
       const aiMessage: Message = { sender: 'ai', text: response.answer };
       setMessages(prev => [...prev, aiMessage]);
+
+      if (response.navigationTarget) {
+        toast({
+            title: 'Navigating...',
+            description: `Taking you to ${response.navigationTarget}`,
+            icon: <Navigation className="h-5 w-5 text-primary" />,
+        });
+        setTimeout(() => {
+            router.push(response.navigationTarget!);
+        }, 1500);
+      }
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -137,7 +149,7 @@ export function AskQuestion() {
           AI Assistant
         </CardTitle>
         <CardDescription>
-          Have a question about StudyPal? Ask our AI assistant for help.
+          Have a question or need to go somewhere? Ask our AI assistant for help.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -184,7 +196,7 @@ export function AskQuestion() {
                             <FormLabel className="sr-only">Your Question</FormLabel>
                             <FormControl>
                                 <Input
-                                placeholder="e.g., 'How do I see my practice test history?'"
+                                placeholder="e.g., 'Take me to my history'"
                                 {...field}
                                 disabled={isLoading}
                                 />
