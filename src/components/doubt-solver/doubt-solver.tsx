@@ -32,6 +32,7 @@ import { Loader2, BrainCircuit, Send, User, Bot, Paperclip, X, File as FileIcon 
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/use-user-role';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 
 const formSchema = z.object({
@@ -91,6 +92,7 @@ export function DoubtSolver() {
   const [filePreview, setFilePreview] = useState<{ data: string; name: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const heroImage = PlaceHolderImages.find((img) => img.id === 'login-hero');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -182,117 +184,129 @@ export function DoubtSolver() {
   }
 
   return (
-    <Card className="w-full h-[75vh] flex flex-col">
-        <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-            <BrainCircuit className="h-6 w-6 text-accent" />
-            AI Tutor Chat
-            </CardTitle>
-        </CardHeader>
-        <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
-            <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
-                <div className="space-y-4">
-                    {messages.map((message, index) => (
-                        <div key={index} className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : ''}`}>
-                            {message.sender === 'ai' && (
+    <Card className="w-full h-[75vh] flex flex-col relative overflow-hidden">
+        {heroImage && (
+            <Image
+                src={heroImage.imageUrl}
+                alt={heroImage.description}
+                fill={true}
+                style={{objectFit: "cover"}}
+                className="opacity-10 dark:opacity-5"
+                data-ai-hint={heroImage.imageHint}
+            />
+        )}
+        <div className="relative z-10 flex flex-col h-full">
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                <BrainCircuit className="h-6 w-6 text-accent" />
+                AI Tutor Chat
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden bg-background/50 dark:bg-background/70 backdrop-blur-sm">
+                <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
+                    <div className="space-y-4">
+                        {messages.map((message, index) => (
+                            <div key={index} className={`flex items-start gap-3 ${message.sender === 'user' ? 'justify-end' : ''}`}>
+                                {message.sender === 'ai' && (
+                                    <Avatar className="w-8 h-8 border">
+                                        <AvatarFallback><Bot className="w-5 h-5"/></AvatarFallback>
+                                    </Avatar>
+                                )}
+                                <div className={`rounded-lg p-3 max-w-lg ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                    {message.image && (
+                                        <Image
+                                            src={message.image}
+                                            alt="User upload"
+                                            width={200}
+                                            height={200}
+                                            className="rounded-md mb-2 max-w-full h-auto"
+                                        />
+                                    )}
+                                    {message.fileName && (
+                                        <div className="flex items-center gap-2 p-2 rounded-md bg-black/10 dark:bg-white/10 mb-2">
+                                            <FileIcon className="h-5 w-5" />
+                                            <span className="text-sm font-medium truncate">{message.fileName}</span>
+                                        </div>
+                                    )}
+                                    <AnswerDisplay text={message.text} />
+                                </div>
+                                {message.sender === 'user' && (
+                                    <Avatar className="w-8 h-8 border">
+                                        <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                )}
+                            </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex items-start gap-3">
                                 <Avatar className="w-8 h-8 border">
                                     <AvatarFallback><Bot className="w-5 h-5"/></AvatarFallback>
                                 </Avatar>
-                            )}
-                            <div className={`rounded-lg p-3 max-w-lg ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
-                                {message.image && (
-                                    <Image
-                                        src={message.image}
-                                        alt="User upload"
-                                        width={200}
-                                        height={200}
-                                        className="rounded-md mb-2 max-w-full h-auto"
-                                    />
-                                )}
-                                {message.fileName && (
-                                    <div className="flex items-center gap-2 p-2 rounded-md bg-black/10 dark:bg-white/10 mb-2">
-                                        <FileIcon className="h-5 w-5" />
-                                        <span className="text-sm font-medium truncate">{message.fileName}</span>
-                                    </div>
-                                )}
-                                <AnswerDisplay text={message.text} />
+                                <div className="rounded-lg p-3 bg-muted flex items-center">
+                                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                                </div>
                             </div>
-                            {message.sender === 'user' && (
-                                <Avatar className="w-8 h-8 border">
-                                    <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                            )}
-                        </div>
-                    ))}
-                    {isLoading && (
-                        <div className="flex items-start gap-3">
-                            <Avatar className="w-8 h-8 border">
-                                <AvatarFallback><Bot className="w-5 h-5"/></AvatarFallback>
-                            </Avatar>
-                            <div className="rounded-lg p-3 bg-muted flex items-center">
-                                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                            </div>
+                        )}
+                    </div>
+                </ScrollArea>
+                <div className="mt-auto pt-4 border-t">
+                    {filePreview && (
+                        <div className="relative w-full mb-2 border rounded-md p-2 flex items-center gap-2 bg-muted/50">
+                            <FileIcon className="h-5 w-5 text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground truncate flex-1">{filePreview.name}</span>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 rounded-full"
+                                onClick={removeFile}
+                            >
+                                <X className="h-4 w-4" />
+                            </Button>
                         </div>
                     )}
-                </div>
-            </ScrollArea>
-            <div className="mt-auto pt-4 border-t">
-                {filePreview && (
-                    <div className="relative w-full mb-2 border rounded-md p-2 flex items-center gap-2 bg-muted/50">
-                        <FileIcon className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-sm text-muted-foreground truncate flex-1">{filePreview.name}</span>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 rounded-full"
-                            onClick={removeFile}
-                        >
-                            <X className="h-4 w-4" />
-                        </Button>
-                    </div>
-                )}
-                 <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
-                        <input
-                            type="file"
-                            ref={fileInputRef}
-                            onChange={handleFileChange}
-                            className="hidden"
-                        />
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => fileInputRef.current?.click()}
-                            disabled={isLoading}
-                        >
-                            <Paperclip className="h-5 w-5" />
-                        </Button>
-                        <FormField
-                        control={form.control}
-                        name="doubt"
-                        render={({ field }) => (
-                            <FormItem className="flex-1">
-                            <FormLabel className="sr-only">Your Doubt</FormLabel>
-                            <FormControl>
-                                <Input
-                                placeholder="Explain the problem in the file or ask a question..."
-                                {...field}
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="flex items-center gap-2">
+                            <input
+                                type="file"
+                                ref={fileInputRef}
+                                onChange={handleFileChange}
+                                className="hidden"
+                            />
+                            <Button
+                                type="button"
+                                variant="outline"
+                                size="icon"
+                                onClick={() => fileInputRef.current?.click()}
                                 disabled={isLoading}
-                                />
-                            </FormControl>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <Button type="submit" disabled={isLoading} size="icon">
-                            <Send className="h-4 w-4" />
-                            <span className="sr-only">Send</span>
-                        </Button>
-                    </form>
-                </Form>
-            </div>
-        </CardContent>
+                            >
+                                <Paperclip className="h-5 w-5" />
+                            </Button>
+                            <FormField
+                            control={form.control}
+                            name="doubt"
+                            render={({ field }) => (
+                                <FormItem className="flex-1">
+                                <FormLabel className="sr-only">Your Doubt</FormLabel>
+                                <FormControl>
+                                    <Input
+                                    placeholder="Explain the problem in the file or ask a question..."
+                                    {...field}
+                                    disabled={isLoading}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                            />
+                            <Button type="submit" disabled={isLoading} size="icon">
+                                <Send className="h-4 w-4" />
+                                <span className="sr-only">Send</span>
+                            </Button>
+                        </form>
+                    </Form>
+                </div>
+            </CardContent>
+        </div>
     </Card>
   );
 }
