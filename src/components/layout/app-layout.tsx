@@ -62,17 +62,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             
             <nav className="flex flex-grow items-center justify-center gap-2">
                 {navItems.map((item, index) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        className={cn(
-                            "flex flex-col items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200",
-                            pathname.startsWith(item.href) ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                    <React.Fragment key={item.href}>
+                        <Link
+                            href={item.href}
+                            className={cn(
+                                "flex flex-col items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium transition-all duration-300",
+                                pathname.startsWith(item.href)
+                                ? "bg-muted text-primary shadow-[0_4px_14px_0_rgb(0,118,255,39%)]"
+                                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                            )}
+                        >
+                            <item.icon className="h-5 w-5" />
+                            <span className="text-xs">{item.label}</span>
+                        </Link>
+                         {index < navItems.length - 1 && (
+                            <Separator orientation="vertical" className="h-10" />
                         )}
-                    >
-                        <item.icon className="h-5 w-5" />
-                        <span className="text-xs">{item.label}</span>
-                    </Link>
+                    </React.Fragment>
                 ))}
             </nav>
           </div>
