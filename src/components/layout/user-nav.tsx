@@ -1,10 +1,10 @@
-
 'use client';
 
 import {
   LogOut,
   Settings,
   User,
+  Trash2
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -19,18 +19,46 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user-role';
+import { useHistory } from '@/hooks/use-history';
+import { useToast } from '@/hooks/use-toast';
 
 export function UserNav() {
   const router = useRouter();
+  const { toast } = useToast();
   const { userName, userEmail, userAvatar } = useUser();
+  const { clearHistory } = useHistory();
 
   const handleLogout = () => {
     router.push('/');
   };
+
+  const handleClearData = () => {
+    try {
+        localStorage.clear();
+        toast({
+            title: "Local Data Cleared",
+            description: "All your local history and settings have been reset. The app will now reload."
+        });
+        // Force a reload to clear all state
+        setTimeout(() => {
+            window.location.reload();
+        }, 1500);
+    } catch (e) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not clear local data."
+        })
+    }
+  }
 
   const getInitials = (name: string) => {
     if (!name) return '';
@@ -73,10 +101,20 @@ export function UserNav() {
               <span>Profile</span>
             </DropdownMenuItem>
           </Link>
-          <DropdownMenuItem>
-            <Settings className="mr-2 h-4 w-4" />
-            <span>Settings</span>
-          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Settings</span>
+            </DropdownMenuSubTrigger>
+            <DropdownMenuPortal>
+              <DropdownMenuSubContent>
+                <DropdownMenuItem onClick={handleClearData}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Clear Local Data</span>
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuPortal>
+          </DropdownMenuSub>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleLogout}>
