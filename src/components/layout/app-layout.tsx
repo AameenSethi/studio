@@ -17,7 +17,7 @@ import {
   ArrowUp,
   HelpCircle,
   Wand2,
-  MessageSquareQuestion,
+  BrainCircuit,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -43,7 +43,7 @@ const navItems = [
   { href: '/study-plan', icon: Wand2, label: 'Study Plan' },
   { href: '/explanations', icon: Lightbulb, label: 'Explanations' },
   { href: '/practice', icon: FileText, label: 'Practice' },
-  { href: '/doubt-solver', icon: MessageSquareQuestion, label: 'Doubt Solver' },
+  { href: '/doubt-solver', icon: BrainCircuit, label: 'Doubt Solver' },
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/progress', icon: TrendingUp, label: 'Progress' },
   { href: '/history', icon: History, label: 'History' },
