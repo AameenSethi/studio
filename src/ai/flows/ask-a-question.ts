@@ -39,6 +39,7 @@ Here are the main features of StudyPal and their application paths:
 - **Study Plan**: '/study-plan' - A personalized study plan generator.
 - **Explanations**: '/explanations' - An "Intelligent Explanations" feature to break down complex topics.
 - **Practice**: '/practice' - A "Practice Test Generator" for creating quizzes.
+- **Doubt Solver**: '/doubt-solver' - An AI tutor to solve academic questions.
 - **Analytics**: '/analytics' - A dashboard with charts for study performance.
 - **Progress**: '/progress' - A "Student Progress Report" generator.
 - **History**: '/history' - A log of all generated content.
