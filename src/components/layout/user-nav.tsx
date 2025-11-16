@@ -4,9 +4,10 @@ import {
   LogOut,
   Settings,
   User,
-  Trash2
+  Trash2,
+  FileDown,
+  History
 } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,7 +25,6 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user-role';
 import { useHistory } from '@/hooks/use-history';
@@ -34,20 +34,19 @@ export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
   const { userName, userEmail, userAvatar } = useUser();
-  const { clearHistory } = useHistory();
+  const { history, clearHistory } = useHistory();
 
   const handleLogout = () => {
     router.push('/');
   };
 
-  const handleClearData = () => {
+  const handleClearAllData = () => {
     try {
         localStorage.clear();
         toast({
             title: "Local Data Cleared",
             description: "All your local history and settings have been reset. The app will now reload."
         });
-        // Force a reload to clear all state
         setTimeout(() => {
             window.location.reload();
         }, 1500);
@@ -57,6 +56,44 @@ export function UserNav() {
             title: "Error",
             description: "Could not clear local data."
         })
+    }
+  }
+
+  const handleClearHistory = () => {
+    try {
+        clearHistory();
+        toast({
+            title: "History Cleared",
+            description: "Your action history has been cleared."
+        });
+    } catch (e) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not clear history."
+        })
+    }
+  }
+
+  const handleExportHistory = () => {
+    try {
+        const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
+            JSON.stringify(history, null, 2)
+        )}`;
+        const link = document.createElement("a");
+        link.href = jsonString;
+        link.download = `studypal_history_${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        toast({
+            title: "History Exported",
+            description: "Your action history has been downloaded as a JSON file."
+        });
+    } catch (e) {
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "Could not export history."
+        });
     }
   }
 
@@ -108,9 +145,18 @@ export function UserNav() {
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
-                <DropdownMenuItem onClick={handleClearData}>
+                <DropdownMenuItem onClick={handleExportHistory}>
+                  <FileDown className="mr-2 h-4 w-4" />
+                  <span>Export History</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleClearHistory}>
+                  <History className="mr-2 h-4 w-4" />
+                  <span>Clear History</span>
+                </DropdownMenuItem>
+                 <DropdownMenuItem onClick={handleClearAllData} className="text-destructive focus:bg-destructive/10 focus:text-destructive">
                   <Trash2 className="mr-2 h-4 w-4" />
-                  <span>Clear Local Data</span>
+                  <span>Clear All Data</span>
                 </DropdownMenuItem>
               </DropdownMenuSubContent>
             </DropdownMenuPortal>
