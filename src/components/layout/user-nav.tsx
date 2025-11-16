@@ -6,7 +6,9 @@ import {
   User,
   Trash2,
   FileDown,
-  History
+  History,
+  Info,
+  BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -25,16 +27,27 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuPortal
 } from '@/components/ui/dropdown-menu';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+  } from '@/components/ui/dialog';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user-role';
 import { useHistory } from '@/hooks/use-history';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 export function UserNav() {
   const router = useRouter();
   const { toast } = useToast();
   const { userName, userEmail, userAvatar } = useUser();
   const { history, clearHistory } = useHistory();
+  const [isAboutDialogOpen, setIsAboutDialogOpen] = useState(false);
 
   const handleLogout = () => {
     router.push('/');
@@ -107,6 +120,7 @@ export function UserNav() {
   };
 
   return (
+    <>
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
@@ -145,6 +159,11 @@ export function UserNav() {
             </DropdownMenuSubTrigger>
             <DropdownMenuPortal>
               <DropdownMenuSubContent>
+                <DropdownMenuItem onSelect={() => setIsAboutDialogOpen(true)}>
+                    <Info className="mr-2 h-4 w-4" />
+                    <span>About StudyPal</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleExportHistory}>
                   <FileDown className="mr-2 h-4 w-4" />
                   <span>Export History</span>
@@ -169,5 +188,39 @@ export function UserNav() {
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <Dialog open={isAboutDialogOpen} onOpenChange={setIsAboutDialogOpen}>
+        <DialogContent>
+            <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                    <BookOpen className="h-6 w-6 text-primary" />
+                    About StudyPal
+                </DialogTitle>
+                <DialogDescription>
+                    Your personalized path to academic excellence.
+                </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 text-sm text-muted-foreground">
+                <p>
+                    <strong>Version:</strong> 1.0.0
+                </p>
+                <p>
+                    StudyPal is a revolutionary AI-powered learning assistant designed to help students of all ages achieve their academic goals. From personalized study plans to intelligent explanations of complex topics, StudyPal is your dedicated partner in education.
+                </p>
+                <p>
+                    For more information, visit our website.
+                </p>
+            </div>
+            <DialogFooter className="sm:justify-between gap-2">
+                <a href="#" target="_blank" rel="noopener noreferrer" className='text-xs text-muted-foreground'>
+                    www.studypal.com
+                </a>
+                <Button type="button" onClick={() => setIsAboutDialogOpen(false)}>
+                    Close
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+    </>
   );
 }
