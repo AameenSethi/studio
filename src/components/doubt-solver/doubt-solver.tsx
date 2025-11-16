@@ -85,9 +85,7 @@ export function DoubtSolver() {
   const { toast } = useToast();
   const { userName } = useUser();
   const [isLoading, setIsLoading] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. Ask a question or upload an image of a problem.` }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -98,6 +96,14 @@ export function DoubtSolver() {
       doubt: '',
     },
   });
+
+  useEffect(() => {
+    if (userName) {
+        setMessages([
+            { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. Ask a question or upload an image of a problem.` }
+        ]);
+    }
+  }, [userName]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
