@@ -59,9 +59,16 @@ export default function SignupPage() {
         
         // Simulate API call for account creation
         setTimeout(() => {
+            const userId = values.email.split('@')[0];
             updateUser({
                 name: `${values.firstName} ${values.lastName}`,
                 email: values.email,
+                id: userId,
+                avatar: `https://i.pravatar.cc/150?u=${userId}`,
+                 // Reset other fields to default for a new user
+                class: '10th Grade',
+                field: '',
+                institution: 'Your School',
             });
 
             toast({

@@ -38,7 +38,7 @@ export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const { setUserEmail } = useUser();
+  const { loadUserByEmail } = useUser();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -50,13 +50,29 @@ export function LoginForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
+    
+    // In a real app, this would be an API call to your backend to check credentials.
+    // For this demo, we'll check against our mock "database" (the genuineUsers array).
+    // We also check local storage which is populated on sign up.
+    const storedUser = localStorage.getItem('userProfile');
+    const allUsers = [...genuineUsers];
+    if (storedUser) {
+        try {
+            const parsed = JSON.parse(storedUser);
+            if(parsed.email && !allUsers.includes(parsed.email)) {
+                allUsers.push(parsed.email);
+            }
+        } catch (e) {
+            console.error("Failed to parse user from storage", e);
+        }
+    }
 
-    // Check if the user's email is in our list of genuine users
-    if (!genuineUsers.includes(values.email.toLowerCase())) {
+
+    if (!allUsers.includes(values.email.toLowerCase())) {
         setTimeout(() => {
             toast({
                 variant: 'destructive',
-                title: 'New User Detected',
+                title: 'User Not Found',
                 description: "This email isn't registered. Please sign up first.",
             });
             setIsLoading(false);
@@ -67,7 +83,7 @@ export function LoginForm() {
     // Simulate API call for genuine users
     setTimeout(() => {
       // In a real app, you'd handle success/error from an API
-      setUserEmail(values.email);
+      loadUserByEmail(values.email);
       toast({
         title: 'Login Successful',
         description: "Welcome back! You're being redirected to your dashboard.",
