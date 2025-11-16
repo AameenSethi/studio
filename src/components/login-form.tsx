@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -30,6 +31,9 @@ const formSchema = z.object({
   }),
 });
 
+// A mock list of genuine users. In a real application, this would be a database check.
+const genuineUsers = ['student@example.com', 'alex@example.com'];
+
 export function LoginForm() {
   const router = useRouter();
   const { toast } = useToast();
@@ -46,7 +50,21 @@ export function LoginForm() {
 
   function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    // Simulate API call
+
+    // Check if the user's email is in our list of genuine users
+    if (!genuineUsers.includes(values.email.toLowerCase())) {
+        setTimeout(() => {
+            toast({
+                variant: 'destructive',
+                title: 'New User Detected',
+                description: "This email isn't registered. Please sign up first.",
+            });
+            setIsLoading(false);
+        }, 1000);
+        return;
+    }
+
+    // Simulate API call for genuine users
     setTimeout(() => {
       // In a real app, you'd handle success/error from an API
       setUserEmail(values.email);
