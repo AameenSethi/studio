@@ -56,6 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [underlineStyle, setUnderlineStyle] = useState({});
   const navRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = React.useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -70,7 +71,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (navRef.current) {
-        const activeLink = navRef.current.querySelector(`a[href="${pathname}"]`) as HTMLElement;
+        const activeLink = navRef.current.querySelector(`a[data-active='true']`) as HTMLElement;
         if (activeLink) {
             const { offsetLeft, offsetWidth } = activeLink;
             setUnderlineStyle({
@@ -102,7 +103,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div ref={navRef} className="relative hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
             <Link
               href="/dashboard"
-              className="flex items-center gap-2 text-lg font-semibold md:text-base"
+              className="flex items-center gap-2 text-lg font-semibold md:text-base mr-4"
             >
               <BookOpen className="h-6 w-6 text-primary" />
               <span className="sr-only">StudyPal</span>
@@ -111,20 +112,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                  <Link
                     key={item.href}
                     href={item.href}
+                    data-active={pathname.startsWith(item.href)}
                     className={cn(
-                        "transition-colors hover:text-foreground",
-                        pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground"
+                        "flex items-center gap-2 px-3 py-2 transition-colors duration-300 rounded-md",
+                        pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                     )}
                 >
+                    <item.icon className="h-4 w-4" />
                     {item.label}
                 </Link>
             ))}
              <div
-                className="absolute bottom-[-13px] h-1.5 bg-blue-500 rounded-full blur-sm transition-all duration-300"
+                className="absolute bottom-[-13px] h-1 bg-primary rounded-full blur-[2px] transition-all duration-300"
                 style={underlineStyle}
              />
           </div>
-          <Sheet>
+          <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -140,6 +143,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                     <Link
                         href="/dashboard"
                         className="flex items-center gap-2 text-lg font-semibold"
+                        onClick={() => setOpen(false)}
                     >
                         <BookOpen className="h-6 w-6 text-primary" />
                          <span className="font-headline text-xl">StudyPal</span>
@@ -148,6 +152,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                          <Link
                             key={item.href}
                             href={item.href}
+                            onClick={() => setOpen(false)}
                             className={cn(
                                 "flex items-center gap-4 px-2.5 transition-colors duration-300",
                                 pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
