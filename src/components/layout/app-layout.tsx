@@ -96,7 +96,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 ))}
             </div>
              <div
-                className="absolute bottom-[-21px] h-1 bg-primary/70 rounded-full blur-lg transition-all duration-300"
+                className="absolute bottom-[-21px] h-1 bg-primary/80 rounded-full blur-lg transition-all duration-300"
                 style={underlineStyle}
              />
           </div>
