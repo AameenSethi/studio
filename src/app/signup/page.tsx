@@ -106,7 +106,7 @@ export default function SignupPage() {
 
     useEffect(() => {
         setIsClient(true);
-        setCaptchaText(generateCaptchaText());
+        regenerateCaptcha();
     }, []);
 
     const regenerateCaptcha = () => {
@@ -132,17 +132,22 @@ export default function SignupPage() {
         setIsLoading(true);
         
         const db = getMockUserDatabase();
+        
+        // If user already exists, treat it as a login
         if (db[values.email.toLowerCase()]) {
-            toast({
-                variant: 'destructive',
-                title: 'User Already Exists',
-                description: 'An account with this email already exists. Please sign in.',
-            });
-            setIsLoading(false);
-            regenerateCaptcha();
+            setTimeout(() => {
+                loadUserByEmail(values.email);
+                toast({
+                    title: 'Welcome Back!',
+                    description: "You're already registered. Logging you in now.",
+                });
+                router.push('/dashboard');
+                setIsLoading(false);
+            }, 1000);
             return;
         }
 
+        // Otherwise, create a new account
         setTimeout(() => {
             const userId = values.email.toLowerCase().replace(/[^a-z0-9]/g, '-');
             const newUser: UserProfile = {
@@ -312,5 +317,4 @@ export default function SignupPage() {
     </div>
   )
 }
-
     
