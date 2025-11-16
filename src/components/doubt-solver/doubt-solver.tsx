@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, BrainCircuit, Send, User, Bot, ImagePlus, X } from 'lucide-react';
+import { Loader2, MessageSquareQuestion, Send, User, Bot, ImagePlus, X } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/use-user-role';
@@ -98,12 +99,12 @@ export function DoubtSolver() {
   });
 
   useEffect(() => {
-    if (userName) {
+    if (userName && messages.length === 0) {
         setMessages([
             { sender: 'ai', text: `Hello ${userName.split(' ')[0]}! I'm your AI Tutor. Ask a question or upload an image of a problem.` }
         ]);
     }
-  }, [userName]);
+  }, [userName, messages.length]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
@@ -177,7 +178,7 @@ export function DoubtSolver() {
     <Card className="w-full h-[75vh] flex flex-col">
         <CardHeader>
             <CardTitle className="flex items-center gap-2">
-            <BrainCircuit className="h-6 w-6 text-accent" />
+            <MessageSquareQuestion className="h-6 w-6 text-accent" />
             AI Tutor Chat
             </CardTitle>
         </CardHeader>
