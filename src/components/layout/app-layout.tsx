@@ -109,7 +109,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </Link>
             </div>
             <div className='flex-1 flex justify-center'>
-              <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
+              <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-2 md:text-sm lg:gap-4 relative">
                   {navItems.map((item, index) => (
                       <React.Fragment key={item.href}>
                         <Link
