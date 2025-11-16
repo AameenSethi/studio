@@ -92,7 +92,7 @@ export function DoubtSolver() {
   const [filePreview, setFilePreview] = useState<{ data: string; name: string } | null>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const heroImage = PlaceHolderImages.find((img) => img.id === 'login-hero');
+  const heroImage = PlaceHolderImages.find((img) => img.id === 'profile-card-background');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -191,10 +191,11 @@ export function DoubtSolver() {
                 alt={heroImage.description}
                 fill={true}
                 style={{objectFit: "cover"}}
-                className="opacity-10 dark:opacity-5"
+                className="opacity-20"
                 data-ai-hint={heroImage.imageHint}
             />
         )}
+        <div className="absolute inset-0 bg-background/70 dark:bg-background/80 backdrop-blur-sm" />
         <div className="relative z-10 flex flex-col h-full">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -202,7 +203,7 @@ export function DoubtSolver() {
                 AI Tutor Chat
                 </CardTitle>
             </CardHeader>
-            <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden bg-background/50 dark:bg-background/70 backdrop-blur-sm">
+            <CardContent className="flex-1 flex flex-col gap-4 overflow-hidden">
                 <ScrollArea className="flex-1 pr-4 -mr-4" ref={scrollAreaRef}>
                     <div className="space-y-4">
                         {messages.map((message, index) => (
@@ -212,7 +213,7 @@ export function DoubtSolver() {
                                         <AvatarFallback><Bot className="w-5 h-5"/></AvatarFallback>
                                     </Avatar>
                                 )}
-                                <div className={`rounded-lg p-3 max-w-lg ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-muted'}`}>
+                                <div className={`rounded-lg p-3 max-w-lg ${message.sender === 'user' ? 'bg-primary text-primary-foreground' : 'bg-background shadow-sm border'}`}>
                                     {message.image && (
                                         <Image
                                             src={message.image}
