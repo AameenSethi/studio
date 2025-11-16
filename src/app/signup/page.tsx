@@ -90,6 +90,17 @@ export default function SignupPage() {
     const { loadUserByEmail } = useUser();
     const [captchaText, setCaptchaText] = useState('');
 
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            firstName: "",
+            lastName: "",
+            email: "",
+            password: "",
+            captcha: "",
+        },
+    });
+
     useEffect(() => {
         setCaptchaText(generateCaptchaText());
     }, []);
@@ -288,5 +299,3 @@ export default function SignupPage() {
     </div>
   )
 }
-
-    
