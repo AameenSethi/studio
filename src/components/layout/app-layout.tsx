@@ -127,7 +127,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         )}
                       </React.Fragment>
                   ))}
-                  <div className="absolute -bottom-[21px] h-0.5 bg-primary transition-all duration-300" style={underlineStyle} />
+                  <div className="absolute -bottom-3 h-1 bg-primary/50 blur-md transition-all duration-300" style={underlineStyle} />
               </nav>
             </div>
           <Sheet>
