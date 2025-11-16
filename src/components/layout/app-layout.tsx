@@ -35,6 +35,7 @@ import { UserNav } from './user-nav';
 import { cn } from '@/lib/utils';
 import { useState, useEffect, useRef } from 'react';
 import { ModeToggle } from './mode-toggle';
+import { Separator } from '@/components/ui/separator';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -74,25 +75,27 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div ref={navRef} className="relative hidden w-full flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
             <Link
               href="/dashboard"
-              className="flex flex-col items-center gap-2 text-lg font-semibold md:text-base mr-4 px-3"
+              className="flex flex-col items-center justify-center gap-2 text-lg font-semibold md:text-base mr-4 px-3"
             >
               <BookOpen className="h-7 w-7 text-primary" />
               <span className="text-xs font-bold">StudyPal</span>
             </Link>
-            <div className="flex flex-grow justify-center gap-2">
-                {navItems.map((item) => (
-                    <Link
-                        key={item.href}
-                        href={item.href}
-                        data-active={pathname.startsWith(item.href)}
-                        className={cn(
-                            "flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors duration-300 rounded-md w-20 h-16",
-                            pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                        )}
-                    >
-                        <item.icon className="h-5 w-5" />
-                        <span className="text-xs">{item.label}</span>
-                    </Link>
+            <div className="flex flex-grow justify-center items-center gap-2">
+                {navItems.map((item, index) => (
+                    <React.Fragment key={item.href}>
+                        <Link
+                            href={item.href}
+                            data-active={pathname.startsWith(item.href)}
+                            className={cn(
+                                "flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors duration-300 rounded-md w-20 h-16",
+                                pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                            )}
+                        >
+                            <item.icon className="h-5 w-5" />
+                            <span className="text-xs">{item.label}</span>
+                        </Link>
+                        {index < navItems.length - 1 && <Separator orientation="vertical" className="h-10" />}
+                    </React.Fragment>
                 ))}
             </div>
              <div
