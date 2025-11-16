@@ -16,6 +16,7 @@ import {
   ArrowUp,
   HelpCircle,
   Wand2,
+  Users,
 } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 
@@ -45,6 +46,7 @@ const navItems = [
   { href: '/analytics', icon: BarChart2, label: 'Analytics' },
   { href: '/progress', icon: TrendingUp, label: 'Progress' },
   { href: '/history', icon: History, label: 'History' },
+  { href: '/students', icon: Users, label: 'Students' },
   { href: '/profile', icon: User, label: 'Profile' },
   { href: '/help', icon: HelpCircle, label: 'Help' },
 ];
@@ -110,12 +112,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <nav ref={navRef} className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6 relative">
                 {navItems.map((item, index) => (
                     <Fragment key={item.href}>
-                      {index > 0 && <Separator orientation="vertical" className="h-10" />}
+                      {index > 0 && item.label === 'Students' && <Separator orientation="vertical" className="h-10 mx-2" />}
                       <Link
                           href={item.href}
                           className={cn(
                               "relative flex flex-col items-center justify-center gap-1 w-20 text-center transition-colors duration-300 group",
-                              pathname === item.href ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
+                              pathname.startsWith(item.href) ? "text-foreground font-semibold" : "text-muted-foreground hover:text-foreground"
                           )}
                       >
                           <item.icon className="h-5 w-5 transition-transform duration-300 group-hover:scale-110" />
@@ -152,7 +154,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                             href={item.href}
                             className={cn(
                                 "flex items-center gap-4 px-2.5 transition-colors duration-300",
-                                pathname === item.href ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
                             )}
                         >
                             <item.icon className="h-5 w-5" />
