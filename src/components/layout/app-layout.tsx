@@ -50,34 +50,33 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-       <header className="sticky top-0 z-30 flex h-24 items-center gap-4 border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
-          <div className="relative hidden w-full flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+       <header className="sticky top-0 z-30 flex h-20 items-center border-b bg-background/95 px-4 backdrop-blur-sm md:px-6">
+          <div className="hidden w-full items-center md:flex">
             <Link
               href="/dashboard"
-              className="flex flex-col items-center justify-center gap-2 text-lg font-semibold md:text-base mr-4 px-3"
+              className="flex flex-col items-center justify-center gap-1.5 text-lg font-semibold pr-6 mr-6 border-r"
             >
               <BookOpen className="h-7 w-7 text-primary" />
               <span className="text-xs font-bold">StudyPal</span>
             </Link>
-            <div className="flex flex-grow justify-center items-center gap-2">
+            
+            <nav className="flex flex-grow items-center justify-center gap-2">
                 {navItems.map((item, index) => (
-                    <React.Fragment key={item.href}>
-                        <Link
-                            href={item.href}
-                            data-active={pathname.startsWith(item.href)}
-                            className={cn(
-                                "flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors duration-300 rounded-md w-20 h-16",
-                                pathname.startsWith(item.href) ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                            )}
-                        >
-                            <item.icon className="h-5 w-5" />
-                            <span className="text-xs">{item.label}</span>
-                        </Link>
-                        {index < navItems.length - 1 && <Separator orientation="vertical" className="h-10" />}
-                    </React.Fragment>
+                    <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                            "flex flex-col items-center justify-center gap-1 rounded-md px-4 py-2 text-sm font-medium transition-colors duration-200",
+                            pathname.startsWith(item.href) ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+                        )}
+                    >
+                        <item.icon className="h-5 w-5" />
+                        <span className="text-xs">{item.label}</span>
+                    </Link>
                 ))}
-            </div>
+            </nav>
           </div>
+          
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
@@ -116,7 +115,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 </nav>
             </SheetContent>
           </Sheet>
-          <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4 md:w-auto">
+
+          <div className="flex w-full items-center gap-4 md:ml-auto md:w-auto">
              <Link
               href="/dashboard"
               className="flex items-center gap-2 text-lg font-semibold md:hidden"
