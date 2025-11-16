@@ -2,7 +2,7 @@
 'use client';
 
 import Link from "next/link"
-import { BookOpen, Loader2 } from "lucide-react"
+import { BookOpen, Loader2, RefreshCw } from "lucide-react"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
@@ -25,8 +25,7 @@ import {
     FormMessage,
   } from '@/components/ui/form';
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useToast } from "@/hooks/use-toast"
 import { useUser, type UserProfile } from "@/hooks/use-user-role"
 
@@ -61,13 +60,28 @@ const saveMockUserDatabase = (db: { [email: string]: UserProfile }) => {
 };
 
 const generateCaptchaText = (length = 6) => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789'; // Avoid ambiguous chars
     let result = '';
     for (let i = 0; i < length; i++) {
         result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
     return result;
 }
+
+const generateNoise = (width: number, height: number) => {
+    const noiseLines = [];
+    for (let i = 0; i < 5; i++) {
+        noiseLines.push(`<line x1="${Math.random() * width}" y1="${Math.random() * height}" x2="${Math.random() * width}" y2="${Math.random() * height}" stroke="hsl(var(--muted-foreground))" stroke-width="1" opacity="0.3" />`);
+    }
+    let noiseDots = '';
+    for (let i = 0; i < 100; i++) {
+      noiseDots += `<circle cx="${Math.random() * width}" cy="${Math.random() * height}" r="1" fill="hsl(var(--muted-foreground))" opacity="0.2" />`;
+    }
+    const strikePathY = height / 2 + (Math.random() * 10 - 5);
+    const strikePath = `<path d="M5 ${strikePathY} C ${width/3} ${strikePathY - 10 + Math.random() * 20}, ${width*2/3} ${strikePathY - 10 + Math.random() * 20}, ${width - 5} ${strikePathY}" stroke="hsl(var(--muted-foreground))" stroke-width="1" fill="none" opacity="0.5" />`;
+
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg" class="absolute inset-0">${noiseDots}${noiseLines.join('')}${strikePath}</svg>`;
+  };
 
 export default function SignupPage() {
     const router = useRouter();
@@ -77,7 +91,6 @@ export default function SignupPage() {
     const [captchaText, setCaptchaText] = useState('');
 
     useEffect(() => {
-        // Generate captcha text on the client-side to avoid hydration mismatch
         setCaptchaText(generateCaptchaText());
     }, []);
 
@@ -85,19 +98,13 @@ export default function SignupPage() {
         setCaptchaText(generateCaptchaText());
     }
 
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            firstName: "",
-            lastName: "",
-            email: "",
-            password: "",
-            captcha: "",
-        },
-    });
+    const captchaNoiseSvg = useMemo(() => {
+        if (typeof window === 'undefined') return '';
+        const noise = generateNoise(180, 40);
+        return `data:image/svg+xml;base64,${btoa(noise)}`;
+    }, [captchaText]); // Re-generate noise with text
 
     function onSubmit(values: z.infer<typeof formSchema>) {
-        // Human verification check
         if (values.captcha.toLowerCase() !== captchaText.toLowerCase()) {
             form.setError("captcha", {
                 type: "manual",
@@ -137,7 +144,6 @@ export default function SignupPage() {
             db[newUser.email] = newUser;
             saveMockUserDatabase(db);
             
-            // Load the newly created user into the context
             loadUserByEmail(newUser.email);
 
             toast({
@@ -225,20 +231,31 @@ export default function SignupPage() {
                  <div className="space-y-2">
                     <FormLabel htmlFor="captcha">Human Verification</FormLabel>
                     <div className="flex items-center justify-between gap-2 p-2 rounded-md border bg-muted select-none">
-                        <div className="font-mono text-2xl tracking-widest flex-grow text-center" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'100\' height=\'40\' viewBox=\'0 0 100 40\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M10 10 Q 50 30 90 10\' stroke=\'rgba(0,0,0,0.1)\' fill=\'none\' stroke-width=\'1\'/%3E%3Cpath d=\'M10 30 Q 50 10 90 30\' stroke=\'rgba(0,0,0,0.1)\' fill=\'none\' stroke-width=\'1\'/%3E%3C/svg%3E")' }}>
-                            {captchaText.split('').map((char, index) => {
-                                const colors = ['#f87171', '#60a5fa', '#34d399', '#fbbF24', '#c084fc'];
-                                const rotation = Math.random() * 20 - 10;
-                                const color = colors[Math.floor(Math.random() * colors.length)];
-                                return (
-                                    <span key={index} style={{ transform: `rotate(${rotation}deg)`, color, display: 'inline-block' }}>
-                                        {char}
-                                    </span>
-                                );
-                            })}
+                        <div className="relative font-mono text-2xl tracking-widest flex-grow text-center" style={{ height: '40px' }}>
+                            <img src={captchaNoiseSvg} alt="CAPTCHA background noise" className="absolute inset-0 w-full h-full" />
+                            <div className="absolute inset-0 flex items-center justify-center w-full h-full">
+                                {captchaText.split('').map((char, index) => {
+                                    const colors = ['hsl(var(--primary))', 'hsl(var(--foreground))', 'hsl(var(--accent-foreground))'];
+                                    const rotation = Math.random() * 30 - 15;
+                                    const yOffset = Math.random() * 8 - 4;
+                                    const skew = Math.random() * 20 - 10;
+                                    const color = colors[Math.floor(Math.random() * colors.length)];
+                                    return (
+                                        <span key={index} style={{
+                                            transform: `rotate(${rotation}deg) translateY(${yOffset}px) skewX(${skew}deg)`,
+                                            color,
+                                            display: 'inline-block',
+                                            fontWeight: Math.random() > 0.5 ? 'bold' : 'normal'
+                                        }}>
+                                            {char}
+                                        </span>
+                                    );
+                                })}
+                            </div>
                         </div>
-                        <Button type="button" variant="ghost" size="sm" onClick={regenerateCaptcha}>
-                            &#x21bb;
+                        <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={regenerateCaptcha}>
+                            <RefreshCw className="w-4 h-4" />
+                            <span className="sr-only">Refresh CAPTCHA</span>
                         </Button>
                     </div>
                     <FormField
@@ -271,3 +288,5 @@ export default function SignupPage() {
     </div>
   )
 }
+
+    
